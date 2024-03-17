@@ -2,7 +2,7 @@ use std::io::{self, Result};
 
 use crate::{BINOP, BUILTIN_TYPES, OPTCODE};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Block {
     pub bytecode: Vec<OPTCODE>,
 }
@@ -41,12 +41,39 @@ impl Block {
             BINOP::REMAINDER => OPTCODE::REMAINDER,
         });
     }
+    pub fn define_if_block(&mut self, block: Block) {
+        let block_length = block.bytecode.len();
+        self.bytecode.push(OPTCODE::JUMP_IF_FALSE {
+            steps: block_length,
+        });
+        for optcode in block.bytecode {
+            self.bytecode.push(optcode);
+        }
+    }
+    pub fn define_if_else_block(&mut self, if_block: Block, else_block: Block) {
+        println!("{:?}", else_block);
+        let if_block_length = if_block.bytecode.len();
+        let else_block_length = else_block.bytecode.len();
+        self.bytecode.push(OPTCODE::JUMP_IF_FALSE {
+            steps: if_block_length + 1,
+        });
+        for optcode in if_block.bytecode {
+            self.bytecode.push(optcode);
+        }
+        self.bytecode.push(OPTCODE::JUMP {
+            steps: else_block_length,
+        });
+        for optcode in else_block.bytecode {
+            self.bytecode.push(optcode);
+        }
+    }
     pub fn call_function(&mut self, name: &str) {
         self.bytecode.push(OPTCODE::CALL_FUNCTION {
             name: name.to_string(),
         });
     }
-    pub fn call_print_function(&mut self) {
-        self.bytecode.push(OPTCODE::CALL_PRINT_FUNCTION);
+    pub fn call_print_function(&mut self, newline: bool) {
+        self.bytecode
+            .push(OPTCODE::CALL_PRINT_FUNCTION { newline: newline });
     }
 }

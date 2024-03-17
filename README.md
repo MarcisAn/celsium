@@ -14,7 +14,7 @@ fn main() {
         main_block.load_const(BUILTIN_TYPES::MAGIC_INT, "1");
         main_block.load_const(BUILTIN_TYPES::MAGIC_INT, "2");
         main_block.binop(BINOP::ADD);
-        main_block.call_print_function();
+        main_block.call_print_function(true);
     }
     //println!("{:?}", main_block.bytecode);
     main_module.add_block(main_block);

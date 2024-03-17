@@ -136,7 +136,7 @@ impl VM {
             _ => panic!("Unknown arithmetics operator"),
         }
     }
-    pub fn print_function(&mut self) {
+    pub fn print_function(&mut self, newline: bool) {
         match self.stack.pop_back().unwrap() {
             StackValue::BOOL { value } => {
                 if (value) {
@@ -148,5 +148,11 @@ impl VM {
             StackValue::BIGINT { value } => print!("{}", value),
             StackValue::STRING { value } => print!("{}", value),
         };
+        if newline {
+            print!("\n");
+        }
+    }
+    pub fn must_jump(&mut self) -> bool {
+        return self.stack.pop_back().unwrap() == StackValue::BOOL { value: false };
     }
 }
