@@ -1,2 +1,1 @@
-Potencial errors:
-- 
+# A rust library for building interpreters
