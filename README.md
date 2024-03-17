@@ -1,0 +1,2 @@
+Potencial errors:
+- 
