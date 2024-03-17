@@ -82,7 +82,7 @@ mod tests {
             main_block.load_const(BUILTIN_TYPES::STRING, "9");
             main_block.call_print_function();
         }
-        println!("{:?}", main_block.bytecode);
+        //println!("{:?}", main_block.bytecode);
         main_module.add_block(main_block);
         celsius.add_module(&main_module);
         celsius.run_program();
