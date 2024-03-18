@@ -13,6 +13,12 @@ pub enum BINOP {
     MULTIPLY,
     DIVIDE,
     REMAINDER,
+    LESS_THAN,
+    LARGER_THAN,
+    LESS_OR_EQ,
+    LARGER_OR_EQ,
+    NOT_EQ,
+    EQ,
 }
 
 #[derive(Clone, Debug)]
@@ -32,6 +38,12 @@ pub enum OPTCODE {
     MULTIPLY,
     DIVIDE,
     REMAINDER,
+    LESS_THAN,
+    LARGER_THAN,
+    LESS_OR_EQ,
+    LARGER_OR_EQ,
+    NOT_EQ,
+    EQ,
     JUMP_IF_FALSE {
         steps: usize,
     },
@@ -79,7 +91,9 @@ mod tests {
         let mut main_block = Block::new();
 
         let mut fn_block = Block::new();
-        fn_block.load_const(BUILTIN_TYPES::STRING, "aaa");
+        fn_block.load_const(BUILTIN_TYPES::MAGIC_INT, "2");
+        fn_block.load_const(BUILTIN_TYPES::MAGIC_INT, "2");
+        fn_block.binop(BINOP::EQ);
         fn_block.call_print_function(true);
 
         main_module.define_function(

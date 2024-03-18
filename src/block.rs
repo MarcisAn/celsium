@@ -24,6 +24,12 @@ impl Block {
             BINOP::MULTIPLY => OPTCODE::MULTIPLY,
             BINOP::DIVIDE => OPTCODE::DIVIDE,
             BINOP::REMAINDER => OPTCODE::REMAINDER,
+            BINOP::LESS_THAN => OPTCODE::LESS_THAN,
+            BINOP::LARGER_THAN => OPTCODE::LARGER_THAN,
+            BINOP::LESS_OR_EQ => OPTCODE::LESS_OR_EQ,
+            BINOP::LARGER_OR_EQ => OPTCODE::LARGER_OR_EQ,
+            BINOP::NOT_EQ => OPTCODE::NOT_EQ,
+            BINOP::EQ => OPTCODE::EQ,
         });
     }
     pub fn define_if_block(&mut self, block: Block) {

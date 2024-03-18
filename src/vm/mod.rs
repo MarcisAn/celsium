@@ -31,6 +31,12 @@ pub(super) fn run(bytecode: &Vec<OPTCODE>) {
                 }
             }
             OPTCODE::JUMP { steps } => index += steps,
+            OPTCODE::LESS_THAN => vm.aritmethics("<"),
+            OPTCODE::LARGER_THAN => vm.aritmethics(">"),
+            OPTCODE::LESS_OR_EQ => vm.aritmethics("<="),
+            OPTCODE::LARGER_OR_EQ => vm.aritmethics(">="),
+            OPTCODE::NOT_EQ => vm.aritmethics("!="),
+            OPTCODE::EQ => vm.aritmethics("=="),
         }
         index += 1;
     }

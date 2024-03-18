@@ -94,8 +94,134 @@ impl StackValue {
     pub fn remainder(a: StackValue, b: StackValue) -> StackValue {
         match a {
             StackValue::BOOL { value: _ } => panic!("Cannot do division with BOOL's"),
-            StackValue::BIGINT { value } => Self::divide_with_bigint(value, b),
+            StackValue::BIGINT { value } => Self::get_remainder_with_bigint(value, b),
             StackValue::STRING { value: _ } => panic!("Cannot do division with STRING's"),
+        }
+    }
+    pub fn less_than(a: StackValue, b: StackValue) -> StackValue {
+        match a {
+            StackValue::BOOL { value: val_a } => match b {
+                StackValue::BOOL { value } => StackValue::BOOL {
+                    value: val_a < value,
+                },
+                StackValue::BIGINT { value } => panic!("Cannot compare MAGICINT with BOOL"),
+                StackValue::STRING { value } => panic!("Cannot compare MAGICINT with STRING"),
+            },
+            StackValue::BIGINT { value: val_a } => match b {
+                StackValue::BOOL { value } => panic!("Cannot compare MAGICINT with BOOL"),
+                StackValue::BIGINT { value } => StackValue::BOOL {
+                    value: val_a < value,
+                },
+                StackValue::STRING { value } => panic!("Cannot compare MAGICINT with STRING"),
+            },
+            StackValue::STRING { value: _ } => panic!("Cannot do comparisons  with STRING's"),
+        }
+    }
+    pub fn larger_than(a: StackValue, b: StackValue) -> StackValue {
+        match a {
+            StackValue::BOOL { value: val_a } => match b {
+                StackValue::BOOL { value } => StackValue::BOOL {
+                    value: val_a > value,
+                },
+                StackValue::BIGINT { value } => panic!("Cannot compare MAGICINT with BOOL"),
+                StackValue::STRING { value } => panic!("Cannot compare MAGICINT with STRING"),
+            },
+            StackValue::BIGINT { value: val_a } => match b {
+                StackValue::BOOL { value } => panic!("Cannot compare MAGICINT with BOOL"),
+                StackValue::BIGINT { value } => StackValue::BOOL {
+                    value: val_a > value,
+                },
+                StackValue::STRING { value } => panic!("Cannot compare MAGICINT with STRING"),
+            },
+            StackValue::STRING { value: _ } => panic!("Cannot do comparisons  with STRING's"),
+        }
+    }
+    pub fn less_or_eq(a: StackValue, b: StackValue) -> StackValue {
+        match a {
+            StackValue::BOOL { value: val_a } => match b {
+                StackValue::BOOL { value } => StackValue::BOOL {
+                    value: val_a <= value,
+                },
+                StackValue::BIGINT { value } => panic!("Cannot compare MAGICINT with BOOL"),
+                StackValue::STRING { value } => panic!("Cannot compare MAGICINT with STRING"),
+            },
+            StackValue::BIGINT { value: val_a } => match b {
+                StackValue::BOOL { value } => panic!("Cannot compare MAGICINT with BOOL"),
+                StackValue::BIGINT { value } => StackValue::BOOL {
+                    value: val_a <= value,
+                },
+                StackValue::STRING { value } => panic!("Cannot compare MAGICINT with STRING"),
+            },
+            StackValue::STRING { value: _ } => panic!("Cannot do comparisons  with STRING's"),
+        }
+    }
+    pub fn larger_or_eq(a: StackValue, b: StackValue) -> StackValue {
+        match a {
+            StackValue::BOOL { value: val_a } => match b {
+                StackValue::BOOL { value } => StackValue::BOOL {
+                    value: val_a >= value,
+                },
+                StackValue::BIGINT { value } => panic!("Cannot compare MAGICINT with BOOL"),
+                StackValue::STRING { value } => panic!("Cannot compare MAGICINT with STRING"),
+            },
+            StackValue::BIGINT { value: val_a } => match b {
+                StackValue::BOOL { value } => panic!("Cannot compare MAGICINT with BOOL"),
+                StackValue::BIGINT { value } => StackValue::BOOL {
+                    value: val_a >= value,
+                },
+                StackValue::STRING { value } => panic!("Cannot compare MAGICINT with STRING"),
+            },
+            StackValue::STRING { value: _ } => panic!("Cannot do comparisons  with STRING's"),
+        }
+    }
+    pub fn not_eq(a: StackValue, b: StackValue) -> StackValue {
+        match a {
+            StackValue::BOOL { value: val_a } => match b {
+                StackValue::BOOL { value } => StackValue::BOOL {
+                    value: val_a != value,
+                },
+                StackValue::BIGINT { value } => panic!("Cannot compare MAGICINT with BOOL"),
+                StackValue::STRING { value } => panic!("Cannot compare MAGICINT with STRING"),
+            },
+            StackValue::BIGINT { value: val_a } => match b {
+                StackValue::BOOL { value } => panic!("Cannot compare MAGICINT with BOOL"),
+                StackValue::BIGINT { value } => StackValue::BOOL {
+                    value: val_a != value,
+                },
+                StackValue::STRING { value } => panic!("Cannot compare MAGICINT with STRING"),
+            },
+            StackValue::STRING { value: val_a } => match b {
+                StackValue::BOOL { value } => panic!("Cannot compare STRING with BOOL"),
+                StackValue::BIGINT { value } => panic!("Cannot compare STRING with BIGINT"),
+                StackValue::STRING { value } => StackValue::BOOL {
+                    value: val_a != value,
+                },
+            },
+        }
+    }
+    pub fn eq(a: StackValue, b: StackValue) -> StackValue {
+        match a {
+            StackValue::BOOL { value: val_a } => match b {
+                StackValue::BOOL { value } => StackValue::BOOL {
+                    value: val_a == value,
+                },
+                StackValue::BIGINT { value } => panic!("Cannot compare MAGICINT with BOOL"),
+                StackValue::STRING { value } => panic!("Cannot compare MAGICINT with STRING"),
+            },
+            StackValue::BIGINT { value: val_a } => match b {
+                StackValue::BOOL { value } => panic!("Cannot compare MAGICINT with BOOL"),
+                StackValue::BIGINT { value } => StackValue::BOOL {
+                    value: val_a == value,
+                },
+                StackValue::STRING { value } => panic!("Cannot compare MAGICINT with STRING"),
+            },
+            StackValue::STRING { value: val_a } => match b {
+                StackValue::BOOL { value } => panic!("Cannot compare STRING with BOOL"),
+                StackValue::BIGINT { value } => panic!("Cannot compare STRING with BIGINT"),
+                StackValue::STRING { value } => StackValue::BOOL {
+                    value: val_a == value,
+                },
+            },
         }
     }
 }
@@ -132,6 +258,12 @@ impl VM {
             "*" => self.stack.push_back(StackValue::multiply(a, b)),
             "/" => self.stack.push_back(StackValue::divide(a, b)),
             "%" => self.stack.push_back(StackValue::remainder(a, b)),
+            "<" => self.stack.push_back(StackValue::less_than(a, b)),
+            ">" => self.stack.push_back(StackValue::larger_than(a, b)),
+            "<=" => self.stack.push_back(StackValue::less_or_eq(a, b)),
+            ">=" => self.stack.push_back(StackValue::larger_or_eq(a, b)),
+            "!=" => self.stack.push_back(StackValue::not_eq(a, b)),
+            "==" => self.stack.push_back(StackValue::eq(a, b)),
 
             _ => panic!("Unknown arithmetics operator"),
         }
