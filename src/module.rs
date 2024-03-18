@@ -1,11 +1,64 @@
-use crate::block::{Block, FUNC_VISIBILITY};
+use std::fmt::format;
+
+use crate::block::{self, Block};
 use crate::vm::StackValue;
-use crate::{CelsiumProgram, BINOP};
+use crate::{CelsiumProgram, BINOP, BUILTIN_TYPES, OPTCODE};
 #[derive(Clone)]
 pub struct Module {
     id: usize,
+    pub name: String,
+    pub main_block: Block,
+    functions: Vec<Function>,
+}
+#[derive(Clone, Debug)]
+pub enum FUNCTION_RETURN_TYPE {
+    NONE,
+    BUILTIN_TYPES,
+}
+#[derive(Clone, Debug)]
+pub struct FunctionSignature {
+    pub(crate) name: String,
+    pub(crate) return_type: FUNCTION_RETURN_TYPE,
+    pub(crate) args: Vec<FuncArg>,
+}
+impl FunctionSignature {
+    pub fn new(
+        func_name: String,
+        args: Vec<FuncArg>,
+        return_type: FUNCTION_RETURN_TYPE,
+    ) -> FunctionSignature {
+        FunctionSignature {
+            name: func_name,
+            args,
+            return_type,
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct FuncArg {
     name: String,
-    pub(super) blocks: Vec<Block>,
+    arg_type: BUILTIN_TYPES,
+}
+#[derive(Clone, Debug)]
+pub enum FUNC_VISIBILITY {
+    PRIVATE,
+    PUBLIC,
+}
+#[derive(Debug, Clone)]
+pub struct Function {
+    signature: FunctionSignature,
+    body: Block,
+    visibility: FUNC_VISIBILITY,
+}
+
+fn load_function_bytecode(name: String, module: &Module) -> Result<Vec<OPTCODE>, String> {
+    for func in &module.functions {
+        if func.signature.name == name {
+            return Ok(func.clone().body.bytecode);
+        }
+    }
+    Err(format!("Could not find function {} in module", { name }))
 }
 
 impl Module {
@@ -13,12 +66,35 @@ impl Module {
         let module = Module {
             name: name.to_string(),
             id: celsius_program.modules.len(),
-            blocks: vec![],
+            main_block: Block::new(),
+            functions: vec![],
         };
         module
     }
-    pub fn add_block(&mut self, block: Block) {
-        self.blocks.push(block);
+    pub fn add_main_block(&mut self, mut block: Block) {
+        let mut bytecode_inserted: Vec<OPTCODE> = vec![];
+        for optcode in block.clone().bytecode {
+            match optcode {
+                OPTCODE::CALL_FUNCTION { name } => {
+                    bytecode_inserted.append(&mut load_function_bytecode(name, self).unwrap())
+                }
+                _ => bytecode_inserted.push(optcode),
+            }
+        }
+        block.bytecode = bytecode_inserted.clone();
+        println!("{:?}", bytecode_inserted);
+        self.main_block = block;
     }
-    pub fn define_function(&mut self, body: Block, visibility: FUNC_VISIBILITY) {}
+    pub fn define_function(
+        &mut self,
+        body_block: Block,
+        visibility: FUNC_VISIBILITY,
+        signature: FunctionSignature,
+    ) {
+        self.functions.push(Function {
+            signature: signature,
+            body: body_block,
+            visibility: visibility,
+        })
+    }
 }

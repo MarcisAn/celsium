@@ -7,21 +7,6 @@ pub struct Block {
     pub bytecode: Vec<OPTCODE>,
 }
 
-pub struct FunctionSignature {
-    pub(crate) name: String,
-    pub(crate) return_type: String,
-
-    pub(crate) args: Vec<FuncArg>,
-}
-pub struct FuncArg {
-    name: String,
-    arg_type: String,
-}
-pub enum FUNC_VISIBILITY {
-    PRIVATE,
-    PUBLIC,
-}
-
 impl Block {
     pub fn new() -> Block {
         Block { bytecode: vec![] }

@@ -1,5 +1,6 @@
-use block::{Block, FuncArg, FunctionSignature, FUNC_VISIBILITY};
+use block::Block;
 use module::Module;
+use module::FUNCTION_RETURN_TYPE;
 
 pub mod block;
 pub mod module;
@@ -59,26 +60,16 @@ impl CelsiumProgram {
     pub fn run_program(&self) {
         let mut bytecode: Vec<OPTCODE> = vec![];
         for module in &self.modules {
-            for block in &module.blocks {
-                bytecode.append(&mut block.bytecode.clone());
-            }
+            bytecode.append(&mut module.main_block.bytecode.clone());
         }
         vm::run(&bytecode);
     }
 }
 
-impl FunctionSignature {
-    pub fn new(func_name: String, args: Vec<FuncArg>, return_type: String) -> FunctionSignature {
-        FunctionSignature {
-            name: func_name,
-            args,
-            return_type,
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
+    use self::module::{FunctionSignature, FUNC_VISIBILITY};
+
     use super::*;
 
     #[test]
@@ -86,28 +77,29 @@ mod tests {
         let mut celsius = CelsiumProgram::new();
         let mut main_module = Module::new("main", &mut celsius);
         let mut main_block = Block::new();
-        {
-            main_block.load_const(BUILTIN_TYPES::BOOL, "1");
-            let mut if_block = Block::new();
-            {
-                if_block.load_const(BUILTIN_TYPES::STRING, "executed");
-                if_block.call_print_function(true);
-            }
-            let mut else_block = Block::new();
-            {
-                else_block.load_const(BUILTIN_TYPES::STRING, "executed2");
-                else_block.call_print_function(true);
-            }
-            main_block.define_if_else_block(if_block, else_block);
-            main_block.load_const(BUILTIN_TYPES::STRING, "aaa");
-            main_block.call_print_function(true);
-        }
+
+        let mut fn_block = Block::new();
+        fn_block.load_const(BUILTIN_TYPES::STRING, "aaa");
+        fn_block.call_print_function(true);
+
+        main_module.define_function(
+            fn_block,
+            FUNC_VISIBILITY::PRIVATE,
+            FunctionSignature {
+                name: "test".to_owned(),
+                return_type: FUNCTION_RETURN_TYPE::NONE,
+                args: vec![],
+            },
+        );
+
+        main_block.call_function("test");
+
         let mut i = 0;
         while i < main_block.bytecode.len() {
             println!("{} {:?}", i, main_block.bytecode[i]);
             i += 1;
         }
-        main_module.add_block(main_block);
+        main_module.add_main_block(main_block);
         celsius.add_module(&main_module);
         celsius.run_program();
     }

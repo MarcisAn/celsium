@@ -18,7 +18,7 @@ pub(super) fn run(bytecode: &Vec<OPTCODE>) {
         let optcode = &bytecode[index];
         match optcode {
             OPTCODE::LOAD_CONST { data_type, data } => vm.push(&data_type, &data),
-            OPTCODE::CALL_FUNCTION { name } => todo!(),
+            OPTCODE::CALL_FUNCTION { name } => panic!("Call function in bytecode"),
             OPTCODE::ADD => vm.aritmethics("+"),
             OPTCODE::SUBTRACT => vm.aritmethics("-"),
             OPTCODE::MULTIPLY => vm.aritmethics("*"),
