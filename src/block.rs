@@ -30,6 +30,9 @@ impl Block {
             BINOP::LARGER_OR_EQ => OPTCODE::LARGER_OR_EQ,
             BINOP::NOT_EQ => OPTCODE::NOT_EQ,
             BINOP::EQ => OPTCODE::EQ,
+            BINOP::AND => OPTCODE::AND,
+            BINOP::OR => OPTCODE::OR,
+            BINOP::XOR => OPTCODE::XOR,
         });
     }
     pub fn define_if_block(&mut self, block: Block) {
@@ -42,7 +45,7 @@ impl Block {
         }
     }
     pub fn define_if_else_block(&mut self, if_block: Block, else_block: Block) {
-        println!("{:?}", else_block);
+        //println!("{:?}", else_block);
         let if_block_length = if_block.bytecode.len();
         let else_block_length = else_block.bytecode.len();
         self.bytecode.push(OPTCODE::JUMP_IF_FALSE {

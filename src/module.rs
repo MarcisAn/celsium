@@ -1,31 +1,28 @@
-use std::fmt::format;
-
-use crate::block::{self, Block};
-use crate::vm::StackValue;
-use crate::{CelsiumProgram, BINOP, BUILTIN_TYPES, OPTCODE};
+use crate::block::Block;
+use crate::{CelsiumProgram, BUILTIN_TYPES, OPTCODE};
 #[derive(Clone)]
 pub struct Module {
-    id: usize,
     pub name: String,
     pub main_block: Block,
     functions: Vec<Function>,
+    _id: usize,
 }
 #[derive(Clone, Debug)]
-pub enum FUNCTION_RETURN_TYPE {
+pub enum FunctionReturnType {
     NONE,
-    BUILTIN_TYPES,
+    BuiltinTypes,
 }
 #[derive(Clone, Debug)]
 pub struct FunctionSignature {
     pub(crate) name: String,
-    pub(crate) return_type: FUNCTION_RETURN_TYPE,
+    pub(crate) return_type: FunctionReturnType,
     pub(crate) args: Vec<FuncArg>,
 }
 impl FunctionSignature {
     pub fn new(
         func_name: String,
         args: Vec<FuncArg>,
-        return_type: FUNCTION_RETURN_TYPE,
+        return_type: FunctionReturnType,
     ) -> FunctionSignature {
         FunctionSignature {
             name: func_name,
@@ -65,7 +62,7 @@ impl Module {
     pub fn new(name: &str, celsius_program: &mut CelsiumProgram) -> Module {
         let module = Module {
             name: name.to_string(),
-            id: celsius_program.modules.len(),
+            _id: celsius_program.modules.len(),
             main_block: Block::new(),
             functions: vec![],
         };
@@ -82,7 +79,7 @@ impl Module {
             }
         }
         block.bytecode = bytecode_inserted.clone();
-        println!("{:?}", bytecode_inserted);
+        //println!("{:?}", bytecode_inserted);
         self.main_block = block;
     }
     pub fn define_function(

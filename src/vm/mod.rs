@@ -2,15 +2,17 @@ use crate::OPTCODE;
 pub mod vm;
 use num::bigint::{BigInt, ToBigInt};
 use vm::VM;
+mod math_operators;
 
 #[derive(Debug, PartialEq)]
-pub(crate) enum StackValue {
+pub enum StackValue {
     BOOL { value: bool },
     BIGINT { value: BigInt },
     STRING { value: String },
 }
 
 pub(super) fn run(bytecode: &Vec<OPTCODE>) {
+    println!("{:?}", bytecode);
     let mut vm = VM::new();
 
     let mut index = 0;
@@ -37,6 +39,9 @@ pub(super) fn run(bytecode: &Vec<OPTCODE>) {
             OPTCODE::LARGER_OR_EQ => vm.aritmethics(">="),
             OPTCODE::NOT_EQ => vm.aritmethics("!="),
             OPTCODE::EQ => vm.aritmethics("=="),
+            OPTCODE::OR => vm.aritmethics("or"),
+            OPTCODE::AND => vm.aritmethics("and"),
+            OPTCODE::XOR => vm.aritmethics("xor"),
         }
         index += 1;
     }

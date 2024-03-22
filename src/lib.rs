@@ -1,6 +1,6 @@
 use block::Block;
+use module::FunctionReturnType;
 use module::Module;
-use module::FUNCTION_RETURN_TYPE;
 
 pub mod block;
 pub mod module;
@@ -19,6 +19,9 @@ pub enum BINOP {
     LARGER_OR_EQ,
     NOT_EQ,
     EQ,
+    AND,
+    OR,
+    XOR,
 }
 
 #[derive(Clone, Debug)]
@@ -44,6 +47,9 @@ pub enum OPTCODE {
     LARGER_OR_EQ,
     NOT_EQ,
     EQ,
+    OR,
+    AND,
+    XOR,
     JUMP_IF_FALSE {
         steps: usize,
     },
@@ -101,7 +107,7 @@ mod tests {
             FUNC_VISIBILITY::PRIVATE,
             FunctionSignature {
                 name: "test".to_owned(),
-                return_type: FUNCTION_RETURN_TYPE::NONE,
+                return_type: FunctionReturnType::NONE,
                 args: vec![],
             },
         );
