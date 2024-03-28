@@ -64,13 +64,21 @@ pub enum BUILTIN_TYPES {
     STRING,
 }
 
+pub struct CelsiumConfig {
+    is_wasm: bool,
+}
+
 pub struct CelsiumProgram {
     modules: Vec<Module>,
+    config: CelsiumConfig,
 }
 
 impl CelsiumProgram {
-    pub fn new() -> CelsiumProgram {
-        CelsiumProgram { modules: vec![] }
+    pub fn new(is_wasm: bool) -> CelsiumProgram {
+        CelsiumProgram {
+            modules: vec![],
+            config: CelsiumConfig { is_wasm: is_wasm },
+        }
     }
     pub fn add_module(&mut self, module: &Module) {
         self.modules.push(module.clone());
@@ -80,7 +88,7 @@ impl CelsiumProgram {
         for module in &self.modules {
             bytecode.append(&mut module.main_block.bytecode.clone());
         }
-        vm::run(&bytecode);
+        vm::run(&bytecode, &self.config);
     }
 }
 
@@ -92,7 +100,7 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let mut celsius = CelsiumProgram::new();
+        let mut celsius = CelsiumProgram::new(false);
         let mut main_module = Module::new("main", &mut celsius);
         let mut main_block = Block::new();
 

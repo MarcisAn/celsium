@@ -76,6 +76,22 @@ impl VM {
             print!("\n");
         }
     }
+    pub fn print_function_wasm(&mut self, newline: bool) {
+        match self.stack.pop_back().unwrap() {
+            StackValue::BOOL { value } => {
+                if (value) {
+                    print!("1")
+                } else {
+                    print!("0")
+                }
+            }
+            StackValue::BIGINT { value } => print!("{}", value),
+            StackValue::STRING { value } => print!("{}", value),
+        };
+        if newline {
+            print!("\n");
+        }
+    }
     pub fn must_jump(&mut self) -> bool {
         return self.stack.pop_back().unwrap() == StackValue::BOOL { value: false };
     }

@@ -1,4 +1,4 @@
-use crate::OPTCODE;
+use crate::{CelsiumConfig, OPTCODE};
 pub mod vm;
 use num::bigint::{BigInt, ToBigInt};
 use vm::VM;
@@ -11,7 +11,7 @@ pub enum StackValue {
     STRING { value: String },
 }
 
-pub(super) fn run(bytecode: &Vec<OPTCODE>) {
+pub(super) fn run(bytecode: &Vec<OPTCODE>, config: &CelsiumConfig) {
     println!("{:?}", bytecode);
     let mut vm = VM::new();
 
@@ -26,7 +26,13 @@ pub(super) fn run(bytecode: &Vec<OPTCODE>) {
             OPTCODE::MULTIPLY => vm.aritmethics("*"),
             OPTCODE::DIVIDE => vm.aritmethics("/"),
             OPTCODE::REMAINDER => vm.aritmethics("%"),
-            OPTCODE::CALL_PRINT_FUNCTION { newline } => vm.print_function(*newline),
+            OPTCODE::CALL_PRINT_FUNCTION { newline } => {
+                if (config.is_wasm) {
+                    vm.print_function(*newline)
+                } else {
+                    vm.print_function_wasm(*newline)
+                }
+            }
             OPTCODE::JUMP_IF_FALSE { steps } => {
                 if (vm.must_jump()) {
                     index += steps
