@@ -3,6 +3,17 @@ pub mod vm;
 use num::bigint::{BigInt, ToBigInt};
 use vm::VM;
 mod math_operators;
+use wasm_bindgen::prelude::*;
+
+#[cfg(feature = "wee_alloc")]
+#[global_allocator]
+static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+
+#[wasm_bindgen]
+extern "C" {
+    fn alert(s: &str);
+    fn wasm_print(s: &str);
+}
 
 #[derive(Debug, PartialEq)]
 pub enum StackValue {
@@ -20,18 +31,19 @@ pub(super) fn run(bytecode: &Vec<OPTCODE>, config: &CelsiumConfig) {
         let optcode = &bytecode[index];
         match optcode {
             OPTCODE::LOAD_CONST { data_type, data } => vm.push(&data_type, &data),
-            OPTCODE::CALL_FUNCTION { name } => panic!("Call function in bytecode"),
+            OPTCODE::CALL_FUNCTION { name } => {
+                panic!("Non-replaced call function optcode in bytecode")
+            }
             OPTCODE::ADD => vm.aritmethics("+"),
             OPTCODE::SUBTRACT => vm.aritmethics("-"),
             OPTCODE::MULTIPLY => vm.aritmethics("*"),
             OPTCODE::DIVIDE => vm.aritmethics("/"),
             OPTCODE::REMAINDER => vm.aritmethics("%"),
             OPTCODE::CALL_PRINT_FUNCTION { newline } => {
-                if (config.is_wasm) {
-                    vm.print_function(*newline)
-                } else {
-                    vm.print_function_wasm(*newline)
-                }
+                let printable = &vm.format_for_print(*newline);
+                #[cfg(target_family = "wasm")]
+                wasm_print(printable);
+                print!("{}", printable);
             }
             OPTCODE::JUMP_IF_FALSE { steps } => {
                 if (vm.must_jump()) {

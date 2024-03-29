@@ -60,38 +60,41 @@ impl VM {
             _ => panic!("Unknown arithmetics operator"),
         }
     }
-    pub fn print_function(&mut self, newline: bool) {
+    pub fn format_for_print(&mut self, newline: bool) -> String {
         match self.stack.pop_back().unwrap() {
             StackValue::BOOL { value } => {
-                if (value) {
-                    print!("1")
+                if newline {
+                    if (value) {
+                        return "1".to_owned();
+                    } else {
+                        return "0".to_owned();
+                    }
                 } else {
-                    print!("0")
+                    if (value) {
+                        return "1\n".to_owned();
+                    } else {
+                        return "0\n".to_owned();
+                    }
                 }
             }
-            StackValue::BIGINT { value } => print!("{}", value),
-            StackValue::STRING { value } => print!("{}", value),
-        };
-        if newline {
-            print!("\n");
-        }
-    }
-    pub fn print_function_wasm(&mut self, newline: bool) {
-        match self.stack.pop_back().unwrap() {
-            StackValue::BOOL { value } => {
-                if (value) {
-                    print!("1")
+            StackValue::BIGINT { value } => {
+                if newline {
+                    return format!("{}", value);
                 } else {
-                    print!("0")
+                    return format!("{}\n", value);
                 }
             }
-            StackValue::BIGINT { value } => print!("{}", value),
-            StackValue::STRING { value } => print!("{}", value),
+            StackValue::STRING { value } => {
+                if newline {
+                    return format!("{}", value);
+                } else {
+                    return format!("{}\n", value);
+                }
+            }
         };
-        if newline {
-            print!("\n");
-        }
+        return "".to_owned();
     }
+
     pub fn must_jump(&mut self) -> bool {
         return self.stack.pop_back().unwrap() == StackValue::BOOL { value: false };
     }
