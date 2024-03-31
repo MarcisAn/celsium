@@ -23,7 +23,6 @@ pub enum StackValue {
 }
 
 pub(super) fn run(bytecode: &Vec<OPTCODE>, config: &CelsiumConfig) {
-    println!("{:?}", bytecode);
     let mut vm = VM::new();
 
     let mut index = 0;

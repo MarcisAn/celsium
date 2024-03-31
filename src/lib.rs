@@ -107,27 +107,17 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let mut celsius = CelsiumProgram::new(false);
-        let mut main_module = Module::new("main", &mut celsius);
+        let mut celsium = CelsiumProgram::new(false);
+        let mut main_module = Module::new("main", &mut celsium);
         let mut main_block = Block::new();
 
-        let mut fn_block = Block::new();
-        fn_block.load_const(BUILTIN_TYPES::MAGIC_INT, "2");
-        fn_block.load_const(BUILTIN_TYPES::MAGIC_INT, "2");
-        fn_block.binop(BINOP::EQ);
-        fn_block.call_print_function(true);
+        let mut loop_block = Block::new();
+        loop_block.load_const(BUILTIN_TYPES::MAGIC_INT, "2");
+        loop_block.load_const(BUILTIN_TYPES::MAGIC_INT, "2");
+        loop_block.binop(BINOP::EQ);
+        loop_block.call_print_function(true);
 
-        main_module.define_function(
-            fn_block,
-            FUNC_VISIBILITY::PRIVATE,
-            FunctionSignature {
-                name: "test".to_owned(),
-                return_type: FunctionReturnType::NONE,
-                args: vec![],
-            },
-        );
-
-        main_block.call_function("test");
+        main_block.define_simple_loop(loop_block, 2);
 
         let mut i = 0;
         while i < main_block.bytecode.len() {
@@ -135,7 +125,7 @@ mod tests {
             i += 1;
         }
         main_module.add_main_block(main_block);
-        celsius.add_module(&main_module);
-        celsius.run_program();
+        celsium.add_module(&main_module);
+        celsium.run_program();
     }
 }

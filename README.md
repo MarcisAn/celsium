@@ -1,4 +1,4 @@
-# A rust library for building interpreters
+# A rust library for building interpreters with WASM support
 
 ## Basic usage
 
@@ -137,5 +137,32 @@ fn main() {
     celsium.add_module(&main_module);
 
     celsium.run_program();
+}
+```
+
+## Simple loops
+
+```rust
+use celsium::block::Block;
+use celsium::module::Module;
+use celsium::{CelsiumProgram, BINOP, BUILTIN_TYPES};
+
+fn main() {
+    let mut celsium = CelsiumProgram::new(false);
+        let mut main_module = Module::new("main", &mut celsium);
+        let mut main_block = Block::new();
+
+        let mut loop_block = Block::new();
+        loop_block.load_const(BUILTIN_TYPES::MAGIC_INT, "2");
+        loop_block.load_const(BUILTIN_TYPES::MAGIC_INT, "2");
+        loop_block.binop(BINOP::EQ);
+        loop_block.call_print_function(true);
+
+        let number_of_repeats = 3;
+        main_block.define_simple_loop(loop_block, number_of_repeats);
+
+        main_module.add_main_block(main_block);
+        celsium.add_module(&main_module);
+        celsium.run_program();
 }
 ```

@@ -70,4 +70,11 @@ impl Block {
         self.bytecode
             .push(OPTCODE::CALL_PRINT_FUNCTION { newline: newline });
     }
+    pub fn define_simple_loop(&mut self, block: Block, loops: usize) {
+        for repeat in 0..loops {
+            for optcode in &block.bytecode {
+                self.bytecode.push(optcode.clone());
+            }
+        }
+    }
 }
