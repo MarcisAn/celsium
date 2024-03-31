@@ -76,33 +76,6 @@ let mut main_block = Block::new();
 }
 ```
 
-## If Else statements
-
-```rust
-let mut celsium = CelsiumProgram::new();
-let mut main_module = Module::new("main", &mut celsium);
-let mut main_block = Block::new();
-{
-    main_block.load_const(BUILTIN_TYPES::BOOL, "1");
-    let mut if_block = Block::new();
-    {
-        if_block.load_const(BUILTIN_TYPES::STRING, "executed if block");
-        if_block.call_print_function(true);
-    }
-    let mut else_block = Block::new();
-    {
-        else_block.load_const(BUILTIN_TYPES::STRING, "executed else block");
-        else_block.call_print_function(true);
-    }
-    main_block.define_if_else_block(if_block, else_block);
-    main_module.add_main_block(main_block);
-
-    celsium.add_module(&main_module);
-
-    celsium.run_program();
-}
-```
-
 ## Define functions
 
 ```rust
