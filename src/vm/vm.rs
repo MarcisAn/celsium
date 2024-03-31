@@ -63,7 +63,7 @@ impl VM {
     pub fn format_for_print(&mut self, newline: bool) -> String {
         match self.stack.pop_back().unwrap() {
             StackValue::BOOL { value } => {
-                if newline {
+                if !newline {
                     if (value) {
                         return "1".to_owned();
                     } else {
@@ -78,14 +78,14 @@ impl VM {
                 }
             }
             StackValue::BIGINT { value } => {
-                if newline {
+                if !newline {
                     return format!("{}", value);
                 } else {
                     return format!("{}\n", value);
                 }
             }
             StackValue::STRING { value } => {
-                if newline {
+                if !newline {
                     return format!("{}", value);
                 } else {
                     return format!("{}\n", value);
