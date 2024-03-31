@@ -1,6 +1,6 @@
 use std::io::{self, Result};
 
-use crate::{BINOP, BUILTIN_TYPES, OPTCODE};
+use crate::{module::VISIBILITY, BINOP, BUILTIN_TYPES, OPTCODE};
 
 #[derive(Clone, Debug)]
 pub struct Block {
@@ -76,5 +76,22 @@ impl Block {
                 self.bytecode.push(optcode.clone());
             }
         }
+    }
+    pub fn define_variable(
+        &mut self,
+        data_type: BUILTIN_TYPES,
+        visibility: VISIBILITY,
+        name: &str,
+    ) {
+        self.bytecode.push(OPTCODE::DEFINE_VAR {
+            data_type,
+            visibility,
+            name: name.to_string(),
+        })
+    }
+    pub fn load_variable(&mut self, name: &str) {
+        self.bytecode.push(OPTCODE::LOAD_VAR {
+            name: name.to_string(),
+        })
     }
 }

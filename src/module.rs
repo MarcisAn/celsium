@@ -38,7 +38,7 @@ pub struct FuncArg {
     arg_type: BUILTIN_TYPES,
 }
 #[derive(Clone, Debug)]
-pub enum FUNC_VISIBILITY {
+pub enum VISIBILITY {
     PRIVATE,
     PUBLIC,
 }
@@ -46,7 +46,7 @@ pub enum FUNC_VISIBILITY {
 pub struct Function {
     signature: FunctionSignature,
     body: Block,
-    visibility: FUNC_VISIBILITY,
+    visibility: VISIBILITY,
 }
 
 fn load_function_bytecode(name: String, module: &Module) -> Result<Vec<OPTCODE>, String> {
@@ -85,7 +85,7 @@ impl Module {
     pub fn define_function(
         &mut self,
         body_block: Block,
-        visibility: FUNC_VISIBILITY,
+        visibility: VISIBILITY,
         signature: FunctionSignature,
     ) {
         self.functions.push(Function {

@@ -5,6 +5,7 @@ use module::Module;
 pub mod block;
 pub mod module;
 mod vm;
+use module::VISIBILITY;
 use wasm_bindgen::prelude::*;
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
@@ -37,6 +38,9 @@ pub enum OPTCODE {
         data_type: BUILTIN_TYPES,
         data: String,
     },
+    LOAD_VAR {
+        name: String,
+    },
     CALL_FUNCTION {
         name: String,
     },
@@ -62,6 +66,11 @@ pub enum OPTCODE {
     },
     JUMP {
         steps: usize,
+    },
+    DEFINE_VAR {
+        data_type: BUILTIN_TYPES,
+        visibility: VISIBILITY,
+        name: String,
     },
 }
 #[derive(Clone, Debug)]
@@ -101,7 +110,7 @@ impl CelsiumProgram {
 
 #[cfg(test)]
 mod tests {
-    use self::module::{FunctionSignature, FUNC_VISIBILITY};
+    use self::module::{FunctionSignature, VISIBILITY};
 
     use super::*;
 
@@ -111,13 +120,11 @@ mod tests {
         let mut main_module = Module::new("main", &mut celsium);
         let mut main_block = Block::new();
 
-        let mut loop_block = Block::new();
-        loop_block.load_const(BUILTIN_TYPES::MAGIC_INT, "2");
-        loop_block.load_const(BUILTIN_TYPES::MAGIC_INT, "2");
-        loop_block.binop(BINOP::EQ);
-        loop_block.call_print_function(true);
-
-        main_block.define_simple_loop(loop_block, 2);
+        main_block.load_const(BUILTIN_TYPES::MAGIC_INT, "2");
+        main_block.define_variable(BUILTIN_TYPES::MAGIC_INT, VISIBILITY::PRIVATE, "testing");
+        //variable is defined
+        main_block.load_variable("testing");
+        main_block.call_print_function(true);
 
         let mut i = 0;
         while i < main_block.bytecode.len() {

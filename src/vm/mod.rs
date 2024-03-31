@@ -15,7 +15,7 @@ extern "C" {
     fn wasm_print(s: &str);
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum StackValue {
     BOOL { value: bool },
     BIGINT { value: BigInt },
@@ -59,6 +59,12 @@ pub(super) fn run(bytecode: &Vec<OPTCODE>, config: &CelsiumConfig) {
             OPTCODE::OR => vm.aritmethics("or"),
             OPTCODE::AND => vm.aritmethics("and"),
             OPTCODE::XOR => vm.aritmethics("xor"),
+            OPTCODE::DEFINE_VAR {
+                data_type,
+                visibility,
+                name,
+            } => vm.define_var(0, name.to_string(), visibility),
+            OPTCODE::LOAD_VAR { name } => vm.load_var(name),
         }
         index += 1;
     }

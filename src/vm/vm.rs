@@ -1,7 +1,7 @@
 use super::{math_operators::*, StackValue};
-use crate::BUILTIN_TYPES;
+use crate::{module::VISIBILITY, BUILTIN_TYPES};
 use num::BigInt;
-use std::{collections::LinkedList, str::FromStr};
+use std::{collections::LinkedList, env::var, str::FromStr};
 
 enum FUNCTION {
     RUST_FUNCTION,
@@ -12,13 +12,22 @@ pub fn define_function() {}
 
 pub struct VM {
     stack: LinkedList<StackValue>,
+    variables: Vec<Variable>,
 }
+struct Variable {
+    module_id: usize,
+    name: String,
+    value: StackValue,
+    visibility: VISIBILITY,
+}
+
 impl StackValue {}
 
 impl VM {
     pub fn new() -> VM {
         VM {
             stack: LinkedList::new(),
+            variables: vec![],
         }
     }
     pub fn push(&mut self, data_type: &BUILTIN_TYPES, data: &String) {
@@ -97,5 +106,22 @@ impl VM {
 
     pub fn must_jump(&mut self) -> bool {
         return self.stack.pop_back().unwrap() == StackValue::BOOL { value: false };
+    }
+
+    pub fn define_var(&mut self, module_id: usize, name: String, visibility: &VISIBILITY) {
+        self.variables.push(Variable {
+            module_id,
+            name,
+            value: self.stack.pop_back().unwrap(),
+            visibility: visibility.clone(),
+        })
+    }
+
+    pub fn load_var(&mut self, name: &str) {
+        for var in &self.variables {
+            if var.name == name {
+                self.stack.push_back(var.value.clone());
+            }
+        }
     }
 }
