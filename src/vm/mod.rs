@@ -25,9 +25,9 @@ pub enum StackValue {
 pub(super) fn run(bytecode: &Vec<OPTCODE>, config: &CelsiumConfig) {
     let mut vm = VM::new();
 
-    let mut index = 0;
-    while index < bytecode.len() {
-        let optcode = &bytecode[index];
+    let mut index: isize = 0;
+    while index < bytecode.len() as isize {
+        let optcode = &bytecode[index as usize];
         match optcode {
             OPTCODE::LOAD_CONST { data_type, data } => vm.push(&data_type, &data),
             OPTCODE::CALL_FUNCTION { name } => {
@@ -46,10 +46,11 @@ pub(super) fn run(bytecode: &Vec<OPTCODE>, config: &CelsiumConfig) {
             }
             OPTCODE::JUMP_IF_FALSE { steps } => {
                 if (vm.must_jump()) {
-                    index += steps
+                    index += *steps as isize
                 }
             }
-            OPTCODE::JUMP { steps } => index += steps,
+            OPTCODE::JUMP { steps } => index += *steps as isize,
+            OPTCODE::JUMP_BACK { steps } => index -= *steps as isize,
             OPTCODE::LESS_THAN => vm.aritmethics("<"),
             OPTCODE::LARGER_THAN => vm.aritmethics(">"),
             OPTCODE::LESS_OR_EQ => vm.aritmethics("<="),
@@ -65,6 +66,7 @@ pub(super) fn run(bytecode: &Vec<OPTCODE>, config: &CelsiumConfig) {
                 name,
             } => vm.define_var(0, name.to_string(), visibility),
             OPTCODE::LOAD_VAR { name } => vm.load_var(name),
+            OPTCODE::ASSIGN_VAR { name } => vm.assign_var(name),
         }
         index += 1;
     }

@@ -105,7 +105,19 @@ impl VM {
     }
 
     pub fn must_jump(&mut self) -> bool {
-        return self.stack.pop_back().unwrap() == StackValue::BOOL { value: false };
+        let value = self.stack.pop_back().unwrap();
+        if value
+            == (StackValue::BIGINT {
+                value: BigInt::from(0),
+            })
+            || value
+                == (StackValue::STRING {
+                    value: "".to_string(),
+                })
+        {
+            return true;
+        }
+        return value == StackValue::BOOL { value: false };
     }
 
     pub fn define_var(&mut self, module_id: usize, name: String, visibility: &VISIBILITY) {
@@ -117,11 +129,24 @@ impl VM {
         })
     }
 
+    pub fn assign_var(&mut self, name: &str) {
+        let value = self.stack.pop_back().unwrap();
+        for var in &mut self.variables {
+            if var.name == name {
+                var.value = value.clone();
+                return;
+            }
+        }
+        panic!("Cound not found vairable named {}", name);
+    }
+
     pub fn load_var(&mut self, name: &str) {
         for var in &self.variables {
             if var.name == name {
                 self.stack.push_back(var.value.clone());
+                return;
             }
         }
+        panic!("Cound not found vairable named {}", name);
     }
 }

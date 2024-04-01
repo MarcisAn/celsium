@@ -77,6 +77,21 @@ impl Block {
             }
         }
     }
+    pub fn define_while_loop(&mut self, loop_block: Block, conditional_block: Block) {
+        let block_length = loop_block.bytecode.len();
+        for optcode in &conditional_block.bytecode {
+            self.bytecode.push(optcode.clone());
+        }
+        self.bytecode.push(OPTCODE::JUMP_IF_FALSE {
+            steps: block_length + 1,
+        });
+        for optcode in loop_block.bytecode {
+            self.bytecode.push(optcode);
+        }
+        self.bytecode.push(OPTCODE::JUMP_BACK {
+            steps: block_length + &conditional_block.bytecode.len() + 2,
+        });
+    }
     pub fn define_variable(
         &mut self,
         data_type: BUILTIN_TYPES,
@@ -86,6 +101,11 @@ impl Block {
         self.bytecode.push(OPTCODE::DEFINE_VAR {
             data_type,
             visibility,
+            name: name.to_string(),
+        })
+    }
+    pub fn assign_variable(&mut self, name: &str) {
+        self.bytecode.push(OPTCODE::ASSIGN_VAR {
             name: name.to_string(),
         })
     }

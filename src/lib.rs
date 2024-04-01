@@ -67,9 +67,15 @@ pub enum OPTCODE {
     JUMP {
         steps: usize,
     },
+    JUMP_BACK {
+        steps: usize,
+    },
     DEFINE_VAR {
         data_type: BUILTIN_TYPES,
         visibility: VISIBILITY,
+        name: String,
+    },
+    ASSIGN_VAR {
         name: String,
     },
 }
@@ -120,12 +126,20 @@ mod tests {
         let mut main_module = Module::new("main", &mut celsium);
         let mut main_block = Block::new();
 
-        main_block.load_const(BUILTIN_TYPES::MAGIC_INT, "2");
-        main_block.define_variable(BUILTIN_TYPES::MAGIC_INT, VISIBILITY::PRIVATE, "testing");
-        //variable is defined
-        main_block.load_variable("testing");
+        let mut conditional_block = Block::new();
+        {
+            conditional_block.load_const(BUILTIN_TYPES::MAGIC_INT, "1");
+            conditional_block.load_const(BUILTIN_TYPES::MAGIC_INT, "1");
+            conditional_block.binop(BINOP::ADD);
+        }
+        let mut loop_block = Block::new();
+        {
+            loop_block.load_const(BUILTIN_TYPES::MAGIC_INT, "20");
+            loop_block.call_print_function(true);
+        }
+        main_block.define_while_loop(loop_block, conditional_block);
+        main_block.load_const(BUILTIN_TYPES::MAGIC_INT, "3");
         main_block.call_print_function(true);
-
         let mut i = 0;
         while i < main_block.bytecode.len() {
             println!("{} {:?}", i, main_block.bytecode[i]);
