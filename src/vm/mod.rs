@@ -20,6 +20,7 @@ pub enum StackValue {
     BOOL { value: bool },
     BIGINT { value: BigInt },
     STRING { value: String },
+    ARRAY { value: Vec<StackValue> },
 }
 
 pub(super) fn run(bytecode: &Vec<OPTCODE>, config: &CelsiumConfig) {
@@ -68,6 +69,12 @@ pub(super) fn run(bytecode: &Vec<OPTCODE>, config: &CelsiumConfig) {
             } => vm.define_var(0, name.to_string(), visibility),
             OPTCODE::LOAD_VAR { name } => vm.load_var(name),
             OPTCODE::ASSIGN_VAR { name } => vm.assign_var(name),
+            OPTCODE::DEFINE_ARRAY {
+                visibility,
+                name,
+                init_values_count,
+            } => vm.define_array(0, name.to_string(), visibility, *init_values_count),
+            OPTCODE::GET_FROM_ARRAY { name, index } => vm.get_from_array(name, *index),
         }
         index += 1;
     }

@@ -21,6 +21,57 @@ struct Variable {
     visibility: VISIBILITY,
 }
 
+fn format_for_print(value: StackValue, newline: bool) -> String {
+    match value {
+        StackValue::BOOL { value } => {
+            if !newline {
+                if (value) {
+                    return "1".to_owned();
+                } else {
+                    return "0".to_owned();
+                }
+            } else {
+                if (value) {
+                    return "1\n".to_owned();
+                } else {
+                    return "0\n".to_owned();
+                }
+            }
+        }
+        StackValue::BIGINT { value } => {
+            if !newline {
+                return format!("{}", value);
+            } else {
+                return format!("{}\n", value);
+            }
+        }
+        StackValue::STRING { value } => {
+            if !newline {
+                return format!("{}", value);
+            } else {
+                return format!("{}\n", value);
+            }
+        }
+        StackValue::ARRAY { value } => {
+            let mut printable_str: String = "[".to_string();
+            let mut counter = 0;
+            for i in &value {
+                printable_str += format_for_print(i.clone(), false).as_str();
+                if counter != value.len() - 1 {
+                    printable_str += ";";
+                }
+                counter += 1;
+            }
+            if newline {
+                printable_str += "]\n";
+            } else {
+                printable_str += "]";
+            }
+            return printable_str;
+        }
+    };
+}
+
 impl StackValue {}
 
 impl VM {
@@ -71,37 +122,7 @@ impl VM {
         }
     }
     pub fn format_for_print(&mut self, newline: bool) -> String {
-        match self.stack.pop_back().unwrap() {
-            StackValue::BOOL { value } => {
-                if !newline {
-                    if (value) {
-                        return "1".to_owned();
-                    } else {
-                        return "0".to_owned();
-                    }
-                } else {
-                    if (value) {
-                        return "1\n".to_owned();
-                    } else {
-                        return "0\n".to_owned();
-                    }
-                }
-            }
-            StackValue::BIGINT { value } => {
-                if !newline {
-                    return format!("{}", value);
-                } else {
-                    return format!("{}\n", value);
-                }
-            }
-            StackValue::STRING { value } => {
-                if !newline {
-                    return format!("{}", value);
-                } else {
-                    return format!("{}\n", value);
-                }
-            }
-        };
+        return format_for_print(self.stack.pop_back().unwrap(), newline);
         return "".to_owned();
     }
 
@@ -130,6 +151,42 @@ impl VM {
         })
     }
 
+    pub fn define_array(
+        &mut self,
+        module_id: usize,
+        name: String,
+        visibility: &VISIBILITY,
+        init_value_count: usize,
+    ) {
+        let mut init_values = vec![];
+        for i in 0..init_value_count {
+            init_values.push(self.stack.pop_back().unwrap());
+        }
+        self.variables.push(Variable {
+            module_id,
+            name,
+            value: StackValue::ARRAY { value: init_values },
+            visibility: visibility.clone(),
+        })
+    }
+    pub fn get_from_array(&mut self, name: &String, index: usize) {
+        for var in &self.variables {
+            if var.clone().name == name.to_string() {
+                match var.value.clone() {
+                    StackValue::ARRAY { value } => {
+                        if value.len() < index {
+                            self.stack.push_back(value[index].clone());
+                        } else {
+                            panic!("The index of the array is too high")
+                        }
+                    }
+                    _ => panic!("{} is not an array", var.name),
+                };
+                return;
+            }
+        }
+        panic!("Cound not found vairable named {}", name);
+    }
     pub fn assign_var(&mut self, name: &str) {
         let value = self.stack.pop_back().unwrap();
         for var in &mut self.variables {

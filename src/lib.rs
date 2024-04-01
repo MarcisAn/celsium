@@ -75,6 +75,15 @@ pub enum OPTCODE {
         visibility: VISIBILITY,
         name: String,
     },
+    DEFINE_ARRAY {
+        visibility: VISIBILITY,
+        name: String,
+        init_values_count: usize,
+    },
+    GET_FROM_ARRAY {
+        name: String,
+        index: usize,
+    },
     ASSIGN_VAR {
         name: String,
     },
@@ -126,19 +135,15 @@ mod tests {
         let mut main_module = Module::new("main", &mut celsium);
         let mut main_block = Block::new();
 
-        let mut loop_block = Block::new();
-        {
-            loop_block.load_const(BUILTIN_TYPES::STRING, "I'm printing many times");
-            loop_block.call_print_function(true);
-        }
-        let mut loop_count_block = Block::new();
-        {
-            loop_count_block.load_const(BUILTIN_TYPES::MAGIC_INT, "3");
-            loop_count_block.load_const(BUILTIN_TYPES::MAGIC_INT, "3");
-            loop_count_block.binop(BINOP::ADD);
-        }
+        main_block.load_const(BUILTIN_TYPES::MAGIC_INT, "2");
+        main_block.load_const(BUILTIN_TYPES::STRING, "a");
 
-        main_block.define_simple_loop(loop_block, loop_count_block);
+        main_block.define_array(VISIBILITY::PRIVATE, "aa".to_string(), 2);
+        main_block.load_variable("aa");
+        main_block.call_print_function(true);
+        main_block.load_from_array("aa", 0);
+        main_block.call_print_function(true);
+
         let mut i = 0;
         while i < main_block.bytecode.len() {
             println!("{} {:?}", i, main_block.bytecode[i]);
