@@ -126,20 +126,19 @@ mod tests {
         let mut main_module = Module::new("main", &mut celsium);
         let mut main_block = Block::new();
 
-        let mut conditional_block = Block::new();
-        {
-            conditional_block.load_const(BUILTIN_TYPES::MAGIC_INT, "1");
-            conditional_block.load_const(BUILTIN_TYPES::MAGIC_INT, "1");
-            conditional_block.binop(BINOP::ADD);
-        }
         let mut loop_block = Block::new();
         {
-            loop_block.load_const(BUILTIN_TYPES::MAGIC_INT, "20");
+            loop_block.load_const(BUILTIN_TYPES::STRING, "I'm printing many times");
             loop_block.call_print_function(true);
         }
-        main_block.define_while_loop(loop_block, conditional_block);
-        main_block.load_const(BUILTIN_TYPES::MAGIC_INT, "3");
-        main_block.call_print_function(true);
+        let mut loop_count_block = Block::new();
+        {
+            loop_count_block.load_const(BUILTIN_TYPES::MAGIC_INT, "3");
+            loop_count_block.load_const(BUILTIN_TYPES::MAGIC_INT, "3");
+            loop_count_block.binop(BINOP::ADD);
+        }
+
+        main_block.define_simple_loop(loop_block, loop_count_block);
         let mut i = 0;
         while i < main_block.bytecode.len() {
             println!("{} {:?}", i, main_block.bytecode[i]);

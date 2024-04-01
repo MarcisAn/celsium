@@ -48,6 +48,7 @@ impl VM {
         }
     }
     pub fn aritmethics(&mut self, action: &str) {
+        //println!("action {}", action);
         let b = self.stack.pop_back().unwrap();
         let a = self.stack.pop_back().unwrap();
         match action {

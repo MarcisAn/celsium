@@ -1,7 +1,7 @@
 [package]
 name = "celsium"
 description = "A library for building interpreters"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
 license = "MIT"
 homepage = "https://github.com/MarcisAn/celsium"
@@ -11,4 +11,5 @@ keywords = ["interpreters", "languages", "stack", "bytecode", "stack"]
 
 [dependencies]
 num = "0.4.1"
+rand = "0.8.5"
 wasm-bindgen = "0.2.92"

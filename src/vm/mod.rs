@@ -28,6 +28,7 @@ pub(super) fn run(bytecode: &Vec<OPTCODE>, config: &CelsiumConfig) {
     let mut index: isize = 0;
     while index < bytecode.len() as isize {
         let optcode = &bytecode[index as usize];
+        //println!("running optcode {:?}", optcode);
         match optcode {
             OPTCODE::LOAD_CONST { data_type, data } => vm.push(&data_type, &data),
             OPTCODE::CALL_FUNCTION { name } => {
