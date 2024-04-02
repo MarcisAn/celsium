@@ -84,6 +84,12 @@ pub enum OPTCODE {
         name: String,
         index: usize,
     },
+    PUSH_TO_ARRAY {
+        name: String,
+    },
+    GET_ARRAY_LENGTH {
+        name: String,
+    },
     ASSIGN_VAR {
         name: String,
     },
@@ -141,7 +147,9 @@ mod tests {
         main_block.define_array(VISIBILITY::PRIVATE, "aa".to_string(), 2);
         main_block.load_variable("aa");
         main_block.call_print_function(true);
-        main_block.load_from_array("aa", 0);
+        main_block.load_const(BUILTIN_TYPES::MAGIC_INT, "2");
+        main_block.push_to_array("aa");
+        main_block.load_variable("aa");
         main_block.call_print_function(true);
 
         let mut i = 0;

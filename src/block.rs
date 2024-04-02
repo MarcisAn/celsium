@@ -185,7 +185,16 @@ impl Block {
             index,
         })
     }
-
+    pub fn get_array_length(&mut self, name: &str) {
+        self.bytecode.push(OPTCODE::GET_ARRAY_LENGTH {
+            name: name.to_string(),
+        });
+    }
+    pub fn push_to_array(&mut self, name: &str) {
+        self.bytecode.push(OPTCODE::PUSH_TO_ARRAY {
+            name: name.to_string(),
+        })
+    }
     pub fn assign_variable(&mut self, name: &str) {
         self.bytecode.push(OPTCODE::ASSIGN_VAR {
             name: name.to_string(),

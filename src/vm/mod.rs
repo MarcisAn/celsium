@@ -75,6 +75,8 @@ pub(super) fn run(bytecode: &Vec<OPTCODE>, config: &CelsiumConfig) {
                 init_values_count,
             } => vm.define_array(0, name.to_string(), visibility, *init_values_count),
             OPTCODE::GET_FROM_ARRAY { name, index } => vm.get_from_array(name, *index),
+            OPTCODE::PUSH_TO_ARRAY { name } => vm.push_to_array(name),
+            OPTCODE::GET_ARRAY_LENGTH { name } => vm.get_array_length(name),
         }
         index += 1;
     }

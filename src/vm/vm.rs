@@ -174,11 +174,47 @@ impl VM {
             if var.clone().name == name.to_string() {
                 match var.value.clone() {
                     StackValue::ARRAY { value } => {
-                        if value.len() < index {
+                        if value.len() > index {
                             self.stack.push_back(value[index].clone());
                         } else {
-                            panic!("The index of the array is too high")
+                            panic!("The index  is too high")
                         }
+                    }
+                    _ => panic!("{} is not an array", var.name),
+                };
+                return;
+            }
+        }
+        panic!("Cound not found vairable named {}", name);
+    }
+    fn get_index(&mut self, name: &String) -> i32 {
+        let mut counter = 0;
+        for var in &mut self.variables {
+            if &var.name.clone() == &name.to_string() {
+                return counter;
+            }
+            counter += 1;
+        }
+        panic!("Cound not found vairable named {}", name);
+    }
+    pub fn push_to_array(&mut self, name: &String) {
+        let index = self.get_index(&name.clone());
+        match self.variables[index as usize].value {
+            StackValue::ARRAY { ref mut value } => {
+                value.push(self.stack.pop_back().unwrap());
+            }
+            _ => panic!("The variable is not an array"),
+        };
+        return;
+    }
+    pub fn get_array_length(&mut self, name: &String) {
+        for var in &self.variables {
+            if var.clone().name == name.to_string() {
+                match var.value.clone() {
+                    StackValue::ARRAY { mut value } => {
+                        self.stack.push_back(StackValue::BIGINT {
+                            value: BigInt::from(value.len()),
+                        });
                     }
                     _ => panic!("{} is not an array", var.name),
                 };
