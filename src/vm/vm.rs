@@ -169,6 +169,7 @@ impl VM {
         for i in 0..init_value_count {
             init_values.push(self.stack.pop_back().unwrap());
         }
+        init_values.reverse();
         self.variables.push(Variable {
             module_id,
             name,
