@@ -56,7 +56,14 @@ fn format_for_print(value: StackValue, newline: bool) -> String {
             let mut printable_str: String = "[".to_string();
             let mut counter = 0;
             for i in &value {
-                printable_str += format_for_print(i.clone(), false).as_str();
+                let formated: String = format_for_print(i.clone(), false).as_str().to_owned();
+                match i {
+                    StackValue::STRING { value } => {
+                        printable_str = printable_str + "\"" + &formated + "\"";
+                    }
+                    _ => printable_str += &formated,
+                }
+
                 if counter != value.len() - 1 {
                     printable_str += ";";
                 }
