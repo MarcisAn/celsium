@@ -1,6 +1,7 @@
 use super::{math_operators::*, StackValue};
 use crate::{module::VISIBILITY, BUILTIN_TYPES};
 use num::BigInt;
+use rand::seq::index;
 use std::{collections::LinkedList, env::var, str::FromStr};
 
 enum FUNCTION {
@@ -177,7 +178,12 @@ impl VM {
             visibility: visibility.clone(),
         })
     }
-    pub fn get_from_array(&mut self, name: &String, index: usize) {
+    pub fn get_from_array(&mut self, name: &String) {
+        let index_stack = self.stack.pop_back().unwrap();
+        let index = match index_stack {
+            StackValue::BIGINT { value } => value.to_string().parse::<usize>().unwrap(),
+            _ => panic!("Array index is not an int"),
+        };
         for var in &self.variables {
             if var.clone().name == name.to_string() {
                 match var.value.clone() {

@@ -82,7 +82,6 @@ pub enum OPTCODE {
     },
     GET_FROM_ARRAY {
         name: String,
-        index: usize,
     },
     PUSH_TO_ARRAY {
         name: String,

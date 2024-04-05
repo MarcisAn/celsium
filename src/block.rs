@@ -179,10 +179,9 @@ impl Block {
             init_values_count,
         })
     }
-    pub fn load_from_array(&mut self, name: &str, index: usize) {
+    pub fn load_from_array(&mut self, name: &str) {
         self.bytecode.push(OPTCODE::GET_FROM_ARRAY {
             name: name.to_string(),
-            index,
         })
     }
     pub fn get_array_length(&mut self, name: &str) {
