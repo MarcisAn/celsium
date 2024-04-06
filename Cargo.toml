@@ -12,4 +12,5 @@ keywords = ["interpreters", "languages", "stack", "bytecode", "stack"]
 [dependencies]
 num = "0.4.1"
 rand = "0.8.5"
+getrandom = { version = "0.2", features = ["js"] }
 wasm-bindgen = "0.2.92"
