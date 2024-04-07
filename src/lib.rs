@@ -1,5 +1,6 @@
 use block::Block;
 use module::FunctionReturnType;
+use module::FunctionSignature;
 use module::Module;
 
 pub mod block;
@@ -91,6 +92,11 @@ pub enum OPTCODE {
     },
     ASSIGN_VAR {
         name: String,
+    },
+    DEFINE_FUNCTION {
+        body_block: Block,
+        visibility: VISIBILITY,
+        signature: FunctionSignature,
     },
 }
 #[derive(Clone, Debug)]

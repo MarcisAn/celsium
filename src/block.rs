@@ -1,6 +1,7 @@
 use num::BigInt;
 use rand::Rng;
 
+use crate::module::FunctionSignature;
 use crate::{module::VISIBILITY, BINOP, BUILTIN_TYPES, OPTCODE};
 use std::io::{self, Result};
 use std::iter;
@@ -172,6 +173,18 @@ impl Block {
             name: name.to_string(),
         })
     }
+    pub fn define_function(
+        &mut self,
+        body_block: Block,
+        visibility: VISIBILITY,
+        signature: FunctionSignature,
+    ) {
+        self.bytecode.push(OPTCODE::DEFINE_FUNCTION {
+            signature: signature,
+            visibility: visibility,
+            body_block,
+        })
+    }
     pub fn define_array(&mut self, visibility: VISIBILITY, name: String, init_values_count: usize) {
         self.bytecode.push(OPTCODE::DEFINE_ARRAY {
             visibility,
@@ -179,11 +192,15 @@ impl Block {
             init_values_count,
         })
     }
+
     pub fn load_from_array(&mut self, name: &str) {
         self.bytecode.push(OPTCODE::GET_FROM_ARRAY {
             name: name.to_string(),
         })
     }
+
+    pub fn call_method_on_variable(method_name: String) {}
+
     pub fn get_array_length(&mut self, name: &str) {
         self.bytecode.push(OPTCODE::GET_ARRAY_LENGTH {
             name: name.to_string(),

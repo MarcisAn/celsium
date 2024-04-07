@@ -77,6 +77,11 @@ pub(super) fn run(bytecode: &Vec<OPTCODE>, config: &CelsiumConfig) {
             OPTCODE::GET_FROM_ARRAY { name } => vm.get_from_array(name),
             OPTCODE::PUSH_TO_ARRAY { name } => vm.push_to_array(name),
             OPTCODE::GET_ARRAY_LENGTH { name } => vm.get_array_length(name),
+            OPTCODE::DEFINE_FUNCTION {
+                body_block,
+                visibility,
+                signature,
+            } => panic!("Define function should not be in bytecoed"),
         }
         index += 1;
     }

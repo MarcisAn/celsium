@@ -82,16 +82,4 @@ impl Module {
         //println!("{:?}", bytecode_inserted);
         self.main_block = block;
     }
-    pub fn define_function(
-        &mut self,
-        body_block: Block,
-        visibility: VISIBILITY,
-        signature: FunctionSignature,
-    ) {
-        self.functions.push(Function {
-            signature: signature,
-            body: body_block,
-            visibility: visibility,
-        })
-    }
 }
