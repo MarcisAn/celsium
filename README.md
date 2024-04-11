@@ -138,37 +138,6 @@ fn main() {
 }
 ```
 
-## Arrays
-
-```rust
-use celsium::block::Block;
-use celsium::module::Module;
-use celsium::{CelsiumProgram, BINOP, BUILTIN_TYPES};
-
-fn main() {
-    let mut celsium = CelsiumProgram::new(false);
-        let mut main_module = Module::new("main", &mut celsium);
-        let mut main_block = Block::new();
-
-        //load two initial values
-        main_block.load_const(BUILTIN_TYPES::MAGIC_INT, "2");
-        main_block.load_const(BUILTIN_TYPES::STRING, "a");
-        //define an array with them
-        main_block.define_array(VISIBILITY::PRIVATE, "aa".to_string(), 2);
-
-        //print the array directly
-        main_block.load_variable("aa");
-        main_block.call_print_function(true);
-
-        //push to the end of an array
-        main_block.load_const(BUILTIN_TYPES::MAGIC_INT, "2");
-        main_block.push_to_array("aa");
-
-        main_module.add_main_block(main_block);
-        celsium.add_module(&main_module);
-        celsium.run_program();
-}
-```
 
 ## Simple loops
 
