@@ -1,3 +1,5 @@
+use std::boxed;
+
 use crate::block::Block;
 use crate::{CelsiumProgram, BUILTIN_TYPES, OPTCODE};
 #[derive(Clone)]
@@ -14,9 +16,9 @@ pub enum FunctionReturnType {
 }
 #[derive(Clone, Debug)]
 pub struct FunctionSignature {
-    pub(crate) name: String,
-    pub(crate) return_type: FunctionReturnType,
-    pub(crate) args: Vec<FuncArg>,
+    pub name: String,
+    pub return_type: FunctionReturnType,
+    pub args: Vec<FuncArg>,
 }
 impl FunctionSignature {
     pub fn new(
@@ -75,6 +77,15 @@ impl Module {
                 OPTCODE::CALL_FUNCTION { name } => {
                     bytecode_inserted.append(&mut load_function_bytecode(name, self).unwrap())
                 }
+                OPTCODE::DEFINE_FUNCTION {
+                    body_block,
+                    visibility,
+                    signature,
+                } => self.functions.push(Function {
+                    signature,
+                    body: body_block,
+                    visibility: visibility,
+                }),
                 _ => bytecode_inserted.push(optcode),
             }
         }
