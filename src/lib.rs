@@ -173,8 +173,9 @@ impl CelsiumProgram {
                     for function in &self.modules.clone()[0].functions {
                         if function.signature.name == name.to_string() {
                             let mut argument_names_to_replace = HashMap::new();
-
-                            for arg in &function.signature.args {
+                            let mut func_args = function.clone().signature.args;
+                            func_args.reverse();
+                            for arg in func_args {
                                 let var_name = "__".to_string()
                                     + &arg.name.to_string()
                                     + &generate_rand_varname(5);
