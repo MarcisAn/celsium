@@ -15,6 +15,7 @@ pub struct VM {
     stack: LinkedList<StackValue>,
     variables: Vec<Variable>,
 }
+#[derive(Clone, Debug)]
 struct Variable {
     module_id: usize,
     name: String,
@@ -153,10 +154,12 @@ impl VM {
     pub fn define_var(&mut self, module_id: usize, name: String, visibility: &VISIBILITY) {
         self.variables.push(Variable {
             module_id,
-            name,
+            name: name.clone(),
             value: self.stack.pop_back().unwrap(),
             visibility: visibility.clone(),
-        })
+        });
+        println!("defining {}", name);
+        println!("{:?}", self.variables);
     }
 
     pub fn define_array(
@@ -249,6 +252,8 @@ impl VM {
     }
 
     pub fn load_var(&mut self, name: &str) {
+        println!("{:?}", self.variables);
+
         for var in &self.variables {
             if var.name == name {
                 self.stack.push_back(var.value.clone());

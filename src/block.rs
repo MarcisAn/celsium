@@ -18,14 +18,14 @@ fn generate_rand_varname(length: usize) -> String {
                             ~!@#$%^&*()-_+=";
 
     let mut rng = rand::thread_rng();
-    let password: String = (0..length)
+    let randstring: String = (0..length)
         .map(|_| {
             let idx = rng.gen_range(0..CHARSET.len());
             CHARSET[idx] as char
         })
         .collect();
 
-    password
+    randstring
 }
 
 impl Block {

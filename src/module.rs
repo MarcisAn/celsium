@@ -6,7 +6,7 @@ use crate::{CelsiumProgram, BUILTIN_TYPES, OPTCODE};
 pub struct Module {
     pub name: String,
     pub main_block: Block,
-    functions: Vec<Function>,
+    pub functions: Vec<Function>,
     _id: usize,
 }
 #[derive(Clone, Debug)]
@@ -36,8 +36,8 @@ impl FunctionSignature {
 
 #[derive(Clone, Debug)]
 pub struct FuncArg {
-    name: String,
-    arg_type: BUILTIN_TYPES,
+    pub name: String,
+    pub arg_type: BUILTIN_TYPES,
 }
 #[derive(Clone, Debug)]
 pub enum VISIBILITY {
@@ -46,9 +46,9 @@ pub enum VISIBILITY {
 }
 #[derive(Debug, Clone)]
 pub struct Function {
-    signature: FunctionSignature,
-    body: Block,
-    visibility: VISIBILITY,
+    pub(crate) signature: FunctionSignature,
+    pub(crate) body: Block,
+    pub(crate) visibility: VISIBILITY,
 }
 
 fn load_function_bytecode(name: String, module: &Module) -> Result<Vec<OPTCODE>, String> {
@@ -71,26 +71,7 @@ impl Module {
         module
     }
     pub fn add_main_block(&mut self, mut block: Block) {
-        let mut bytecode_inserted: Vec<OPTCODE> = vec![];
-        for optcode in block.clone().bytecode {
-            match optcode {
-                OPTCODE::CALL_FUNCTION { name } => {
-                    bytecode_inserted.append(&mut load_function_bytecode(name, self).unwrap())
-                }
-                OPTCODE::DEFINE_FUNCTION {
-                    body_block,
-                    visibility,
-                    signature,
-                } => self.functions.push(Function {
-                    signature,
-                    body: body_block,
-                    visibility: visibility,
-                }),
-                _ => bytecode_inserted.push(optcode),
-            }
-        }
-        block.bytecode = bytecode_inserted.clone();
-        //println!("{:?}", bytecode_inserted);
+        block.bytecode = block.clone().bytecode;
         self.main_block = block;
     }
 }
