@@ -185,6 +185,9 @@ impl Block {
             body_block,
         })
     }
+    pub fn return_from_function(&mut self) {
+        self.bytecode.push(OPTCODE::RETURN_FROM_FUNCTION);
+    }
     pub fn define_array(&mut self, visibility: VISIBILITY, name: String, init_values_count: usize) {
         self.bytecode.push(OPTCODE::DEFINE_ARRAY {
             visibility,

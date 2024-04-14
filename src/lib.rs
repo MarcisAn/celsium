@@ -20,6 +20,11 @@ use wasm_bindgen::prelude::*;
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
+#[wasm_bindgen]
+extern "C" {
+    fn alert(s: &str);
+    fn wasm_print(s: &str);
+}
 #[derive(Clone, Debug)]
 pub enum BINOP {
     ADD,
@@ -56,6 +61,7 @@ pub enum OPTCODE {
     CALL_PRINT_FUNCTION {
         newline: bool,
     },
+    RETURN_FROM_FUNCTION,
     ADD,
     SUBTRACT,
     MULTIPLY,
@@ -192,7 +198,9 @@ impl CelsiumProgram {
                                                     name: new_name.to_string(),
                                                 })
                                             }
-                                            None => todo!(),
+                                            None => replaced_bytecode.push(OPTCODE::LOAD_VAR {
+                                                name: name.to_string(),
+                                            }),
                                         }
                                     }
                                     _ => replaced_bytecode.push(optcode.clone()),
@@ -201,6 +209,9 @@ impl CelsiumProgram {
                             self.run(vm, &replaced_bytecode);
                         }
                     }
+                }
+                OPTCODE::RETURN_FROM_FUNCTION => {
+                    break;
                 }
                 OPTCODE::CALL_FUNCTION_WITH_BYTECODE { bytecode } => {
                     panic!();
