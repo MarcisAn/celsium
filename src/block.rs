@@ -224,4 +224,7 @@ impl Block {
             name: name.to_string(),
         })
     }
+    pub fn input_function(&mut self){
+        self.bytecode.push(OPTCODE::CALL_INPUT);
+    }
 }

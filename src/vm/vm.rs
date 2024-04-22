@@ -2,7 +2,12 @@ use super::{math_operators::*, StackValue};
 use crate::{module::VISIBILITY, BUILTIN_TYPES};
 use num::BigInt;
 use rand::seq::index;
-use std::{collections::LinkedList, env::var, str::FromStr};
+use std::{
+    collections::LinkedList,
+    env::var,
+    io::{self, BufRead, Write},
+    str::FromStr,
+};
 
 enum FUNCTION {
     RUST_FUNCTION,
@@ -249,13 +254,25 @@ impl VM {
         panic!("Cound not found vairable named {}", name);
     }
 
-    pub fn load_var(&mut self, name: &str) {
+    pub fn load_var(&mut self, name: &str) -> Result<(), String> {
         for var in &self.variables {
             if var.name == name {
                 self.stack.push_back(var.value.clone());
-                return;
+                return Ok(());
             }
         }
-        panic!("Cound not found vairable named {}", name);
+        Err(format!("Cound not found vairable named {}", name))
+    }
+
+    pub fn input(&mut self, prompt: &str)  {
+        print!("{}", prompt);
+        io::stdout().flush();
+        let res = io::stdin()
+            .lock()
+            .lines()
+            .next()
+            .unwrap()
+            .map(|x| x.trim_end().to_owned());
+        self.stack.push_back(StackValue::STRING { value: res.unwrap() });
     }
 }

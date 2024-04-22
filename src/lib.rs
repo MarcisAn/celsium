@@ -24,6 +24,7 @@ static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 extern "C" {
     fn alert(s: &str);
     fn wasm_print(s: &str);
+    fn wasm_input() -> String;
 }
 #[derive(Clone, Debug)]
 pub enum BINOP {
@@ -61,6 +62,7 @@ pub enum OPTCODE {
     CALL_PRINT_FUNCTION {
         newline: bool,
     },
+    CALL_INPUT,
     RETURN_FROM_FUNCTION,
     ADD,
     SUBTRACT,
@@ -158,17 +160,17 @@ impl CelsiumProgram {
         self.modules.push(module.clone());
     }
 
-    pub fn run_program(&mut self) {
+    pub fn run_program(&mut self) -> Result<(), String> {
         let mut bytecode: Vec<OPTCODE> = vec![];
         for module in &self.modules {
             bytecode.append(&mut module.main_block.bytecode.clone());
         }
         let mut vm = VM::new();
 
-        self.run(&mut vm, &bytecode);
+        return self.run(&mut vm, &bytecode);
     }
 
-    pub fn run(&mut self, vm: &mut VM, bytecode: &Vec<OPTCODE>) {
+    pub fn run(&mut self, vm: &mut VM, bytecode: &Vec<OPTCODE>) -> Result<(), String> {
         let mut index: isize = 0;
         while index < bytecode.len() as isize {
             let optcode = &bytecode[index as usize];
@@ -248,7 +250,7 @@ impl CelsiumProgram {
                     visibility,
                     name,
                 } => vm.define_var(0, name.to_string(), visibility),
-                OPTCODE::LOAD_VAR { name } => vm.load_var(name),
+                OPTCODE::LOAD_VAR { name } => vm.load_var(name)?,
                 OPTCODE::ASSIGN_VAR { name } => vm.assign_var(name),
                 OPTCODE::DEFINE_ARRAY {
                     visibility,
@@ -267,9 +269,16 @@ impl CelsiumProgram {
                     body: body_block.clone(),
                     visibility: visibility.clone(),
                 }),
+                OPTCODE::CALL_INPUT => { 
+                    #[cfg(target_family = "wasm")]
+                    vm.push(&BUILTIN_TYPES::STRING, &wasm_input());
+                    #[cfg(not(target_family = "wasm"))]
+                    vm.input("");
+                },
             }
             index += 1;
         }
+        Ok(())
     }
 }
 
@@ -285,15 +294,8 @@ mod tests {
         let mut main_module = Module::new("main", &mut celsium);
         let mut main_block = Block::new();
 
-        main_block.load_const(BUILTIN_TYPES::MAGIC_INT, "2");
         main_block.load_const(BUILTIN_TYPES::STRING, "a");
-
-        main_block.define_array(VISIBILITY::PRIVATE, "aa".to_string(), 2);
-        main_block.load_variable("aa");
-        main_block.call_print_function(true);
-        main_block.load_const(BUILTIN_TYPES::MAGIC_INT, "2");
-        main_block.push_to_array("aa");
-        main_block.load_variable("aa");
+        main_block.input_function();
         main_block.call_print_function(true);
 
         let mut i = 0;
