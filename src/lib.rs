@@ -1,5 +1,6 @@
 use std::collections::HashMap;
-
+pub mod bytecode;
+use bytecode::{BINOP, OPTCODE};
 use block::Block;
 use module::Function;
 use module::FunctionReturnType;
@@ -10,7 +11,6 @@ pub mod block;
 pub mod module;
 mod vm;
 use module::VISIBILITY;
-use rand::Rng;
 use vm::vm::VM;
 use wasm_bindgen::prelude::*;
 
@@ -26,95 +26,7 @@ extern "C" {
     fn wasm_print(s: &str);
     fn wasm_input() -> String;
 }
-#[derive(Clone, Debug)]
-pub enum BINOP {
-    ADD,
-    SUBTRACT,
-    MULTIPLY,
-    DIVIDE,
-    REMAINDER,
-    LESS_THAN,
-    LARGER_THAN,
-    LESS_OR_EQ,
-    LARGER_OR_EQ,
-    NOT_EQ,
-    EQ,
-    AND,
-    OR,
-    XOR,
-}
 
-#[derive(Clone, Debug)]
-pub enum OPTCODE {
-    LOAD_CONST {
-        data_type: BUILTIN_TYPES,
-        data: String,
-    },
-    LOAD_VAR {
-        name: String,
-    },
-    CALL_FUNCTION {
-        name: String,
-    },
-    CALL_FUNCTION_WITH_BYTECODE {
-        bytecode: Vec<OPTCODE>,
-    },
-    CALL_PRINT_FUNCTION {
-        newline: bool,
-    },
-    CALL_INPUT,
-    RETURN_FROM_FUNCTION,
-    ADD,
-    SUBTRACT,
-    MULTIPLY,
-    DIVIDE,
-    REMAINDER,
-    LESS_THAN,
-    LARGER_THAN,
-    LESS_OR_EQ,
-    LARGER_OR_EQ,
-    NOT_EQ,
-    EQ,
-    OR,
-    AND,
-    XOR,
-    JUMP_IF_FALSE {
-        steps: usize,
-    },
-    JUMP {
-        steps: usize,
-    },
-    JUMP_BACK {
-        steps: usize,
-    },
-    DEFINE_VAR {
-        data_type: BUILTIN_TYPES,
-        visibility: VISIBILITY,
-        name: String,
-    },
-    DEFINE_ARRAY {
-        visibility: VISIBILITY,
-        name: String,
-        init_values_count: usize,
-    },
-    GET_FROM_ARRAY {
-        name: String,
-    },
-    PUSH_TO_ARRAY {
-        name: String,
-    },
-    GET_ARRAY_LENGTH {
-        name: String,
-    },
-    ASSIGN_VAR {
-        name: String,
-    },
-    DEFINE_FUNCTION {
-        body_block: Block,
-        visibility: VISIBILITY,
-        signature: FunctionSignature,
-    },
-}
 #[derive(Clone, Debug)]
 pub enum BUILTIN_TYPES {
     MAGIC_INT,
@@ -131,22 +43,7 @@ pub struct CelsiumProgram {
     config: CelsiumConfig,
 }
 
-fn generate_rand_varname(length: usize) -> String {
-    const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
-                            abcdefghijklmnopqrstuvwxyz\
-                            0123456789\
-                            ~!@#$%^&*()-_+=";
 
-    let mut rng = rand::thread_rng();
-    let randstring: String = (0..length)
-        .map(|_| {
-            let idx = rng.gen_range(0..CHARSET.len());
-            CHARSET[idx] as char
-        })
-        .collect();
-
-    randstring
-}
 
 impl CelsiumProgram {
     pub fn new(is_wasm: bool) -> CelsiumProgram {
@@ -178,39 +75,7 @@ impl CelsiumProgram {
             match optcode {
                 OPTCODE::LOAD_CONST { data_type, data } => vm.push(&data_type, &data),
                 OPTCODE::CALL_FUNCTION { name } => {
-                    for function in &self.modules.clone()[0].functions {
-                        if function.signature.name == name.to_string() {
-                            let mut argument_names_to_replace = HashMap::new();
-                            let mut func_args = function.clone().signature.args;
-                            func_args.reverse();
-                            for arg in func_args {
-                                let var_name = "__".to_string()
-                                    + &arg.name.to_string()
-                                    + &generate_rand_varname(5);
-                                vm.define_var(0, var_name.clone(), &VISIBILITY::PRIVATE);
-                                argument_names_to_replace.insert(arg.clone().name, var_name);
-                            }
-                            let mut replaced_bytecode: Vec<OPTCODE> = vec![];
-                            for optcode in &function.body.bytecode.clone() {
-                                match optcode {
-                                    OPTCODE::LOAD_VAR { name } => {
-                                        match argument_names_to_replace.get(name) {
-                                            Some(ref new_name) => {
-                                                replaced_bytecode.push(OPTCODE::LOAD_VAR {
-                                                    name: new_name.to_string(),
-                                                })
-                                            }
-                                            None => replaced_bytecode.push(OPTCODE::LOAD_VAR {
-                                                name: name.to_string(),
-                                            }),
-                                        }
-                                    }
-                                    _ => replaced_bytecode.push(optcode.clone()),
-                                }
-                            }
-                            self.run(vm, &replaced_bytecode);
-                        }
-                    }
+                    vm.call_function(name, self);
                 }
                 OPTCODE::RETURN_FROM_FUNCTION => {
                     break;

@@ -1,9 +1,9 @@
 use super::{math_operators::*, StackValue};
-use crate::{module::VISIBILITY, BUILTIN_TYPES};
+use crate::{bytecode::OPTCODE, module::VISIBILITY, CelsiumProgram, BUILTIN_TYPES};
 use num::BigInt;
-use rand::seq::index;
+use rand::{seq::index, Rng};
 use std::{
-    collections::LinkedList,
+    collections::{HashMap, LinkedList},
     env::var,
     io::{self, BufRead, Write},
     str::FromStr,
@@ -14,7 +14,22 @@ enum FUNCTION {
     USER_DEFINED_FUNCTION,
 }
 
-pub fn define_function() {}
+fn generate_rand_varname(length: usize) -> String {
+    const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
+                            abcdefghijklmnopqrstuvwxyz\
+                            0123456789\
+                            ~!@#$%^&*()-_+=";
+
+    let mut rng = rand::thread_rng();
+    let randstring: String = (0..length)
+        .map(|_| {
+            let idx = rng.gen_range(0..CHARSET.len());
+            CHARSET[idx] as char
+        })
+        .collect();
+
+    randstring
+}
 
 pub struct VM {
     stack: LinkedList<StackValue>,
@@ -264,7 +279,7 @@ impl VM {
         Err(format!("Cound not found vairable named {}", name))
     }
 
-    pub fn input(&mut self, prompt: &str)  {
+    pub fn input(&mut self, prompt: &str) {
         print!("{}", prompt);
         io::stdout().flush();
         let res = io::stdin()
@@ -273,6 +288,39 @@ impl VM {
             .next()
             .unwrap()
             .map(|x| x.trim_end().to_owned());
-        self.stack.push_back(StackValue::STRING { value: res.unwrap() });
+        self.stack.push_back(StackValue::STRING {
+            value: res.unwrap(),
+        });
+    }
+
+    pub fn call_function(&mut self, name: &String, program: &mut CelsiumProgram) {
+        for function in &program.modules.clone()[0].functions {
+            if function.signature.name == name.to_string() {
+                let mut argument_names_to_replace = HashMap::new();
+                let mut func_args = function.clone().signature.args;
+                func_args.reverse();
+                for arg in func_args {
+                    let var_name =
+                        "__".to_string() + &arg.name.to_string() + &generate_rand_varname(5);
+                    self.define_var(0, var_name.clone(), &VISIBILITY::PRIVATE);
+                    argument_names_to_replace.insert(arg.clone().name, var_name);
+                }
+                let mut replaced_bytecode: Vec<OPTCODE> = vec![];
+                for optcode in &function.body.bytecode.clone() {
+                    match optcode {
+                        OPTCODE::LOAD_VAR { name } => match argument_names_to_replace.get(name) {
+                            Some(ref new_name) => replaced_bytecode.push(OPTCODE::LOAD_VAR {
+                                name: new_name.to_string(),
+                            }),
+                            None => replaced_bytecode.push(OPTCODE::LOAD_VAR {
+                                name: name.to_string(),
+                            }),
+                        },
+                        _ => replaced_bytecode.push(optcode.clone()),
+                    }
+                }
+                program.run(self, &replaced_bytecode);
+            }
+        }
     }
 }
