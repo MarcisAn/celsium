@@ -138,7 +138,6 @@ fn main() {
 }
 ```
 
-
 ## Simple loops
 
 ```rust
@@ -147,7 +146,7 @@ use celsium::module::Module;
 use celsium::{CelsiumProgram, BINOP, BUILTIN_TYPES};
 
 fn main() {
-    let mut celsium = CelsiumProgram::new(false);
+        let mut celsium = CelsiumProgram::new(false);
         let mut main_module = Module::new("main", &mut celsium);
         let mut main_block = Block::new();
 
@@ -175,6 +174,7 @@ use celsium::module::Module;
 use celsium::{CelsiumProgram, BINOP, BUILTIN_TYPES};
 
 fn main() {
+    let mut celsium = CelsiumProgram::new();
     let mut main_module = Module::new("main", &mut celsium);
     let mut main_block = Block::new();
 
@@ -190,6 +190,33 @@ fn main() {
         loop_block.call_print_function(true);
     }
     main_block.define_while_loop(loop_block, conditional_block);
+
+
+    main_module.add_main_block(main_block);
+    celsium.add_module(&main_module);
+    celsium.run_program();
+}
+```
+
+## Objects
+
+```rust
+use celsium::block::Block;
+use celsium::module::Module;
+use celsium::{CelsiumProgram, BINOP, BUILTIN_TYPES};
+
+fn main() {
+    let mut celsium = CelsiumProgram::new();
+    let mut main_module = Module::new("main", &mut celsium);
+    let mut main_block = Block::new();
+
+    main_block.load_const(BUILTIN_TYPES::STRING, "John");
+    main_block.load_const(BUILTIN_TYPES::MAGIC_INT, "37");
+
+    main_block.create_object("Person", vec!["name", "age"]);
+    main_block.define_variable(BUILTIN_TYPES::OBJECT, VISIBILITY::PUBLIC, "person_1");
+    main_block.load_variable("person_1");
+    main_block.call_print_function(true);
 
 
     main_module.add_main_block(main_block);

@@ -98,6 +98,24 @@ fn format_for_print(value: StackValue, newline: bool) -> String {
             }
             return printable_str;
         }
+        StackValue::OBJECT { name, value: fields } => {
+            let mut printable_object = format!("{} {{\n", name);
+            let mut index = 0;
+            let length = &fields.len();
+            for field in fields {
+                printable_object += &format!("   {}: {}", field.name, format_for_print(field.value, false));
+                if &(index + 2) == length{
+                    printable_object += "\n";
+                }
+                index += 1;
+            }
+            printable_object += "\n}";
+            if !newline {
+                return format!("{}", printable_object);
+            } else {
+                return format!("{}\n", printable_object);
+            }
+        },
     };
 }
 
@@ -125,7 +143,14 @@ impl VM {
             BUILTIN_TYPES::STRING => self.stack.push_back(StackValue::STRING {
                 value: data.to_string(),
             }),
+            BUILTIN_TYPES::OBJECT => panic!(),
         }
+    }
+    pub fn push_stackvalue(&mut self, stackvalue: StackValue){
+        self.stack.push_back(stackvalue);
+    }
+    pub fn pop(&mut self) -> StackValue{
+        return self.stack.pop_back().unwrap();
     }
     pub fn aritmethics(&mut self, action: &str) {
         //println!("action {}", action);

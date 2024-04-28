@@ -227,4 +227,11 @@ impl Block {
     pub fn input_function(&mut self){
         self.bytecode.push(OPTCODE::CALL_INPUT);
     }
+    pub fn create_object(&mut self, name: &str, field_names: Vec<&str>){
+        let mut owned_names: Vec<String> = vec![];
+        for name in field_names {
+            owned_names.push(name.to_string());
+        }
+        self.bytecode.push(OPTCODE::CREATE_OBJECT { name: name.to_string(), field_names: owned_names });
+    }
 }

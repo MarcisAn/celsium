@@ -1,17 +1,26 @@
 use std::collections::HashMap;
+use std::future::IntoFuture;
 pub mod bytecode;
-use bytecode::{BINOP, OPTCODE};
 use block::Block;
+use bytecode::{BINOP, OPTCODE};
+use js_sys::Object;
 use module::Function;
 use module::FunctionReturnType;
 use module::FunctionSignature;
 use module::Module;
+extern crate serde;
+extern crate serde_json;
 
+use serde::{Deserialize, Serialize};
+
+extern crate js_sys;
 pub mod block;
 pub mod module;
 mod vm;
 use module::VISIBILITY;
 use vm::vm::VM;
+use vm::ObjectField;
+use vm::StackValue;
 use wasm_bindgen::prelude::*;
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
@@ -24,7 +33,7 @@ static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 extern "C" {
     fn alert(s: &str);
     fn wasm_print(s: &str);
-    fn wasm_input() -> String;
+    async fn wasm_input() -> JsValue;
 }
 
 #[derive(Clone, Debug)]
@@ -32,39 +41,44 @@ pub enum BUILTIN_TYPES {
     MAGIC_INT,
     BOOL,
     STRING,
+    OBJECT,
 }
 
-pub struct CelsiumConfig {
-    is_wasm: bool,
+pub struct ObjectBuilder {
+    name: String,
+    fields: Vec<ObjectField>,
+}
+
+impl ObjectBuilder {
+    pub fn new(object_name: String) -> ObjectBuilder {
+        ObjectBuilder {
+            name: object_name,
+            fields: vec![],
+        }
+    }
 }
 
 pub struct CelsiumProgram {
     modules: Vec<Module>,
-    config: CelsiumConfig,
 }
 
-
-
 impl CelsiumProgram {
-    pub fn new(is_wasm: bool) -> CelsiumProgram {
-        CelsiumProgram {
-            modules: vec![],
-            config: CelsiumConfig { is_wasm: is_wasm },
-        }
+    pub fn new() -> CelsiumProgram {
+        CelsiumProgram { modules: vec![] }
     }
 
     pub fn add_module(&mut self, module: &Module) {
         self.modules.push(module.clone());
     }
 
-    pub fn run_program(&mut self) -> Result<(), String> {
+    pub fn run_program(&mut self) {
         let mut bytecode: Vec<OPTCODE> = vec![];
         for module in &self.modules {
             bytecode.append(&mut module.main_block.bytecode.clone());
         }
         let mut vm = VM::new();
 
-        return self.run(&mut vm, &bytecode);
+        self.run(&mut vm, &bytecode);
     }
 
     pub fn run(&mut self, vm: &mut VM, bytecode: &Vec<OPTCODE>) -> Result<(), String> {
@@ -134,12 +148,33 @@ impl CelsiumProgram {
                     body: body_block.clone(),
                     visibility: visibility.clone(),
                 }),
-                OPTCODE::CALL_INPUT => { 
+                OPTCODE::CALL_INPUT => {
                     #[cfg(target_family = "wasm")]
-                    vm.push(&BUILTIN_TYPES::STRING, &wasm_input());
+                    vm.push(&BUILTIN_TYPES::STRING, &"asdfghjkl".to_string());
+                    #[cfg(target_family = "wasm")]
+                    async {
+                        let value = &wasm_input().await.as_string().unwrap();
+                        vm.push(&BUILTIN_TYPES::STRING, value);
+                    };
                     #[cfg(not(target_family = "wasm"))]
                     vm.input("");
-                },
+                }
+                OPTCODE::CREATE_OBJECT { name, field_names } => {
+                    let mut fields: Vec<ObjectField> = vec![];
+                    let mut field_names_mut = field_names.clone();
+                    field_names_mut.reverse();
+                    for name in field_names_mut {
+                        fields.push(ObjectField {
+                            name: name.to_string(),
+                            value: vm.pop(),
+                        })
+                    }
+                    fields.reverse();
+                    vm.push_stackvalue(StackValue::OBJECT {
+                        name: name.to_string(),
+                        value: fields,
+                    });
+                }
             }
             index += 1;
         }
@@ -155,12 +190,16 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let mut celsium = CelsiumProgram::new(false);
+        let mut celsium = CelsiumProgram::new();
         let mut main_module = Module::new("main", &mut celsium);
         let mut main_block = Block::new();
 
-        main_block.load_const(BUILTIN_TYPES::STRING, "a");
-        main_block.input_function();
+        main_block.load_const(BUILTIN_TYPES::STRING, "John");
+        main_block.load_const(BUILTIN_TYPES::MAGIC_INT, "37");
+
+        main_block.create_object("Person", vec!["name", "age"]);
+        main_block.define_variable(BUILTIN_TYPES::OBJECT, VISIBILITY::PUBLIC, "person_1");
+        main_block.load_variable("person_1");
         main_block.call_print_function(true);
 
         let mut i = 0;

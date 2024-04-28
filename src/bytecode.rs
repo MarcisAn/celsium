@@ -88,4 +88,8 @@ pub enum OPTCODE {
         visibility: VISIBILITY,
         signature: FunctionSignature,
     },
+    CREATE_OBJECT {
+        name: String,
+        field_names: Vec<String>
+    }
 }

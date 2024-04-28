@@ -9,7 +9,8 @@ fn add_to_bigint(a: BigInt, b: StackValue) -> StackValue {
         StackValue::STRING { value } => StackValue::STRING {
             value: a.to_string() + &value,
         },
-        StackValue::ARRAY { value } => panic!("Cannot do addition with arrays"),
+        StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
+        StackValue::OBJECT { name: _, value: _ } => panic!("Cannot do math with objects"),
     }
 }
 fn add_to_string(a: String, b: StackValue) -> StackValue {
@@ -19,7 +20,8 @@ fn add_to_string(a: String, b: StackValue) -> StackValue {
             value: a + &value.to_string(),
         },
         StackValue::STRING { value } => StackValue::STRING { value: a + &value },
-        StackValue::ARRAY { value } => panic!("Cannot do addition with arrays"),
+        StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
+        StackValue::OBJECT { name: _, value: _ } => panic!("Cannot do math with objects"),
     }
 }
 
@@ -28,7 +30,8 @@ pub fn add(a: StackValue, b: StackValue) -> StackValue {
         StackValue::BOOL { value: _ } => panic!("Cannot do addition with bool's"),
         StackValue::BIGINT { value } => add_to_bigint(value, b),
         StackValue::STRING { value } => add_to_string(value, b),
-        StackValue::ARRAY { value } => panic!("Cannot do addition with arrays"),
+        StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
+        StackValue::OBJECT { name: _, value: _ } => panic!("Cannot do math with objects"),
     }
 }
 fn subtract_from_bigint(a: BigInt, b: StackValue) -> StackValue {
@@ -36,7 +39,9 @@ fn subtract_from_bigint(a: BigInt, b: StackValue) -> StackValue {
         StackValue::BOOL { value: _ } => panic!("Cannot subtract BOOL to INT"),
         StackValue::BIGINT { value } => StackValue::BIGINT { value: a - value },
         StackValue::STRING { value: _ } => panic!("Cannot subtract string from MAGICINT"),
-        StackValue::ARRAY { value } => panic!("Cannot do addition with arrays"),
+        StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
+    
+        StackValue::OBJECT { name: _, value: _ } => panic!("Cannot do math with objects"),
     }
 }
 pub fn subtract(a: StackValue, b: StackValue) -> StackValue {
@@ -44,7 +49,8 @@ pub fn subtract(a: StackValue, b: StackValue) -> StackValue {
         StackValue::BOOL { value: _ } => panic!("Cannot do subtraction with BOOL's"),
         StackValue::BIGINT { value } => subtract_from_bigint(value, b),
         StackValue::STRING { value: _ } => panic!("Cannot do subtraction with STRING's"),
-        StackValue::ARRAY { value } => panic!("Cannot do addition with arrays"),
+        StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
+        StackValue::OBJECT { name: _, value: _ } => panic!("Cannot do math with objects"),
     }
 }
 fn multiply_with_bigint(a: BigInt, b: StackValue) -> StackValue {
@@ -52,7 +58,8 @@ fn multiply_with_bigint(a: BigInt, b: StackValue) -> StackValue {
         StackValue::BOOL { value: _ } => panic!("Cannot multiply BOOL with MAGICINT"),
         StackValue::BIGINT { value } => StackValue::BIGINT { value: a * value },
         StackValue::STRING { value: _ } => panic!("Cannot multiply string with MAGICINT"),
-        StackValue::ARRAY { value } => panic!("Cannot do addition with arrays"),
+        StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
+        StackValue::OBJECT { name: _, value: _ } => panic!("Cannot do math with objects"),
     }
 }
 pub fn multiply(a: StackValue, b: StackValue) -> StackValue {
@@ -60,7 +67,8 @@ pub fn multiply(a: StackValue, b: StackValue) -> StackValue {
         StackValue::BOOL { value: _ } => panic!("Cannot do multiplication with BOOL's"),
         StackValue::BIGINT { value } => multiply_with_bigint(value, b),
         StackValue::STRING { value: _ } => panic!("Cannot do multiplication with STRING's"),
-        StackValue::ARRAY { value } => panic!("Cannot do addition with arrays"),
+        StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
+        StackValue::OBJECT { name: _, value: _ } => panic!("Cannot do math with objects"),
     }
 }
 fn divide_with_bigint(a: BigInt, b: StackValue) -> StackValue {
@@ -68,7 +76,8 @@ fn divide_with_bigint(a: BigInt, b: StackValue) -> StackValue {
         StackValue::BOOL { value: _ } => panic!("Cannot divide BOOL with MAGICINT"),
         StackValue::BIGINT { value } => StackValue::BIGINT { value: a / value },
         StackValue::STRING { value: _ } => panic!("Cannot divide STRING with MAGICINT"),
-        StackValue::ARRAY { value } => panic!("Cannot do addition with arrays"),
+        StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
+        StackValue::OBJECT { name: _, value: _ } => panic!("Cannot do math with objects"),
     }
 }
 pub fn divide(a: StackValue, b: StackValue) -> StackValue {
@@ -76,7 +85,8 @@ pub fn divide(a: StackValue, b: StackValue) -> StackValue {
         StackValue::BOOL { value: _ } => panic!("Cannot do division with BOOL's"),
         StackValue::BIGINT { value } => divide_with_bigint(value, b),
         StackValue::STRING { value: _ } => panic!("Cannot do division with STRING's"),
-        StackValue::ARRAY { value } => panic!("Cannot do addition with arrays"),
+        StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
+        StackValue::OBJECT { name: _, value: _ } => panic!("Cannot do math with objects"),
     }
 }
 fn get_remainder_with_bigint(a: BigInt, b: StackValue) -> StackValue {
@@ -84,7 +94,8 @@ fn get_remainder_with_bigint(a: BigInt, b: StackValue) -> StackValue {
         StackValue::BOOL { value: _ } => panic!("Cannot divide BOOL with MAGICINT"),
         StackValue::BIGINT { value } => StackValue::BIGINT { value: a % value },
         StackValue::STRING { value: _ } => panic!("Cannot divide STRING with MAGICINT"),
-        StackValue::ARRAY { value } => panic!("Cannot do addition with arrays"),
+        StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
+        StackValue::OBJECT { name: _, value: _ } => panic!("Cannot do math with objects"),
     }
 }
 pub fn remainder(a: StackValue, b: StackValue) -> StackValue {
@@ -92,7 +103,8 @@ pub fn remainder(a: StackValue, b: StackValue) -> StackValue {
         StackValue::BOOL { value: _ } => panic!("Cannot do division with BOOL's"),
         StackValue::BIGINT { value } => get_remainder_with_bigint(value, b),
         StackValue::STRING { value: _ } => panic!("Cannot do division with STRING's"),
-        StackValue::ARRAY { value } => panic!("Cannot do addition with arrays"),
+        StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
+        StackValue::OBJECT { name: _, value: _ } => panic!("Cannot do math with objects"),
     }
 }
 pub fn less_than(a: StackValue, b: StackValue) -> StackValue {
@@ -101,20 +113,23 @@ pub fn less_than(a: StackValue, b: StackValue) -> StackValue {
             StackValue::BOOL { value } => StackValue::BOOL {
                 value: val_a < value,
             },
-            StackValue::BIGINT { value } => panic!("Cannot compare MAGICINT with BOOL"),
-            StackValue::ARRAY { value } => panic!("Cannot do addition with arrays"),
-            StackValue::STRING { value } => panic!("Cannot compare MAGICINT with STRING"),
+            StackValue::BIGINT { value: _ } => panic!("Cannot compare MAGICINT with BOOL"),
+            StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
+            StackValue::STRING { value: _ } => panic!("Cannot compare MAGICINT with STRING"),
+            StackValue::OBJECT { name: _, value: _ } => panic!("Cannot do comparison with objects"),
         },
         StackValue::BIGINT { value: val_a } => match b {
-            StackValue::BOOL { value } => panic!("Cannot compare MAGICINT with BOOL"),
+            StackValue::BOOL { value: _ } => panic!("Cannot compare MAGICINT with BOOL"),
             StackValue::BIGINT { value } => StackValue::BOOL {
                 value: val_a < value,
             },
-            StackValue::ARRAY { value } => panic!("Cannot do addition with arrays"),
-            StackValue::STRING { value } => panic!("Cannot compare MAGICINT with STRING"),
+            StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
+            StackValue::STRING { value: _ } => panic!("Cannot compare MAGICINT with STRING"),
+            StackValue::OBJECT { name: _, value: _ } => panic!("Cannot do comparison with objects"),
         },
         StackValue::STRING { value: _ } => panic!("Cannot do comparisons  with STRING's"),
-        StackValue::ARRAY { value } => panic!("Cannot do addition with arrays"),
+        StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
+        StackValue::OBJECT { name: _, value: _ } => panic!("Cannot do comparison with objects"),
     }
 }
 pub fn larger_than(a: StackValue, b: StackValue) -> StackValue {
@@ -123,20 +138,23 @@ pub fn larger_than(a: StackValue, b: StackValue) -> StackValue {
             StackValue::BOOL { value } => StackValue::BOOL {
                 value: val_a > value,
             },
-            StackValue::BIGINT { value } => panic!("Cannot compare MAGICINT with BOOL"),
-            StackValue::ARRAY { value } => panic!("Cannot do addition with arrays"),
-            StackValue::STRING { value } => panic!("Cannot compare MAGICINT with STRING"),
+            StackValue::BIGINT { value: _ } => panic!("Cannot compare MAGICINT with BOOL"),
+            StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
+            StackValue::STRING { value: _ } => panic!("Cannot compare MAGICINT with STRING"),
+            StackValue::OBJECT { name: _, value: _ } => panic!("Cannot do comparison with objects"),
         },
         StackValue::BIGINT { value: val_a } => match b {
-            StackValue::BOOL { value } => panic!("Cannot compare MAGICINT with BOOL"),
+            StackValue::BOOL { value: _ } => panic!("Cannot compare MAGICINT with BOOL"),
             StackValue::BIGINT { value } => StackValue::BOOL {
                 value: val_a > value,
             },
-            StackValue::STRING { value } => panic!("Cannot compare MAGICINT with STRING"),
-            StackValue::ARRAY { value } => panic!("Cannot do addition with arrays"),
+            StackValue::STRING { value: _ } => panic!("Cannot compare MAGICINT with STRING"),
+            StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
+            StackValue::OBJECT { name: _, value: _ } => panic!("Cannot do comparison with objects"),
         },
         StackValue::STRING { value: _ } => panic!("Cannot do comparisons  with STRING's"),
-        StackValue::ARRAY { value } => panic!("Cannot do addition with arrays"),
+        StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
+        StackValue::OBJECT { name: _, value: _ } => panic!("Cannot do comparison with objects"),
     }
 }
 pub fn less_or_eq(a: StackValue, b: StackValue) -> StackValue {
@@ -145,20 +163,23 @@ pub fn less_or_eq(a: StackValue, b: StackValue) -> StackValue {
             StackValue::BOOL { value } => StackValue::BOOL {
                 value: val_a <= value,
             },
-            StackValue::BIGINT { value } => panic!("Cannot compare MAGICINT with BOOL"),
-            StackValue::ARRAY { value } => panic!("Cannot do addition with arrays"),
-            StackValue::STRING { value } => panic!("Cannot compare MAGICINT with STRING"),
+            StackValue::BIGINT { value: _ } => panic!("Cannot compare MAGICINT with BOOL"),
+            StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
+            StackValue::STRING { value: _ } => panic!("Cannot compare MAGICINT with STRING"),
+            StackValue::OBJECT { name: _, value: _ } => panic!("Cannot do comparison with objects"),
         },
         StackValue::BIGINT { value: val_a } => match b {
-            StackValue::BOOL { value } => panic!("Cannot compare MAGICINT with BOOL"),
+            StackValue::BOOL { value: _ } => panic!("Cannot compare MAGICINT with BOOL"),
             StackValue::BIGINT { value } => StackValue::BOOL {
                 value: val_a <= value,
             },
-            StackValue::ARRAY { value } => panic!("Cannot do addition with arrays"),
-            StackValue::STRING { value } => panic!("Cannot compare MAGICINT with STRING"),
+            StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
+            StackValue::STRING { value: _ } => panic!("Cannot compare MAGICINT with STRING"),
+            StackValue::OBJECT { name: _, value: _ } => panic!("Cannot do comparison with objects"),
         },
         StackValue::STRING { value: _ } => panic!("Cannot do comparisons  with STRING's"),
-        StackValue::ARRAY { value } => panic!("Cannot do addition with arrays"),
+        StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
+        StackValue::OBJECT { name: _, value: _ } => panic!("Cannot do comparison with objects"),
     }
 }
 pub fn larger_or_eq(a: StackValue, b: StackValue) -> StackValue {
@@ -167,20 +188,23 @@ pub fn larger_or_eq(a: StackValue, b: StackValue) -> StackValue {
             StackValue::BOOL { value } => StackValue::BOOL {
                 value: val_a >= value,
             },
-            StackValue::BIGINT { value } => panic!("Cannot compare MAGICINT with BOOL"),
-            StackValue::ARRAY { value } => panic!("Cannot do addition with arrays"),
-            StackValue::STRING { value } => panic!("Cannot compare MAGICINT with STRING"),
+            StackValue::BIGINT { value: _ } => panic!("Cannot compare MAGICINT with BOOL"),
+            StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
+            StackValue::STRING { value: _ } => panic!("Cannot compare MAGICINT with STRING"),
+            StackValue::OBJECT { name: _, value: _ } => panic!("Cannot do comparison with objects"),
         },
         StackValue::BIGINT { value: val_a } => match b {
-            StackValue::BOOL { value } => panic!("Cannot compare MAGICINT with BOOL"),
+            StackValue::BOOL { value: _ } => panic!("Cannot compare MAGICINT with BOOL"),
             StackValue::BIGINT { value } => StackValue::BOOL {
                 value: val_a >= value,
             },
-            StackValue::ARRAY { value } => panic!("Cannot do addition with arrays"),
-            StackValue::STRING { value } => panic!("Cannot compare MAGICINT with STRING"),
+            StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
+            StackValue::STRING { value: _ } => panic!("Cannot compare MAGICINT with STRING"),
+            StackValue::OBJECT { name: _, value: _ } => panic!("Cannot do comparison with objects"),
         },
         StackValue::STRING { value: _ } => panic!("Cannot do comparisons  with STRING's"),
-        StackValue::ARRAY { value } => panic!("Cannot do addition with arrays"),
+        StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
+        StackValue::OBJECT { name: _, value: _ } => panic!("Cannot do comparison with objects"),
     }
 }
 pub fn not_eq(a: StackValue, b: StackValue) -> StackValue {
@@ -189,27 +213,31 @@ pub fn not_eq(a: StackValue, b: StackValue) -> StackValue {
             StackValue::BOOL { value } => StackValue::BOOL {
                 value: val_a != value,
             },
-            StackValue::BIGINT { value } => panic!("Cannot compare MAGICINT with BOOL"),
-            StackValue::ARRAY { value } => panic!("Cannot do addition with arrays"),
-            StackValue::STRING { value } => panic!("Cannot compare MAGICINT with STRING"),
+            StackValue::BIGINT { value: _ } => panic!("Cannot compare MAGICINT with BOOL"),
+            StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
+            StackValue::STRING { value: _ } => panic!("Cannot compare MAGICINT with STRING"),
+            StackValue::OBJECT { name: _, value: _ } => panic!("Cannot do comparison with objects"),
         },
         StackValue::BIGINT { value: val_a } => match b {
-            StackValue::BOOL { value } => panic!("Cannot compare MAGICINT with BOOL"),
+            StackValue::BOOL { value: _ } => panic!("Cannot compare MAGICINT with BOOL"),
             StackValue::BIGINT { value } => StackValue::BOOL {
                 value: val_a != value,
             },
-            StackValue::ARRAY { value } => panic!("Cannot do addition with arrays"),
-            StackValue::STRING { value } => panic!("Cannot compare MAGICINT with STRING"),
+            StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
+            StackValue::STRING { value: _ } => panic!("Cannot compare MAGICINT with STRING"),
+            StackValue::OBJECT { name: _, value: _ } => panic!("Cannot do comparison with objects"),
         },
         StackValue::STRING { value: val_a } => match b {
-            StackValue::BOOL { value } => panic!("Cannot compare STRING with BOOL"),
-            StackValue::BIGINT { value } => panic!("Cannot compare STRING with BIGINT"),
+            StackValue::BOOL { value: _ } => panic!("Cannot compare STRING with BOOL"),
+            StackValue::BIGINT { value: _ } => panic!("Cannot compare STRING with BIGINT"),
             StackValue::STRING { value } => StackValue::BOOL {
                 value: val_a != value,
             },
-            StackValue::ARRAY { value } => panic!("Cannot do addition with arrays"),
+            StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
+            StackValue::OBJECT { name: _, value: _ } => panic!("Cannot do comparison with objects"),
         },
-        StackValue::ARRAY { value } => panic!("Cannot do addition with arrays"),
+        StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
+        StackValue::OBJECT { name: _, value: _ } => panic!("Cannot do comparison with objects"),
     }
 }
 pub fn eq(a: StackValue, b: StackValue) -> StackValue {
@@ -218,27 +246,37 @@ pub fn eq(a: StackValue, b: StackValue) -> StackValue {
             StackValue::BOOL { value } => StackValue::BOOL {
                 value: val_a == value,
             },
-            StackValue::BIGINT { value } => panic!("Cannot compare MAGICINT with BOOL"),
-            StackValue::ARRAY { value } => panic!("Cannot do addition with arrays"),
-            StackValue::STRING { value } => panic!("Cannot compare MAGICINT with STRING"),
+            StackValue::BIGINT { value: _ } => panic!("Cannot compare MAGICINT with BOOL"),
+            StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
+            StackValue::STRING { value: _ } => panic!("Cannot compare MAGICINT with STRING"),
+            StackValue::OBJECT { name: _, value: _ } => panic!("Cannot do comparison with objects"),
         },
         StackValue::BIGINT { value: val_a } => match b {
-            StackValue::BOOL { value } => panic!("Cannot compare MAGICINT with BOOL"),
+            StackValue::BOOL { value: _ } => panic!("Cannot compare MAGICINT with BOOL"),
             StackValue::BIGINT { value } => StackValue::BOOL {
                 value: val_a == value,
             },
-            StackValue::ARRAY { value } => panic!("Cannot do addition with arrays"),
-            StackValue::STRING { value } => panic!("Cannot compare MAGICINT with STRING"),
+            StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
+            StackValue::STRING { value: _ } => panic!("Cannot compare MAGICINT with STRING"),
+            StackValue::OBJECT { name: _, value: _ } => panic!("Cannot do comparison with objects"),
         },
         StackValue::STRING { value: val_a } => match b {
-            StackValue::BOOL { value } => panic!("Cannot compare STRING with BOOL"),
-            StackValue::BIGINT { value } => panic!("Cannot compare STRING with BIGINT"),
+            StackValue::BOOL { value: _ } => panic!("Cannot compare STRING with BOOL"),
+            StackValue::BIGINT { value: _ } => panic!("Cannot compare STRING with BIGINT"),
             StackValue::STRING { value } => StackValue::BOOL {
                 value: val_a == value,
             },
-            StackValue::ARRAY { value } => panic!("Cannot do addition with arrays"),
+            StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
+            StackValue::OBJECT { name: _, value: _ } => panic!("Cannot do comparison with objects"),
         },
-        StackValue::ARRAY { value } => panic!("Cannot do addition with arrays"),
+        StackValue::ARRAY { value: _ } => panic!("Cannot do comparison with arrays"),
+        StackValue::OBJECT { name: _, value: val_a } => match b {
+            StackValue::BOOL { value: _ } => panic!("Cannot do comparisons with objects"),
+            StackValue::BIGINT { value: _ } => panic!("Cannot do comparisons with objects"),
+            StackValue::STRING { value: _ } => panic!("Cannot do comparisons with objects"),
+            StackValue::ARRAY { value: _ } => panic!("Cannot do comparisons with objects"),
+            StackValue::OBJECT { name: _, value: val_b } => StackValue::BOOL { value: val_a == val_b },
+        },
     }
 }
 
