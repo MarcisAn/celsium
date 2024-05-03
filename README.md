@@ -16,7 +16,7 @@ fn main() {
         main_block.load_const(BUILTIN_TYPES::MAGIC_INT, "1");
         main_block.load_const(BUILTIN_TYPES::MAGIC_INT, "2");
         main_block.binop(BINOP::ADD);
-        main_block.call_print_function(true);
+        main_block.call_special_function(SpecialFunctions::PRINT);
     }
     //println!("{:?}", main_block.bytecode);
     main_module.add_main_block(main_block);
@@ -38,7 +38,7 @@ let mut main_block = Block::new();
     let mut if_block = Block::new();
     {
         if_block.load_const(BUILTIN_TYPES::STRING, "executed if block");
-        if_block.call_print_function(true);
+        if_block.call_special_function(SpecialFunctions::PRINT);
     }
     main_block.define_if_block(if_block);
     main_module.add_main_block(main_block);
@@ -60,12 +60,12 @@ let mut main_block = Block::new();
     let mut if_block = Block::new();
     {
         if_block.load_const(BUILTIN_TYPES::STRING, "executed if block");
-        if_block.call_print_function(true);
+        if_block.call_special_function(SpecialFunctions::PRINT);
     }
     let mut else_block = Block::new();
     {
         else_block.load_const(BUILTIN_TYPES::STRING, "executed else block");
-        else_block.call_print_function(true);
+        else_block.call_special_function(SpecialFunctions::PRINT);
     }
     main_block.define_if_else_block(if_block, else_block);
     main_module.add_main_block(main_block);
@@ -91,7 +91,7 @@ fn main() {
 
     let mut fn_block = Block::new();
         fn_block.load_const(BUILTIN_TYPES::STRING, "aaa");
-        fn_block.call_print_function(true);
+        fn_block.call_special_function(SpecialFunctions::PRINT);
 
         main_module.define_function(
             fn_block,
@@ -129,7 +129,7 @@ fn main() {
         main_block.define_variable(BUILTIN_TYPES::MAGIC_INT, VISIBILITY::PRIVATE,   "test_var");
         //variable is defined
         main_block.load_variable("test_var");
-        main_block.call_print_function(true);
+        main_block.call_special_function(SpecialFunctions::PRINT);
         //variable is printed
     }
     main_module.add_main_block(main_block);
@@ -153,7 +153,7 @@ fn main() {
         let mut loop_block = Block::new();
         {
             loop_block.load_const(BUILTIN_TYPES::STRING, "I'm printing many times");
-            loop_block.call_print_function(true);
+            loop_block.call_special_function(SpecialFunctions::PRINT);
         }
         let mut loop_count_block = Block::new();
         {
@@ -187,7 +187,7 @@ fn main() {
     let mut loop_block = Block::new();
     {
         loop_block.load_const(BUILTIN_TYPES::MAGIC_INT, "20");
-        loop_block.call_print_function(true);
+        loop_block.call_special_function(SpecialFunctions::PRINT);
     }
     main_block.define_while_loop(loop_block, conditional_block);
 
@@ -216,7 +216,7 @@ fn main() {
     main_block.create_object("Person", vec!["name", "age"]);
     main_block.define_variable(BUILTIN_TYPES::OBJECT, VISIBILITY::PUBLIC, "person_1");
     main_block.load_variable("person_1");
-    main_block.call_print_function(true);
+    main_block.call_special_function(SpecialFunctions::PRINT);
 
 
     main_module.add_main_block(main_block);

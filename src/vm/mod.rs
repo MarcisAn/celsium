@@ -1,8 +1,6 @@
-use crate::{OPTCODE};
 pub mod vm;
-use num::bigint::{BigInt, ToBigInt};
+use num::bigint::BigInt;
 use serde::{Deserialize, Serialize};
-use vm::VM;
 mod math_operators;
 
 #[derive(Debug, PartialEq, Clone,Serialize, Deserialize)]

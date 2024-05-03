@@ -33,10 +33,6 @@ pub enum OPTCODE {
     CALL_FUNCTION_WITH_BYTECODE {
         bytecode: Vec<OPTCODE>,
     },
-    CALL_PRINT_FUNCTION {
-        newline: bool,
-    },
-    CALL_INPUT,
     RETURN_FROM_FUNCTION,
     ADD,
     SUBTRACT,
@@ -91,5 +87,8 @@ pub enum OPTCODE {
     CREATE_OBJECT {
         name: String,
         field_names: Vec<String>
+    },
+    CALL_SPECIAL_FUNCTION {
+        function: super::SpecialFunctions
     }
 }

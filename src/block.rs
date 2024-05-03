@@ -2,6 +2,7 @@ use num::BigInt;
 use rand::Rng;
 
 use crate::module::FunctionSignature;
+use crate::SpecialFunctions;
 use crate::{module::VISIBILITY, BINOP, BUILTIN_TYPES, OPTCODE};
 use std::io::{self, Result};
 use std::iter;
@@ -86,10 +87,6 @@ impl Block {
         self.bytecode.push(OPTCODE::CALL_FUNCTION {
             name: name.to_string(),
         });
-    }
-    pub fn call_print_function(&mut self, newline: bool) {
-        self.bytecode
-            .push(OPTCODE::CALL_PRINT_FUNCTION { newline: newline });
     }
     pub fn define_simple_loop(&mut self, loop_block: Block, loops_count_block: Block) {
         let block_length = loop_block.bytecode.len();
@@ -224,8 +221,8 @@ impl Block {
             name: name.to_string(),
         })
     }
-    pub fn input_function(&mut self){
-        self.bytecode.push(OPTCODE::CALL_INPUT);
+    pub fn call_special_function(&mut self, function: SpecialFunctions){
+        self.bytecode.push(OPTCODE::CALL_SPECIAL_FUNCTION { function });
     }
     pub fn create_object(&mut self, name: &str, field_names: Vec<&str>){
         let mut owned_names: Vec<String> = vec![];

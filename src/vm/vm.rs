@@ -1,18 +1,14 @@
 use super::{math_operators::*, StackValue};
 use crate::{bytecode::OPTCODE, module::VISIBILITY, CelsiumProgram, BUILTIN_TYPES};
 use num::BigInt;
-use rand::{seq::index, Rng};
+use rand::Rng;
 use std::{
     collections::{HashMap, LinkedList},
-    env::var,
     io::{self, BufRead, Write},
     str::FromStr,
 };
 
-enum FUNCTION {
-    RUST_FUNCTION,
-    USER_DEFINED_FUNCTION,
-}
+
 
 fn generate_rand_varname(length: usize) -> String {
     const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\

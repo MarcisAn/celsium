@@ -10,7 +10,9 @@ use module::FunctionSignature;
 use module::Module;
 extern crate serde;
 extern crate serde_json;
-
+use num::bigint::RandBigInt;
+use rand::prelude::*;
+use num::bigint;
 use serde::{Deserialize, Serialize};
 
 extern crate js_sys;
@@ -58,6 +60,12 @@ impl ObjectBuilder {
     }
 }
 
+#[derive(Clone, Debug)]
+pub enum SpecialFunctions {
+    PRINT,
+    INPUT,
+    RANDOM,
+}
 pub struct CelsiumProgram {
     modules: Vec<Module>,
 }
@@ -102,12 +110,6 @@ impl CelsiumProgram {
                 OPTCODE::MULTIPLY => vm.aritmethics("*"),
                 OPTCODE::DIVIDE => vm.aritmethics("/"),
                 OPTCODE::REMAINDER => vm.aritmethics("%"),
-                OPTCODE::CALL_PRINT_FUNCTION { newline } => {
-                    let printable = &vm.format_for_print(*newline);
-                    #[cfg(target_family = "wasm")]
-                    wasm_print(printable);
-                    print!("{}", printable);
-                }
                 OPTCODE::JUMP_IF_FALSE { steps } => {
                     if (vm.must_jump()) {
                         index += *steps as isize
@@ -148,17 +150,7 @@ impl CelsiumProgram {
                     body: body_block.clone(),
                     visibility: visibility.clone(),
                 }),
-                OPTCODE::CALL_INPUT => {
-                    #[cfg(target_family = "wasm")]
-                    vm.push(&BUILTIN_TYPES::STRING, &"asdfghjkl".to_string());
-                    #[cfg(target_family = "wasm")]
-                    async {
-                        let value = &wasm_input().await.as_string().unwrap();
-                        vm.push(&BUILTIN_TYPES::STRING, value);
-                    };
-                    #[cfg(not(target_family = "wasm"))]
-                    vm.input("");
-                }
+
                 OPTCODE::CREATE_OBJECT { name, field_names } => {
                     let mut fields: Vec<ObjectField> = vec![];
                     let mut field_names_mut = field_names.clone();
@@ -175,6 +167,26 @@ impl CelsiumProgram {
                         value: fields,
                     });
                 }
+                OPTCODE::CALL_SPECIAL_FUNCTION { function } => match function {
+                    SpecialFunctions::PRINT => {
+                        let printable = &vm.format_for_print(true);
+                        #[cfg(target_family = "wasm")]
+                        wasm_print(printable);
+                        print!("{}", printable);
+                    }
+                    SpecialFunctions::INPUT => {
+                        #[cfg(target_family = "wasm")]
+                        vm.push(&BUILTIN_TYPES::STRING, &"asdfghjkl".to_string());
+                        #[cfg(target_family = "wasm")]
+                        async {
+                            let value = &wasm_input().await.as_string().unwrap();
+                            vm.push(&BUILTIN_TYPES::STRING, value);
+                        };
+                        #[cfg(not(target_family = "wasm"))]
+                        vm.input("");
+                    }
+                    SpecialFunctions::RANDOM => vm.push_stackvalue(StackValue::BIGINT { value: bigint::BigInt::from(rand::thread_rng().gen_biguint(8))}),
+                },
             }
             index += 1;
         }
@@ -200,7 +212,7 @@ mod tests {
         main_block.create_object("Person", vec!["name", "age"]);
         main_block.define_variable(BUILTIN_TYPES::OBJECT, VISIBILITY::PUBLIC, "person_1");
         main_block.load_variable("person_1");
-        main_block.call_print_function(true);
+        main_block.call_special_function(SpecialFunctions::PRINT);
 
         let mut i = 0;
         while i < main_block.bytecode.len() {
