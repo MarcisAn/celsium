@@ -1,3 +1,5 @@
+use num::FromPrimitive;
+use num::ToPrimitive;
 use std::collections::HashMap;
 use std::future::IntoFuture;
 pub mod bytecode;
@@ -12,6 +14,8 @@ extern crate serde;
 extern crate serde_json;
 use num::bigint;
 use num::bigint::RandBigInt;
+use num::BigInt;
+use num::BigUint;
 use rand::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -186,15 +190,39 @@ impl CelsiumProgram {
                         #[cfg(not(target_family = "wasm"))]
                         vm.input("");
                     }
-                    SpecialFunctions::RANDOM => vm.push_stackvalue(StackValue::BIGINT {
-                        value: bigint::BigInt::from(rand::thread_rng().gen_biguint(8)),
-                    }),
+                    SpecialFunctions::RANDOM => {
+                        let value = {
+                            let max = match vm.pop() {
+                                StackValue::BOOL { value } => panic!(),
+                                StackValue::BIGINT { value } => truncate_biguint_to_i64(&value),
+                                StackValue::FLOAT { value } => panic!(),
+                                StackValue::STRING { value } => panic!(),
+                                StackValue::ARRAY { value } => panic!(),
+                                StackValue::OBJECT { name, value } => panic!(),
+                            };
+                            let min = match vm.pop() {
+                                StackValue::BOOL { value } => panic!(),
+                                StackValue::BIGINT { value } => truncate_biguint_to_i64(&value),
+                                StackValue::FLOAT { value } => panic!(),
+                                StackValue::STRING { value } => panic!(),
+                                StackValue::ARRAY { value } => panic!(),
+                                StackValue::OBJECT { name, value } => panic!(),
+                            };
+                            bigint::BigInt::from_i64(rand::thread_rng().gen_range(min..max)).unwrap()};
+                        vm.push_stackvalue(StackValue::BIGINT {
+                        value: value,
+                    })},
                 },
             }
             index += 1;
         }
         Ok(())
     }
+}
+
+fn truncate_biguint_to_i64(a: &BigInt) -> i64 {
+    let mask = BigInt::from(u64::MAX);
+    (a & mask).to_i64().unwrap()
 }
 
 #[cfg(test)]
