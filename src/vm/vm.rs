@@ -8,8 +8,6 @@ use std::{
     str::FromStr,
 };
 
-
-
 fn generate_rand_varname(length: usize) -> String {
     const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
                             abcdefghijklmnopqrstuvwxyz\
@@ -94,13 +92,20 @@ fn format_for_print(value: StackValue, newline: bool) -> String {
             }
             return printable_str;
         }
-        StackValue::OBJECT { name, value: fields } => {
+        StackValue::OBJECT {
+            name,
+            value: fields,
+        } => {
             let mut printable_object = format!("{} {{\n", name);
             let mut index = 0;
             let length = &fields.len();
             for field in fields {
-                printable_object += &format!("   {}: {}", field.name, format_for_print(field.value, false));
-                if &(index + 2) == length{
+                printable_object += &format!(
+                    "   {}: {}",
+                    field.name,
+                    format_for_print(field.value, false)
+                );
+                if &(index + 2) == length {
                     printable_object += "\n";
                 }
                 index += 1;
@@ -110,6 +115,13 @@ fn format_for_print(value: StackValue, newline: bool) -> String {
                 return format!("{}", printable_object);
             } else {
                 return format!("{}\n", printable_object);
+            }
+        }
+        StackValue::FLOAT { value } => {
+            if !newline {
+                return format!("{}", value.to_string().replace(".", ","));
+            } else {
+                return format!("{}\n", value.to_string().replace(".", ","));
             }
         },
     };
@@ -140,12 +152,13 @@ impl VM {
                 value: data.to_string(),
             }),
             BUILTIN_TYPES::OBJECT => panic!(),
+            BUILTIN_TYPES::FLOAT => self.stack.push_back(StackValue::FLOAT { value: data.parse().unwrap() }),
         }
     }
-    pub fn push_stackvalue(&mut self, stackvalue: StackValue){
+    pub fn push_stackvalue(&mut self, stackvalue: StackValue) {
         self.stack.push_back(stackvalue);
     }
-    pub fn pop(&mut self) -> StackValue{
+    pub fn pop(&mut self) -> StackValue {
         return self.stack.pop_back().unwrap();
     }
     pub fn aritmethics(&mut self, action: &str) {

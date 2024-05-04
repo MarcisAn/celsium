@@ -10,9 +10,9 @@ use module::FunctionSignature;
 use module::Module;
 extern crate serde;
 extern crate serde_json;
+use num::bigint;
 use num::bigint::RandBigInt;
 use rand::prelude::*;
-use num::bigint;
 use serde::{Deserialize, Serialize};
 
 extern crate js_sys;
@@ -44,6 +44,7 @@ pub enum BUILTIN_TYPES {
     BOOL,
     STRING,
     OBJECT,
+    FLOAT
 }
 
 pub struct ObjectBuilder {
@@ -62,7 +63,7 @@ impl ObjectBuilder {
 
 #[derive(Clone, Debug)]
 pub enum SpecialFunctions {
-    PRINT,
+    PRINT {newline: bool},
     INPUT,
     RANDOM,
 }
@@ -168,8 +169,8 @@ impl CelsiumProgram {
                     });
                 }
                 OPTCODE::CALL_SPECIAL_FUNCTION { function } => match function {
-                    SpecialFunctions::PRINT => {
-                        let printable = &vm.format_for_print(true);
+                    SpecialFunctions::PRINT{newline} => {
+                        let printable = &vm.format_for_print(*newline);
                         #[cfg(target_family = "wasm")]
                         wasm_print(printable);
                         print!("{}", printable);
@@ -185,7 +186,9 @@ impl CelsiumProgram {
                         #[cfg(not(target_family = "wasm"))]
                         vm.input("");
                     }
-                    SpecialFunctions::RANDOM => vm.push_stackvalue(StackValue::BIGINT { value: bigint::BigInt::from(rand::thread_rng().gen_biguint(8))}),
+                    SpecialFunctions::RANDOM => vm.push_stackvalue(StackValue::BIGINT {
+                        value: bigint::BigInt::from(rand::thread_rng().gen_biguint(8)),
+                    }),
                 },
             }
             index += 1;
@@ -212,7 +215,7 @@ mod tests {
         main_block.create_object("Person", vec!["name", "age"]);
         main_block.define_variable(BUILTIN_TYPES::OBJECT, VISIBILITY::PUBLIC, "person_1");
         main_block.load_variable("person_1");
-        main_block.call_special_function(SpecialFunctions::PRINT);
+        main_block.call_special_function(SpecialFunctions::PRINT{newline: true});
 
         let mut i = 0;
         while i < main_block.bytecode.len() {

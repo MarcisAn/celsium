@@ -8,6 +8,7 @@ mod math_operators;
 pub enum StackValue {
     BOOL { value: bool },
     BIGINT { value: BigInt },
+    FLOAT {value: f64},
     STRING { value: String },
     ARRAY { value: Vec<StackValue> },
     OBJECT {name: String, value: Vec<ObjectField>},
