@@ -41,13 +41,13 @@ fn format_for_print(value: StackValue, newline: bool) -> String {
     match value {
         StackValue::BOOL { value } => {
             if !newline {
-                if (value) {
+                if value {
                     return "1".to_owned();
                 } else {
                     return "0".to_owned();
                 }
             } else {
-                if (value) {
+                if value {
                     return "1\n".to_owned();
                 } else {
                     return "0\n".to_owned();
@@ -74,7 +74,7 @@ fn format_for_print(value: StackValue, newline: bool) -> String {
             for i in &value {
                 let formated: String = format_for_print(i.clone(), false).as_str().to_owned();
                 match i {
-                    StackValue::STRING { value } => {
+                    StackValue::STRING { value: _ } => {
                         printable_str = printable_str + "\"" + &formated + "\"";
                     }
                     _ => printable_str += &formated,
@@ -142,9 +142,9 @@ impl VM {
                 value: BigInt::from_str(&data).unwrap(),
             }),
             BUILTIN_TYPES::BOOL => {
-                if (data == "1") {
+                if data == "1" {
                     self.stack.push_back(StackValue::BOOL { value: true })
-                } else if (data == "0") {
+                } else if data == "0" {
                     self.stack.push_back(StackValue::BOOL { value: false })
                 }
             }
@@ -186,7 +186,6 @@ impl VM {
     }
     pub fn format_for_print(&mut self, newline: bool) -> String {
         return format_for_print(self.stack.pop_back().unwrap(), newline);
-        return "".to_owned();
     }
 
     pub fn must_jump(&mut self) -> bool {
@@ -222,7 +221,7 @@ impl VM {
         init_value_count: usize,
     ) {
         let mut init_values = vec![];
-        for i in 0..init_value_count {
+        for _ in 0..init_value_count {
             init_values.push(self.stack.pop_back().unwrap());
         }
         init_values.reverse();
@@ -280,7 +279,7 @@ impl VM {
         for var in &self.variables {
             if var.clone().name == name.to_string() {
                 match var.value.clone() {
-                    StackValue::ARRAY { mut value } => {
+                    StackValue::ARRAY { value } => {
                         self.stack.push_back(StackValue::BIGINT {
                             value: BigInt::from(value.len()),
                         });
@@ -303,19 +302,19 @@ impl VM {
         panic!("Cound not found vairable named {}", name);
     }
 
-    pub fn load_var(&mut self, name: &str) -> Result<(), String> {
+    pub fn load_var(&mut self, name: &str) {
         for var in &self.variables {
             if var.name == name {
                 self.stack.push_back(var.value.clone());
-                return Ok(());
+                return;
             }
         }
-        Err(format!("Cound not found vairable named {}", name))
+        panic!("Cound not found vairable named {}", name);
     }
 
     pub fn input(&mut self, prompt: &str) {
         print!("{}", prompt);
-        io::stdout().flush();
+        let _ = io::stdout().flush();
         let res = io::stdin()
             .lock()
             .lines()

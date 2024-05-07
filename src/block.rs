@@ -1,16 +1,11 @@
-use num::BigInt;
 use rand::Rng;
-
 use crate::module::FunctionSignature;
 use crate::SpecialFunctions;
 use crate::{module::VISIBILITY, BINOP, BUILTIN_TYPES, OPTCODE};
-use std::io::{self, Result};
-use std::iter;
-use std::iter::FromIterator;
 
 #[derive(Clone, Debug)]
 pub struct Block {
-    pub bytecode: Vec<OPTCODE>,
+    pub bytecode: Vec<OPTCODE>
 }
 fn generate_rand_varname(length: usize) -> String {
     const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
@@ -46,11 +41,11 @@ impl Block {
             BINOP::MULTIPLY => OPTCODE::MULTIPLY,
             BINOP::DIVIDE => OPTCODE::DIVIDE,
             BINOP::REMAINDER => OPTCODE::REMAINDER,
-            BINOP::LESS_THAN => OPTCODE::LESS_THAN,
-            BINOP::LARGER_THAN => OPTCODE::LARGER_THAN,
-            BINOP::LESS_OR_EQ => OPTCODE::LESS_OR_EQ,
-            BINOP::LARGER_OR_EQ => OPTCODE::LARGER_OR_EQ,
-            BINOP::NOT_EQ => OPTCODE::NOT_EQ,
+            BINOP::LessThan => OPTCODE::LESS_THAN,
+            BINOP::LargerThan => OPTCODE::LARGER_THAN,
+            BINOP::LessOrEq => OPTCODE::LESS_OR_EQ,
+            BINOP::LargerOrEq => OPTCODE::LARGER_OR_EQ,
+            BINOP::NotEq => OPTCODE::NOT_EQ,
             BINOP::EQ => OPTCODE::EQ,
             BINOP::AND => OPTCODE::AND,
             BINOP::OR => OPTCODE::OR,
@@ -186,7 +181,7 @@ impl Block {
         self.bytecode.push(OPTCODE::RETURN_FROM_FUNCTION);
     }
     pub fn define_array(&mut self, visibility: VISIBILITY, name: String, init_values_count: usize) {
-        self.bytecode.push(OPTCODE::DEFINE_ARRAY {
+        self.bytecode.push(OPTCODE::DefineArray {
             visibility,
             name,
             init_values_count,

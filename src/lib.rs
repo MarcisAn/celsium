@@ -85,16 +85,16 @@ impl CelsiumProgram {
     }
 
     pub fn run_program(&mut self) {
-        let mut bytecode: Vec<OPTCODE> = vec![];
+        let mut global_bytecode: Vec<OPTCODE> = vec![];
         for module in &self.modules {
-            bytecode.append(&mut module.main_block.bytecode.clone());
+            global_bytecode.append(&mut module.clone().main_block.unwrap().bytecode.clone());
         }
         let mut vm = VM::new();
 
-        self.run(&mut vm, &bytecode);
+        self.run(&mut vm, &global_bytecode);
     }
 
-    pub fn run(&mut self, vm: &mut VM, bytecode: &Vec<OPTCODE>) -> Result<(), String> {
+    pub fn run(&mut self, vm: &mut VM, bytecode: &Vec<OPTCODE>)  {
         let mut index: isize = 0;
         while index < bytecode.len() as isize {
             let optcode = &bytecode[index as usize];
@@ -107,7 +107,7 @@ impl CelsiumProgram {
                 OPTCODE::RETURN_FROM_FUNCTION => {
                     break;
                 }
-                OPTCODE::CALL_FUNCTION_WITH_BYTECODE { bytecode } => {
+                OPTCODE::CALL_FUNCTION_WITH_BYTECODE { bytecode: _ } => {
                     panic!();
                 }
                 OPTCODE::ADD => vm.aritmethics("+"),
@@ -116,7 +116,7 @@ impl CelsiumProgram {
                 OPTCODE::DIVIDE => vm.aritmethics("/"),
                 OPTCODE::REMAINDER => vm.aritmethics("%"),
                 OPTCODE::JUMP_IF_FALSE { steps } => {
-                    if (vm.must_jump()) {
+                    if vm.must_jump() {
                         index += *steps as isize
                     }
                 }
@@ -132,13 +132,13 @@ impl CelsiumProgram {
                 OPTCODE::AND => vm.aritmethics("and"),
                 OPTCODE::XOR => vm.aritmethics("xor"),
                 OPTCODE::DEFINE_VAR {
-                    data_type,
+                    data_type: _,
                     visibility,
                     name,
                 } => vm.define_var(0, name.to_string(), visibility),
-                OPTCODE::LOAD_VAR { name } => vm.load_var(name)?,
+                OPTCODE::LOAD_VAR { name } => vm.load_var(name),
                 OPTCODE::ASSIGN_VAR { name } => vm.assign_var(name),
-                OPTCODE::DEFINE_ARRAY {
+                OPTCODE::DefineArray {
                     visibility,
                     name,
                     init_values_count,
@@ -193,20 +193,12 @@ impl CelsiumProgram {
                     SpecialFunctions::RANDOM => {
                         let value = {
                             let max = match vm.pop() {
-                                StackValue::BOOL { value } => panic!(),
                                 StackValue::BIGINT { value } => truncate_biguint_to_i64(&value),
-                                StackValue::FLOAT { value } => panic!(),
-                                StackValue::STRING { value } => panic!(),
-                                StackValue::ARRAY { value } => panic!(),
-                                StackValue::OBJECT { name, value } => panic!(),
+                                _ => panic!()
                             };
                             let min = match vm.pop() {
-                                StackValue::BOOL { value } => panic!(),
                                 StackValue::BIGINT { value } => truncate_biguint_to_i64(&value),
-                                StackValue::FLOAT { value } => panic!(),
-                                StackValue::STRING { value } => panic!(),
-                                StackValue::ARRAY { value } => panic!(),
-                                StackValue::OBJECT { name, value } => panic!(),
+                                _ => panic!()
                             };
                             bigint::BigInt::from_i64(rand::thread_rng().gen_range(min..max)).unwrap()};
                         vm.push_stackvalue(StackValue::BIGINT {
@@ -216,7 +208,6 @@ impl CelsiumProgram {
             }
             index += 1;
         }
-        Ok(())
     }
 }
 
@@ -227,7 +218,7 @@ fn truncate_biguint_to_i64(a: &BigInt) -> i64 {
 
 #[cfg(test)]
 mod tests {
-    use self::module::{FunctionSignature, VISIBILITY};
+    use self::module::VISIBILITY;
 
     use super::*;
 

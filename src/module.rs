@@ -1,11 +1,9 @@
-use std::boxed;
-
 use crate::block::Block;
 use crate::{CelsiumProgram, BUILTIN_TYPES, OPTCODE};
 #[derive(Clone)]
 pub struct Module {
     pub name: String,
-    pub main_block: Block,
+    pub main_block: Option<Block>,
     pub functions: Vec<Function>,
     _id: usize,
 }
@@ -65,13 +63,13 @@ impl Module {
         let module = Module {
             name: name.to_string(),
             _id: celsius_program.modules.len(),
-            main_block: Block::new(),
+            main_block: None,
             functions: vec![],
         };
         module
     }
     pub fn add_main_block(&mut self, mut block: Block) {
         block.bytecode = block.clone().bytecode;
-        self.main_block = block;
+        self.main_block = Some(block);
     }
 }
