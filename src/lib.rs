@@ -1,5 +1,6 @@
 use num::FromPrimitive;
 use num::ToPrimitive;
+use typestack::TypeStack;
 use std::collections::HashMap;
 use std::future::IntoFuture;
 pub mod bytecode;
@@ -20,6 +21,7 @@ use rand::prelude::*;
 use serde::{Deserialize, Serialize};
 
 extern crate js_sys;
+mod typestack;
 pub mod block;
 pub mod module;
 mod vm;
@@ -219,22 +221,32 @@ fn truncate_biguint_to_i64(a: &BigInt) -> i64 {
 #[cfg(test)]
 mod tests {
     use self::module::VISIBILITY;
-
+    
     use super::*;
+
+    use typestack::TypeStack;
 
     #[test]
     fn it_works() {
         let mut celsium = CelsiumProgram::new();
         let mut main_module = Module::new("main", &mut celsium);
         let mut main_block = Block::new();
+        let mut typestack = TypeStack::new();
 
         main_block.load_const(BUILTIN_TYPES::STRING, "John");
+        typestack.push(BUILTIN_TYPES::STRING);
         main_block.load_const(BUILTIN_TYPES::MAGIC_INT, "37");
-
-        main_block.create_object("Person", vec!["name", "age"]);
-        main_block.define_variable(BUILTIN_TYPES::OBJECT, VISIBILITY::PUBLIC, "person_1");
-        main_block.load_variable("person_1");
+        typestack.push(BUILTIN_TYPES::OBJECT);
+        let res = typestack.binop(BINOP::ADD);
+        main_block.binop(BINOP::ADD);
         main_block.call_special_function(SpecialFunctions::PRINT{newline: true});
+        println!("{:?}", res);
+
+
+        //main_block.create_object("Person", vec!["name", "age"]);
+        //main_block.define_variable(BUILTIN_TYPES::OBJECT, VISIBILITY::PUBLIC, "person_1");
+        //main_block.load_variable("person_1");
+        //main_block.call_special_function(SpecialFunctions::PRINT{newline: true});
 
         let mut i = 0;
         while i < main_block.bytecode.len() {
