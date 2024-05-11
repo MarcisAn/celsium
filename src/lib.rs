@@ -1,31 +1,20 @@
 use num::FromPrimitive;
 use num::ToPrimitive;
-use typestack::TypeStack;
-use std::collections::HashMap;
-use std::future::IntoFuture;
 pub mod bytecode;
-use block::Block;
 use bytecode::{BINOP, OPTCODE};
-use js_sys::Object;
 use module::Function;
-use module::FunctionReturnType;
-use module::FunctionSignature;
 use module::Module;
 extern crate serde;
 extern crate serde_json;
 use num::bigint;
-use num::bigint::RandBigInt;
 use num::BigInt;
-use num::BigUint;
 use rand::prelude::*;
-use serde::{Deserialize, Serialize};
 
 extern crate js_sys;
-mod typestack;
+pub mod compile_time_checker;
 pub mod block;
 pub mod module;
 mod vm;
-use module::VISIBILITY;
 use vm::vm::VM;
 use vm::ObjectField;
 use vm::StackValue;
@@ -220,18 +209,20 @@ fn truncate_biguint_to_i64(a: &BigInt) -> i64 {
 
 #[cfg(test)]
 mod tests {
+    use crate::block::Block;
+
     use self::module::VISIBILITY;
     
     use super::*;
 
-    use typestack::TypeStack;
+    use compile_time_checker::CompileTimeChecker;
 
     #[test]
     fn it_works() {
         let mut celsium = CelsiumProgram::new();
         let mut main_module = Module::new("main", &mut celsium);
         let mut main_block = Block::new();
-        let mut typestack = TypeStack::new();
+        let mut typestack = CompileTimeChecker::new();
 
         main_block.load_const(BUILTIN_TYPES::STRING, "John");
         typestack.push(BUILTIN_TYPES::STRING);

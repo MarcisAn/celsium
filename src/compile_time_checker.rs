@@ -4,16 +4,19 @@ use num::Float;
 
 use crate::{bytecode::BINOP, BUILTIN_TYPES};
 
-pub struct TypeStack {
+pub struct CompileTimeChecker {
     stack: LinkedList<BUILTIN_TYPES>
 }
 
-impl TypeStack {
-    pub fn new() -> TypeStack {
-        TypeStack { stack: LinkedList::new() }
+impl CompileTimeChecker {
+    pub fn new() -> CompileTimeChecker {
+        CompileTimeChecker { stack: LinkedList::new() }
     }
     pub fn push(&mut self, pushable_type: BUILTIN_TYPES){
         self.stack.push_back(pushable_type);
+    }
+    pub fn pop(&mut self) -> Option<BUILTIN_TYPES> {
+        self.stack.pop_back()
     }
     pub fn binop(&mut self, binop: BINOP) -> Option<BUILTIN_TYPES> {
         match binop {
