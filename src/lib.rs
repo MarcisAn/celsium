@@ -33,7 +33,7 @@ extern "C" {
     async fn wasm_input() -> JsValue;
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum BUILTIN_TYPES {
     MAGIC_INT,
     BOOL,
@@ -222,7 +222,7 @@ mod tests {
         let mut celsium = CelsiumProgram::new();
         let mut main_module = Module::new("main", &mut celsium);
         let mut main_block = Block::new();
-        let mut typestack = CompileTimeChecker::new();
+        let mut typestack = CompileTimeChecker::new("".to_string(), "".to_string());
 
         main_block.load_const(BUILTIN_TYPES::STRING, "John");
         typestack.push(BUILTIN_TYPES::STRING);

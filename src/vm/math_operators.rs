@@ -386,6 +386,7 @@ pub fn not_eq(a: StackValue, b: StackValue) -> StackValue {
             StackValue::FLOAT { value: _ } => panic!("Cannot compare FLOAT with BOOL"),
         },
         StackValue::BIGINT { value: val_a } => match b {
+            
             StackValue::BOOL { value: _ } => panic!("Cannot compare MAGICINT with BOOL"),
             StackValue::BIGINT { value } => StackValue::BOOL {
                 value: val_a != value,
@@ -399,7 +400,7 @@ pub fn not_eq(a: StackValue, b: StackValue) -> StackValue {
                         value: val_a != BigInt::from(value as i64),
                     }
                 } else {
-                    StackValue::BOOL { value: false }
+                    StackValue::BOOL { value: true }
                 }
             },
         },
