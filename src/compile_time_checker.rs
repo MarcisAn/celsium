@@ -1,24 +1,49 @@
 use std::collections::LinkedList;
 
+use crate::{bytecode::BINOP, module::Function, vm::vm::Variable, BUILTIN_TYPES};
 
-use crate::{bytecode::BINOP, BUILTIN_TYPES};
+#[derive(Clone, Debug)]
+pub struct CompileTimeVariable {
+    name: String,
+    data_type: BUILTIN_TYPES
+} 
 
 pub struct CompileTimeChecker {
     stack: LinkedList<BUILTIN_TYPES>,
     pub source_files: Vec<String>,
     pub source_file_paths: Vec<String>,
-    pub current_file: usize
+    pub current_file: usize,
+    pub defined_functions: Vec<Function>,
+    pub defined_variables: Vec<CompileTimeVariable>,
 }
 
 impl CompileTimeChecker {
     pub fn new(source_file: String, path: String) -> CompileTimeChecker {
-        CompileTimeChecker { stack: LinkedList::new(), source_files: vec![source_file], source_file_paths: vec![path], current_file: 0 }
+        CompileTimeChecker {
+            stack: LinkedList::new(),
+            source_files: vec![source_file],
+            source_file_paths: vec![path],
+            current_file: 0,
+            defined_functions: vec![],
+            defined_variables: vec![],
+        }
     }
-    pub fn push(&mut self, pushable_type: BUILTIN_TYPES){
+    pub fn push(&mut self, pushable_type: BUILTIN_TYPES) {
         self.stack.push_back(pushable_type);
     }
     pub fn pop(&mut self) -> Option<BUILTIN_TYPES> {
         self.stack.pop_back()
+    }
+    pub fn def_var(&mut self, name:String, data_type: BUILTIN_TYPES ) {
+        self.defined_variables.push(CompileTimeVariable { name, data_type });
+    }
+    pub fn check_var(&mut self, name:String) -> Option<BUILTIN_TYPES>{
+        for var in &self.defined_variables{
+            if var.name == name{
+                return Some(var.data_type.clone());
+            }
+        }
+        None
     }
     pub fn binop(&mut self, binop: BINOP) -> Option<BUILTIN_TYPES> {
         /*
@@ -171,5 +196,4 @@ impl CompileTimeChecker {
         self.stack.push_back(result.clone().unwrap());
         return result;
     }
-    
 }

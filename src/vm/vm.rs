@@ -30,7 +30,7 @@ pub struct VM {
     variables: Vec<Variable>,
 }
 #[derive(Clone, Debug)]
-struct Variable {
+pub struct Variable {
     module_id: usize,
     name: String,
     value: StackValue,
