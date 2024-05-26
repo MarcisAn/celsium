@@ -196,6 +196,7 @@ impl CelsiumProgram {
                         value: value,
                     })},
                 },
+                OPTCODE::ASSIGN_AT_ARRAY_INDEX { name } => vm.set_at_array(name),
             }
             index += 1;
         }

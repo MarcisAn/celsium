@@ -70,6 +70,9 @@ pub enum OPTCODE {
     GET_FROM_ARRAY {
         name: String,
     },
+    ASSIGN_AT_ARRAY_INDEX {
+        name: String
+    },
     PUSH_TO_ARRAY {
         name: String,
     },
