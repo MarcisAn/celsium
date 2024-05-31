@@ -1,11 +1,12 @@
 use rand::Rng;
 use crate::module::FunctionSignature;
 use crate::SpecialFunctions;
-use crate::{module::VISIBILITY, BINOP, BUILTIN_TYPES, OPTCODE};
+use crate::{ module::VISIBILITY, BINOP, BUILTIN_TYPES, OPTCODE };
 
 #[derive(Clone, Debug)]
 pub struct Block {
-    pub bytecode: Vec<OPTCODE>
+    pub bytecode: Vec<OPTCODE>,
+    ast_id: usize
 }
 fn generate_rand_varname(length: usize) -> String {
     const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
@@ -25,8 +26,9 @@ fn generate_rand_varname(length: usize) -> String {
 }
 
 impl Block {
-    pub fn new() -> Block {
-        Block { bytecode: vec![] }
+    pub fn new(ast_id: usize) -> Block {
+        println!("{}", ast_id);
+        Block { bytecode: vec![], ast_id }
     }
     pub fn load_const(&mut self, data_type: BUILTIN_TYPES, value: &str) {
         self.bytecode.push(OPTCODE::LOAD_CONST {
@@ -157,7 +159,7 @@ impl Block {
         &mut self,
         data_type: BUILTIN_TYPES,
         visibility: VISIBILITY,
-        name: &str,
+        name: &str
     ) {
         self.bytecode.push(OPTCODE::DEFINE_VAR {
             data_type,
@@ -169,7 +171,7 @@ impl Block {
         &mut self,
         body_block: Block,
         visibility: VISIBILITY,
-        signature: FunctionSignature,
+        signature: FunctionSignature
     ) {
         self.bytecode.push(OPTCODE::DEFINE_FUNCTION {
             signature: signature,
@@ -194,7 +196,7 @@ impl Block {
         })
     }
 
-    pub fn assign_to_array(&mut self, name: &str){
+    pub fn assign_to_array(&mut self, name: &str) {
         self.bytecode.push(OPTCODE::ASSIGN_AT_ARRAY_INDEX {
             name: name.to_string(),
         });
@@ -222,14 +224,17 @@ impl Block {
             name: name.to_string(),
         })
     }
-    pub fn call_special_function(&mut self, function: SpecialFunctions){
+    pub fn call_special_function(&mut self, function: SpecialFunctions) {
         self.bytecode.push(OPTCODE::CALL_SPECIAL_FUNCTION { function });
     }
-    pub fn create_object(&mut self, name: &str, field_names: Vec<&str>){
+    pub fn create_object(&mut self, name: &str, field_names: Vec<&str>) {
         let mut owned_names: Vec<String> = vec![];
         for name in field_names {
             owned_names.push(name.to_string());
         }
-        self.bytecode.push(OPTCODE::CREATE_OBJECT { name: name.to_string(), field_names: owned_names });
+        self.bytecode.push(OPTCODE::CREATE_OBJECT {
+            name: name.to_string(),
+            field_names: owned_names,
+        });
     }
 }
