@@ -23,14 +23,12 @@ fn generate_rand_varname(length: usize) -> String {
 
 pub struct VM {
     stack: LinkedList<StackValue>,
-    variables: HashMap<String, Variable>,
+    variables: HashMap<usize, Variable>,
 }
 #[derive(Clone, Debug)]
 pub struct Variable {
-    module_id: usize,
-    name: String,
+    id: usize,
     value: StackValue,
-    visibility: VISIBILITY,
 }
 
 fn format_for_print(value: StackValue, newline: bool) -> String {
@@ -203,35 +201,12 @@ impl VM {
         return value == StackValue::BOOL { value: false };
     }
 
-    pub fn define_var(&mut self, module_id: usize, name: String, visibility: &VISIBILITY) {
-        self.variables.insert(name.clone(), Variable {
-            module_id,
-            name: name.clone(),
-            value: self.stack.pop_back().unwrap(),
-            visibility: visibility.clone(),
-        });
+    pub fn define_var(&mut self, id: usize) {
+        self.variables.insert(id, Variable { id, value: self.stack.pop_back().unwrap() });
     }
 
-    pub fn define_array(
-        &mut self,
-        module_id: usize,
-        name: String,
-        visibility: &VISIBILITY,
-        init_value_count: usize
-    ) {
-        let mut init_values = vec![];
-        for _ in 0..init_value_count {
-            init_values.push(self.stack.pop_back().unwrap());
-        }
-        init_values.reverse();
-        self.variables.insert(name.clone(), Variable {
-            module_id,
-            name: name.clone(),
-            value: StackValue::ARRAY { value: init_values },
-            visibility: visibility.clone(),
-        });
-    }
-    pub fn get_from_array(&mut self, name: &String) {
+    
+    pub fn get_from_array(&mut self, id: usize) {
         let index_stack = self.stack.pop_back().unwrap();
         let index = match index_stack {
             StackValue::BIGINT { value } => value.to_string().parse::<usize>().unwrap(),
@@ -239,21 +214,21 @@ impl VM {
         };
 
 
-        let getter = self.variables.get(name);
+        let getter = self.variables.get(&id);
         if getter.is_none() {
-            panic!("Cound not found vairable named {}", name);
+            panic!("Cound not found vairable named {}", id);
         } else {
             let stackvalue = getter.unwrap().value.to_owned();
             match stackvalue {
                     StackValue::ARRAY { value } => {
                         self.stack.push_back(value[index].clone());
                     }
-                    _ => panic!("{} is not an array", getter.unwrap().name),
+                    _ => panic!("{} is not an array", getter.unwrap().id),
                 }
                 return;
         }
     }
-    pub fn set_at_array(&mut self, name: &String) {
+    pub fn set_at_array(&mut self, id: usize) {
         let index_stack = self.stack.pop_back().unwrap();
         let index = match index_stack {
             StackValue::BIGINT { value } => value.to_string().parse::<usize>().unwrap(),
@@ -261,41 +236,41 @@ impl VM {
         };
 
 
-        let getter = self.variables.get(name);
+        let getter = self.variables.get(&id);
         if getter.is_none() {
-            panic!("Cound not found vairable named {}", name);
+            panic!("Cound not found vairable named {}", id);
         } else {
             match getter.unwrap().value.to_owned() {
                     StackValue::ARRAY { mut value } => {
                         let value_to_push = self.stack.pop_back().unwrap();
                         value[index] = value_to_push;
-                        self.variables.get_mut(name).unwrap().value = StackValue::ARRAY { value: value };
+                        self.variables.get_mut(&id).unwrap().value = StackValue::ARRAY { value: value };
                     }
-                    _ => panic!("{} is not an array", getter.unwrap().name),
+                    _ => panic!("{} is not an array", getter.unwrap().id),
                 }
                 return;
         }
     }
     
-    pub fn push_to_array(&mut self, name: &String) {
-        let getter = self.variables.get(name);
+    pub fn push_to_array(&mut self, id: usize) {
+        let getter = self.variables.get(&id);
         if getter.is_none() {
-            panic!("Cound not found vairable named {}", name);
+            panic!("Cound not found vairable named {}", id);
         } else {
             match getter.unwrap().value.to_owned() {
                     StackValue::ARRAY { mut value } => {
                         let value_to_push = self.stack.pop_back().unwrap();
                         value.push(value_to_push);
                     }
-                    _ => panic!("{} is not an array", getter.unwrap().name),
+                    _ => panic!("{} is not an array", getter.unwrap().id),
                 }
                 return;
         }
     }
-    pub fn get_array_length(&mut self, name: &String) {
-        let getter = self.variables.get(name);
+    pub fn get_array_length(&mut self, id: usize) {
+        let getter = self.variables.get(&id);
         if getter.is_none() {
-            panic!("Cound not found vairable named {}", name);
+            panic!("Cound not found vairable named {}", id);
         } else {
             match getter.unwrap().value.to_owned() {
                     StackValue::ARRAY { value } => {
@@ -303,25 +278,25 @@ impl VM {
                             value: BigInt::from(value.len()),
                         });
                     }
-                    _ => panic!("{} is not an array", getter.unwrap().name),
+                    _ => panic!("{} is not an array", getter.unwrap().id),
                 }
                 return;
         }
     }
-    pub fn assign_var(&mut self, name: &str) {
+    pub fn assign_var(&mut self, id: usize) {
         let value = self.stack.pop_back().unwrap();
-        let getter = self.variables.get(name);
+        let getter = self.variables.get(&id);
         if getter.is_none() {
-            panic!("Cound not found vairable named {}", name);
+            panic!("Cound not found vairable with ID {}", id);
         } else {
-            self.variables.get_mut(name).unwrap().value = value;
+            self.variables.get_mut(&id).unwrap().value = value;
         }
     }
 
-    pub fn load_var(&mut self, name: &str) {
-        let getter = self.variables.get(name);
+    pub fn load_var(&mut self, id: usize) {
+        let getter = self.variables.get(&id);
         if getter.is_none() {
-            panic!("Cound not found vairable named {}", name);
+            panic!("Cound not found vairable id {}", id);
         } else {
             self.stack.push_back(getter.unwrap().value.clone());
         }
@@ -351,22 +326,18 @@ impl VM {
                 for arg in func_args {
                     let var_name =
                         "__".to_string() + &arg.name.to_string() + &generate_rand_varname(5);
-                    self.define_var(0, var_name.clone(), &VISIBILITY::PRIVATE);
+                    self.define_var(9999999999);//TODO argument id's
                     argument_names_to_replace.insert(arg.clone().name, var_name);
                 }
                 let mut replaced_bytecode: Vec<OPTCODE> = vec![];
                 for optcode in &function.body.bytecode.clone() {
                     match optcode {
-                        OPTCODE::LOAD_VAR { name } =>
+                        OPTCODE::LOAD_VAR { id } =>
                             match argument_names_to_replace.get(name) {
                                 Some(ref new_name) =>
-                                    replaced_bytecode.push(OPTCODE::LOAD_VAR {
-                                        name: new_name.to_string(),
-                                    }),
+                                    replaced_bytecode.push(OPTCODE::LOAD_VAR { id: *id }),
                                 None =>
-                                    replaced_bytecode.push(OPTCODE::LOAD_VAR {
-                                        name: name.to_string(),
-                                    }),
+                                    replaced_bytecode.push(OPTCODE::LOAD_VAR { id: *id }),
                             }
                         _ => replaced_bytecode.push(optcode.clone()),
                     }

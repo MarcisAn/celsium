@@ -6,7 +6,7 @@ use crate::{ module::VISIBILITY, BINOP, BUILTIN_TYPES, OPTCODE };
 #[derive(Clone, Debug)]
 pub struct Block {
     pub bytecode: Vec<OPTCODE>,
-    ast_id: usize
+    pub ast_id: usize
 }
 fn generate_rand_varname(length: usize) -> String {
     const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
@@ -27,7 +27,6 @@ fn generate_rand_varname(length: usize) -> String {
 
 impl Block {
     pub fn new(ast_id: usize) -> Block {
-        println!("{}", ast_id);
         Block { bytecode: vec![], ast_id }
     }
     pub fn load_const(&mut self, data_type: BUILTIN_TYPES, value: &str) {
@@ -85,7 +84,7 @@ impl Block {
             name: name.to_string(),
         });
     }
-    pub fn define_simple_loop(&mut self, loop_block: Block, loops_count_block: Block) {
+    pub fn define_simple_loop(&mut self, loop_block: Block, loops_count_block: Block) {/*
         let block_length = loop_block.bytecode.len();
         let tmp_var_name = "_".to_string() + &generate_rand_varname(17);
 
@@ -95,17 +94,11 @@ impl Block {
             data_type: BUILTIN_TYPES::MAGIC_INT,
             data: "0".to_string(),
         });
-        self.bytecode.push(OPTCODE::DEFINE_VAR {
-            data_type: BUILTIN_TYPES::MAGIC_INT,
-            visibility: VISIBILITY::PRIVATE,
-            name: tmp_var_name.clone(),
-        });
+        self.bytecode.push(OPTCODE::DEFINE_VAR { data_type: BUILTIN_TYPES::MAGIC_INT, id: loop_block.ast_id });
 
         //make a conditional with the tmp variable
 
-        self.bytecode.push(OPTCODE::LOAD_VAR {
-            name: tmp_var_name.clone(),
-        });
+        self.bytecode.push(OPTCODE::LOAD_VAR { id: () });
         for optcode in &loops_count_block.bytecode {
             self.bytecode.push(optcode.clone());
         }
@@ -124,6 +117,7 @@ impl Block {
 
         self.bytecode.push(OPTCODE::LOAD_VAR {
             name: tmp_var_name.clone(),
+            scope: loop_block.ast_id
         });
         self.bytecode.push(OPTCODE::LOAD_CONST {
             data_type: BUILTIN_TYPES::MAGIC_INT,
@@ -138,7 +132,7 @@ impl Block {
 
         self.bytecode.push(OPTCODE::JUMP_BACK {
             steps: block_length + &loops_count_block.bytecode.len() + 8,
-        });
+        }); */
     }
     pub fn define_while_loop(&mut self, loop_block: Block, conditional_block: Block) {
         let block_length = loop_block.bytecode.len();
@@ -158,14 +152,12 @@ impl Block {
     pub fn define_variable(
         &mut self,
         data_type: BUILTIN_TYPES,
-        visibility: VISIBILITY,
-        name: &str
+        id: usize,
     ) {
         self.bytecode.push(OPTCODE::DEFINE_VAR {
             data_type,
-            visibility,
-            name: name.to_string(),
-        })
+            id,
+        });
     }
     pub fn define_function(
         &mut self,
@@ -182,47 +174,31 @@ impl Block {
     pub fn return_from_function(&mut self) {
         self.bytecode.push(OPTCODE::RETURN_FROM_FUNCTION);
     }
-    pub fn define_array(&mut self, visibility: VISIBILITY, name: String, init_values_count: usize) {
-        self.bytecode.push(OPTCODE::DefineArray {
-            visibility,
-            name,
-            init_values_count,
-        })
+    pub fn define_array(&mut self, init_values_count: usize, id: usize) {
+        self.bytecode.push(OPTCODE::DefineArray { id, init_values_count })
     }
 
-    pub fn load_from_array(&mut self, name: &str) {
-        self.bytecode.push(OPTCODE::GET_FROM_ARRAY {
-            name: name.to_string(),
-        })
+    pub fn load_from_array(&mut self, id: usize) {
+        self.bytecode.push(OPTCODE::GET_FROM_ARRAY { id })
     }
 
-    pub fn assign_to_array(&mut self, name: &str) {
-        self.bytecode.push(OPTCODE::ASSIGN_AT_ARRAY_INDEX {
-            name: name.to_string(),
-        });
+    pub fn assign_to_array(&mut self, id: usize) {
+        self.bytecode.push(OPTCODE::ASSIGN_AT_ARRAY_INDEX { id });
     }
 
     pub fn call_method_on_variable(method_name: String) {}
 
-    pub fn get_array_length(&mut self, name: &str) {
-        self.bytecode.push(OPTCODE::GET_ARRAY_LENGTH {
-            name: name.to_string(),
-        });
+    pub fn get_array_length(&mut self, id: usize) {
+        self.bytecode.push(OPTCODE::GET_ARRAY_LENGTH { id });
     }
-    pub fn push_to_array(&mut self, name: &str) {
-        self.bytecode.push(OPTCODE::PUSH_TO_ARRAY {
-            name: name.to_string(),
-        })
+    pub fn push_to_array(&mut self, id: usize) {
+        self.bytecode.push(OPTCODE::PUSH_TO_ARRAY { id })
     }
-    pub fn assign_variable(&mut self, name: &str) {
-        self.bytecode.push(OPTCODE::ASSIGN_VAR {
-            name: name.to_string(),
-        })
+    pub fn assign_variable(&mut self, id: usize) {
+        self.bytecode.push(OPTCODE::ASSIGN_VAR { id })
     }
-    pub fn load_variable(&mut self, name: &str) {
-        self.bytecode.push(OPTCODE::LOAD_VAR {
-            name: name.to_string(),
-        })
+    pub fn load_variable(&mut self, id: usize) {
+        self.bytecode.push(OPTCODE::LOAD_VAR { id })
     }
     pub fn call_special_function(&mut self, function: SpecialFunctions) {
         self.bytecode.push(OPTCODE::CALL_SPECIAL_FUNCTION { function });

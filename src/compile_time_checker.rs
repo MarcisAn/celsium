@@ -4,8 +4,9 @@ use crate::{bytecode::BINOP, module::Function, vm::vm::Variable, BUILTIN_TYPES};
 
 #[derive(Clone, Debug)]
 pub struct CompileTimeVariable {
-    name: String,
-    data_type: BUILTIN_TYPES
+    pub name: String,
+    pub data_type: BUILTIN_TYPES,
+    pub scope: usize
 } 
 
 #[derive(Clone, Debug)]
@@ -14,6 +15,12 @@ pub struct CompileTimeArray {
     data_type: BUILTIN_TYPES,
     length: usize
 } 
+
+#[derive(Clone, Debug)]
+pub struct BlockNode{
+    id: usize,
+    parrent: usize
+}
 
 pub struct CompileTimeChecker {
     stack: LinkedList<BUILTIN_TYPES>,
@@ -44,20 +51,14 @@ impl CompileTimeChecker {
     pub fn pop(&mut self) -> Option<BUILTIN_TYPES> {
         self.stack.pop_back()
     }
-    pub fn def_var(&mut self, name:String, data_type: BUILTIN_TYPES ) {
-        self.defined_variables.push(CompileTimeVariable { name, data_type });
+    pub fn def_var(&mut self, name: String, data_type: BUILTIN_TYPES, scope: usize) -> usize {
+        self.defined_variables.push(CompileTimeVariable { name, data_type, scope });
+        return self.defined_functions.len() -1;
     }
     pub fn def_array(&mut self, name: &str, data_type: BUILTIN_TYPES, initial_length: usize ) {
         self.defined_arrays.push(CompileTimeArray { name: name.to_string(), data_type, length: initial_length  });
     }
-    pub fn check_var(&mut self, name: &str) -> Option<BUILTIN_TYPES>{
-        for var in &self.defined_variables{
-            if var.name == name{
-                return Some(var.data_type.clone());
-            }
-        }
-        None
-    }
+
     pub fn check_array_type_and_length(&mut self, name: &str) -> Option<(BUILTIN_TYPES, usize)>{
         for array in &self.defined_arrays{
             if array.name == name{

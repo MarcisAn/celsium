@@ -1,7 +1,7 @@
 use num::FromPrimitive;
 use num::ToPrimitive;
 pub mod bytecode;
-use bytecode::{BINOP, OPTCODE};
+use bytecode::{ BINOP, OPTCODE };
 use module::Function;
 use module::Module;
 extern crate serde;
@@ -39,7 +39,7 @@ pub enum BUILTIN_TYPES {
     BOOL,
     STRING,
     OBJECT,
-    FLOAT
+    FLOAT,
 }
 
 pub struct ObjectBuilder {
@@ -58,7 +58,9 @@ impl ObjectBuilder {
 
 #[derive(Clone, Debug)]
 pub enum SpecialFunctions {
-    PRINT {newline: bool},
+    PRINT {
+        newline: bool,
+    },
     INPUT,
     RANDOM,
 }
@@ -85,9 +87,9 @@ impl CelsiumProgram {
         self.run(&mut vm, &global_bytecode);
     }
 
-    pub fn run(&mut self, vm: &mut VM, bytecode: &Vec<OPTCODE>)  {
+    pub fn run(&mut self, vm: &mut VM, bytecode: &Vec<OPTCODE>) {
         let mut index: isize = 0;
-        while index < bytecode.len() as isize {
+        while index < (bytecode.len() as isize) {
             let optcode = &bytecode[index as usize];
             //println!("running optcode {:?}", optcode);
             match optcode {
@@ -108,11 +110,15 @@ impl CelsiumProgram {
                 OPTCODE::REMAINDER => vm.aritmethics("%"),
                 OPTCODE::JUMP_IF_FALSE { steps } => {
                     if vm.must_jump() {
-                        index += *steps as isize
+                        index += *steps as isize;
                     }
                 }
-                OPTCODE::JUMP { steps } => index += *steps as isize,
-                OPTCODE::JUMP_BACK { steps } => index -= *steps as isize,
+                OPTCODE::JUMP { steps } => {
+                    index += *steps as isize;
+                }
+                OPTCODE::JUMP_BACK { steps } => {
+                    index -= *steps as isize;
+                }
                 OPTCODE::LESS_THAN => vm.aritmethics("<"),
                 OPTCODE::LARGER_THAN => vm.aritmethics(">"),
                 OPTCODE::LESS_OR_EQ => vm.aritmethics("<="),
@@ -122,30 +128,26 @@ impl CelsiumProgram {
                 OPTCODE::OR => vm.aritmethics("or"),
                 OPTCODE::AND => vm.aritmethics("and"),
                 OPTCODE::XOR => vm.aritmethics("xor"),
-                OPTCODE::DEFINE_VAR {
-                    data_type: _,
-                    visibility,
-                    name,
-                } => vm.define_var(0, name.to_string(), visibility),
-                OPTCODE::LOAD_VAR { name } => vm.load_var(name),
-                OPTCODE::ASSIGN_VAR { name } => vm.assign_var(name),
-                OPTCODE::DefineArray {
-                    visibility,
-                    name,
-                    init_values_count,
-                } => vm.define_array(0, name.to_string(), visibility, *init_values_count),
-                OPTCODE::GET_FROM_ARRAY { name } => vm.get_from_array(name),
-                OPTCODE::PUSH_TO_ARRAY { name } => vm.push_to_array(name),
-                OPTCODE::GET_ARRAY_LENGTH { name } => vm.get_array_length(name),
-                OPTCODE::DEFINE_FUNCTION {
-                    body_block,
-                    visibility,
-                    signature,
-                } => self.modules[0].functions.push(Function {
-                    signature: signature.clone(),
-                    body: body_block.clone(),
-                    visibility: visibility.clone(),
-                }),
+                OPTCODE::DEFINE_VAR { data_type: _, id: usize } => vm.define_var(0),
+                OPTCODE::LOAD_VAR { id } => vm.load_var(*id),
+                OPTCODE::ASSIGN_VAR { id } => vm.assign_var(*id),
+                OPTCODE::DefineArray { id, init_values_count } => {
+                    let mut init_values: Vec<StackValue> = vec![];
+                    for _ in 0..*init_values_count {
+                        init_values.push(vm.pop());
+                    }
+                    init_values.reverse();
+                    vm.define_var(0);
+                }
+                OPTCODE::GET_FROM_ARRAY { id } => vm.get_from_array(*id),
+                OPTCODE::PUSH_TO_ARRAY { id } => vm.push_to_array(*id),
+                OPTCODE::GET_ARRAY_LENGTH { id } => vm.get_array_length(*id),
+                OPTCODE::DEFINE_FUNCTION { body_block, visibility, signature } =>
+                    self.modules[0].functions.push(Function {
+                        signature: signature.clone(),
+                        body: body_block.clone(),
+                        visibility: visibility.clone(),
+                    }),
 
                 OPTCODE::CREATE_OBJECT { name, field_names } => {
                     let mut fields: Vec<ObjectField> = vec![];
@@ -155,7 +157,7 @@ impl CelsiumProgram {
                         fields.push(ObjectField {
                             name: name.to_string(),
                             value: vm.pop(),
-                        })
+                        });
                     }
                     fields.reverse();
                     vm.push_stackvalue(StackValue::OBJECT {
@@ -163,40 +165,45 @@ impl CelsiumProgram {
                         value: fields,
                     });
                 }
-                OPTCODE::CALL_SPECIAL_FUNCTION { function } => match function {
-                    SpecialFunctions::PRINT{newline} => {
-                        let printable = &vm.format_for_print(*newline);
-                        #[cfg(target_family = "wasm")]
-                        wasm_print(printable);
-                        print!("{}", printable);
-                    }
-                    SpecialFunctions::INPUT => {
-                        #[cfg(target_family = "wasm")]
-                        vm.push(&BUILTIN_TYPES::STRING, &"asdfghjkl".to_string());
-                        #[cfg(target_family = "wasm")]
-                        async {
-                            let value = &wasm_input().await.as_string().unwrap();
-                            vm.push(&BUILTIN_TYPES::STRING, value);
-                        };
-                        #[cfg(not(target_family = "wasm"))]
-                        vm.input("");
-                    }
-                    SpecialFunctions::RANDOM => {
-                        let value = {
-                            let max = match vm.pop() {
-                                StackValue::BIGINT { value } => truncate_biguint_to_i64(&value),
-                                _ => panic!()
+                OPTCODE::CALL_SPECIAL_FUNCTION { function } =>
+                    match function {
+                        SpecialFunctions::PRINT { newline } => {
+                            let printable = &vm.format_for_print(*newline);
+                            #[cfg(target_family = "wasm")]
+                            wasm_print(printable);
+                            print!("{}", printable);
+                        }
+                        SpecialFunctions::INPUT => {
+                            #[cfg(target_family = "wasm")]
+                            vm.push(&BUILTIN_TYPES::STRING, &"asdfghjkl".to_string());
+                            #[cfg(target_family = "wasm")]
+                            async {
+                                let value = &wasm_input().await.as_string().unwrap();
+                                vm.push(&BUILTIN_TYPES::STRING, value);
                             };
-                            let min = match vm.pop() {
-                                StackValue::BIGINT { value } => truncate_biguint_to_i64(&value),
-                                _ => panic!()
+                            #[cfg(not(target_family = "wasm"))]
+                            vm.input("");
+                        }
+                        SpecialFunctions::RANDOM => {
+                            let value = {
+                                let max = match vm.pop() {
+                                    StackValue::BIGINT { value } => truncate_biguint_to_i64(&value),
+                                    _ => panic!(),
+                                };
+                                let min = match vm.pop() {
+                                    StackValue::BIGINT { value } => truncate_biguint_to_i64(&value),
+                                    _ => panic!(),
+                                };
+                                bigint::BigInt
+                                    ::from_i64(rand::thread_rng().gen_range(min..max))
+                                    .unwrap()
                             };
-                            bigint::BigInt::from_i64(rand::thread_rng().gen_range(min..max)).unwrap()};
-                        vm.push_stackvalue(StackValue::BIGINT {
-                        value: value,
-                    })},
-                },
-                OPTCODE::ASSIGN_AT_ARRAY_INDEX { name } => vm.set_at_array(name),
+                            vm.push_stackvalue(StackValue::BIGINT {
+                                value: value,
+                            });
+                        }
+                    }
+                OPTCODE::ASSIGN_AT_ARRAY_INDEX { id } => vm.set_at_array(*id),
             }
             index += 1;
         }
@@ -213,7 +220,7 @@ mod tests {
     use crate::block::Block;
 
     use self::module::VISIBILITY;
-    
+
     use super::*;
 
     use compile_time_checker::CompileTimeChecker;
@@ -231,9 +238,8 @@ mod tests {
         typestack.push(BUILTIN_TYPES::OBJECT);
         let res = typestack.binop(BINOP::ADD);
         main_block.binop(BINOP::ADD);
-        main_block.call_special_function(SpecialFunctions::PRINT{newline: true});
+        main_block.call_special_function(SpecialFunctions::PRINT { newline: true });
         println!("{:?}", res);
-
 
         //main_block.create_object("Person", vec!["name", "age"]);
         //main_block.define_variable(BUILTIN_TYPES::OBJECT, VISIBILITY::PUBLIC, "person_1");

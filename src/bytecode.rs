@@ -1,4 +1,4 @@
-use crate::{block::Block, module::{FunctionSignature, VISIBILITY}, BUILTIN_TYPES};
+use crate::{ block::Block, module::{ FunctionSignature, VISIBILITY }, BUILTIN_TYPES };
 
 #[derive(Clone, Debug)]
 pub enum BINOP {
@@ -25,7 +25,7 @@ pub enum OPTCODE {
         data: String,
     },
     LOAD_VAR {
-        name: String,
+        id: usize,
     },
     CALL_FUNCTION {
         name: String,
@@ -59,28 +59,26 @@ pub enum OPTCODE {
     },
     DEFINE_VAR {
         data_type: BUILTIN_TYPES,
-        visibility: VISIBILITY,
-        name: String,
+        id: usize,
     },
     DefineArray {
-        visibility: VISIBILITY,
-        name: String,
-        init_values_count: usize,
+        id: usize,
+        init_values_count: usize
     },
     GET_FROM_ARRAY {
-        name: String,
+        id: usize,
     },
     ASSIGN_AT_ARRAY_INDEX {
-        name: String
+        id: usize,
     },
     PUSH_TO_ARRAY {
-        name: String,
+        id: usize,
     },
     GET_ARRAY_LENGTH {
-        name: String,
+        id: usize,
     },
     ASSIGN_VAR {
-        name: String,
+        id: usize,
     },
     DEFINE_FUNCTION {
         body_block: Block,
@@ -89,9 +87,9 @@ pub enum OPTCODE {
     },
     CREATE_OBJECT {
         name: String,
-        field_names: Vec<String>
+        field_names: Vec<String>,
     },
     CALL_SPECIAL_FUNCTION {
-        function: super::SpecialFunctions
-    }
+        function: super::SpecialFunctions,
+    },
 }
