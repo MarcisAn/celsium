@@ -53,10 +53,11 @@ impl CompileTimeChecker {
     }
     pub fn def_var(&mut self, name: String, data_type: BUILTIN_TYPES, scope: usize) -> usize {
         self.defined_variables.push(CompileTimeVariable { name, data_type, scope });
-        return self.defined_functions.len() -1;
+        return self.defined_variables.len() -1;
     }
-    pub fn def_array(&mut self, name: &str, data_type: BUILTIN_TYPES, initial_length: usize ) {
+    pub fn def_array(&mut self, name: &str, data_type: BUILTIN_TYPES, initial_length: usize ) -> usize {
         self.defined_arrays.push(CompileTimeArray { name: name.to_string(), data_type, length: initial_length  });
+        return self.defined_arrays.len() -1;
     }
 
     pub fn check_array_type_and_length(&mut self, name: &str) -> Option<(BUILTIN_TYPES, usize)>{

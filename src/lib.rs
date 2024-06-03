@@ -128,7 +128,7 @@ impl CelsiumProgram {
                 OPTCODE::OR => vm.aritmethics("or"),
                 OPTCODE::AND => vm.aritmethics("and"),
                 OPTCODE::XOR => vm.aritmethics("xor"),
-                OPTCODE::DEFINE_VAR { data_type: _, id: usize } => vm.define_var(0),
+                OPTCODE::DEFINE_VAR { data_type: _, id } => vm.define_var(*id),
                 OPTCODE::LOAD_VAR { id } => vm.load_var(*id),
                 OPTCODE::ASSIGN_VAR { id } => vm.assign_var(*id),
                 OPTCODE::DefineArray { id, init_values_count } => {
