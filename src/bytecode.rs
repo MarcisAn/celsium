@@ -92,4 +92,7 @@ pub enum OPTCODE {
     CALL_SPECIAL_FUNCTION {
         function: super::SpecialFunctions,
     },
+    SimpleLoop {
+        body_block: Block
+    }
 }

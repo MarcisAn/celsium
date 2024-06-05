@@ -1,5 +1,5 @@
 use super::{ math_operators::*, StackValue };
-use crate::{ bytecode::OPTCODE, module::VISIBILITY, CelsiumProgram, BUILTIN_TYPES };
+use crate::{ block::Block, bytecode::OPTCODE, module::VISIBILITY, CelsiumProgram, BUILTIN_TYPES };
 use num::BigInt;
 use rand::Rng;
 use std::{ collections::{ HashMap, LinkedList }, io::{ self, BufRead, Write }, str::FromStr };
@@ -345,5 +345,19 @@ impl VM {
                 program.run(self, &replaced_bytecode);
             }
         }
+    }
+    pub fn simple_loop(&mut self, program: &mut CelsiumProgram, loop_block: Vec<OPTCODE>){
+        let count = self.stack.pop_back().unwrap();
+        match count {
+            StackValue::BIGINT { value } => {
+                let mut counter = BigInt::from(0);
+                while counter < value{
+                    program.run(self, &loop_block);
+                    counter += 1;
+                }
+            },
+            _ => panic!()
+        }
+
     }
 }

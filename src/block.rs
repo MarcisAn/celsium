@@ -84,55 +84,9 @@ impl Block {
             name: name.to_string(),
         });
     }
-    pub fn define_simple_loop(&mut self, loop_block: Block, loops_count_block: Block) {/*
-        let block_length = loop_block.bytecode.len();
-        let tmp_var_name = "_".to_string() + &generate_rand_varname(17);
-
-        //Define a variable with a crazy name to hold the value for repeats with the value of 0
-
-        self.bytecode.push(OPTCODE::LOAD_CONST {
-            data_type: BUILTIN_TYPES::MAGIC_INT,
-            data: "0".to_string(),
-        });
-        self.bytecode.push(OPTCODE::DEFINE_VAR { data_type: BUILTIN_TYPES::MAGIC_INT, id: loop_block.ast_id });
-
-        //make a conditional with the tmp variable
-
-        self.bytecode.push(OPTCODE::LOAD_VAR { id: () });
-        for optcode in &loops_count_block.bytecode {
-            self.bytecode.push(optcode.clone());
-        }
-        self.bytecode.push(OPTCODE::LESS_THAN);
-
-        //make a while loop
-
-        self.bytecode.push(OPTCODE::JUMP_IF_FALSE {
-            steps: block_length + 5,
-        });
-        for optcode in loop_block.bytecode {
-            self.bytecode.push(optcode);
-        }
-
-        //add 1 to the tmp variable at the end of the loop
-
-        self.bytecode.push(OPTCODE::LOAD_VAR {
-            name: tmp_var_name.clone(),
-            scope: loop_block.ast_id
-        });
-        self.bytecode.push(OPTCODE::LOAD_CONST {
-            data_type: BUILTIN_TYPES::MAGIC_INT,
-            data: "1".to_string(),
-        });
-        self.bytecode.push(OPTCODE::ADD);
-        self.bytecode.push(OPTCODE::ASSIGN_VAR {
-            name: tmp_var_name.clone(),
-        });
-
-        //jump to the start of the loop
-
-        self.bytecode.push(OPTCODE::JUMP_BACK {
-            steps: block_length + &loops_count_block.bytecode.len() + 8,
-        }); */
+    pub fn define_simple_loop(&mut self, loop_block: Block) {
+        self.bytecode.push(OPTCODE::SimpleLoop { body_block: loop_block });
+        
     }
     pub fn define_while_loop(&mut self, loop_block: Block, conditional_block: Block) {
         let block_length = loop_block.bytecode.len();

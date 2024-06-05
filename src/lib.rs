@@ -204,6 +204,7 @@ impl CelsiumProgram {
                         }
                     }
                 OPTCODE::ASSIGN_AT_ARRAY_INDEX { id } => vm.set_at_array(*id),
+                OPTCODE::SimpleLoop { body_block } => vm.simple_loop(self, body_block.bytecode.clone()),
             }
             index += 1;
         }
