@@ -1,24 +1,23 @@
 use std::collections::LinkedList;
 
-use crate::{bytecode::BINOP, module::Function, vm::vm::Variable, BUILTIN_TYPES};
+use crate::{ bytecode::BINOP, module::Function, vm::vm::Variable, BUILTIN_TYPES };
 
 #[derive(Clone, Debug)]
 pub struct CompileTimeVariable {
+    pub id: usize,
     pub name: String,
     pub data_type: BUILTIN_TYPES,
-    pub scope: usize
-} 
+    pub scope: usize,
+}
 
 #[derive(Clone, Debug)]
 pub struct CompileTimeArray {
+    pub id: usize,
     pub name: String,
     pub data_type: BUILTIN_TYPES,
     pub length: usize,
-    pub scope: usize
-
-} 
-
-
+    pub scope: usize,
+}
 
 pub struct CompileTimeHelper {
     stack: LinkedList<BUILTIN_TYPES>,
@@ -28,7 +27,7 @@ pub struct CompileTimeHelper {
     pub defined_functions: Vec<Function>,
     pub defined_variables: Vec<CompileTimeVariable>,
     pub defined_arrays: Vec<CompileTimeArray>,
-
+    definition_counter: usize,
 }
 
 impl CompileTimeHelper {
@@ -40,7 +39,8 @@ impl CompileTimeHelper {
             current_file: 0,
             defined_functions: vec![],
             defined_variables: vec![],
-            defined_arrays: vec![]
+            defined_arrays: vec![],
+            definition_counter: 0,
         }
     }
     pub fn push(&mut self, pushable_type: BUILTIN_TYPES) {
@@ -50,17 +50,46 @@ impl CompileTimeHelper {
         self.stack.pop_back()
     }
     pub fn def_var(&mut self, name: String, data_type: BUILTIN_TYPES, scope: usize) -> usize {
-        self.defined_variables.push(CompileTimeVariable { name, data_type, scope });
-        return self.defined_variables.len() -1;
+        self.defined_variables.push(CompileTimeVariable {
+            name,
+            data_type,
+            scope,
+            id: self.definition_counter,
+        });
+        self.definition_counter += 1;
+        return self.definition_counter - 1;
     }
-    pub fn def_array(&mut self, name: &str, data_type: BUILTIN_TYPES, initial_length: usize, scope: usize ) -> usize {
-        self.defined_arrays.push(CompileTimeArray { name: name.to_string(), data_type, length: initial_length, scope  });
-        return self.defined_arrays.len() -1;
+    pub fn get_var_type(&mut self, var_id: usize) -> Option<BUILTIN_TYPES> {
+        for var in self.defined_variables.clone() {
+            if var.id == var_id {
+                return Some(var.data_type);
+            }
+        }
+        None
+    }
+    pub fn def_array(
+        &mut self,
+        name: &str,
+        data_type: BUILTIN_TYPES,
+        initial_length: usize,
+        scope: usize
+    ) -> usize {
+        self.defined_arrays.push(CompileTimeArray {
+            name: name.to_string(),
+            data_type,
+            length: initial_length,
+            scope,
+            id: self.definition_counter,
+        });
+
+        self.definition_counter += 1;
+
+        return self.definition_counter - 1;
     }
 
-    pub fn check_array_type_and_length(&mut self, name: &str) -> Option<(BUILTIN_TYPES, usize)>{
-        for array in &self.defined_arrays{
-            if array.name == name{
+    pub fn get_array_type_and_length(&mut self, id: usize) -> Option<(BUILTIN_TYPES, usize)> {
+        for array in &self.defined_arrays {
+            if array.id == id {
                 return Some((array.data_type.clone(), array.length));
             }
         }
@@ -92,41 +121,46 @@ impl CompileTimeHelper {
         let a = self.stack.pop_back().unwrap();
         let b = self.stack.pop_back().unwrap();
         let result = match a {
-            BUILTIN_TYPES::MAGIC_INT => match b {
-                BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::MAGIC_INT),
-                BUILTIN_TYPES::BOOL => return None,
-                BUILTIN_TYPES::STRING => Some(BUILTIN_TYPES::STRING),
-                BUILTIN_TYPES::OBJECT => return None,
-                BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::FLOAT),
-            },
-            BUILTIN_TYPES::BOOL => match b {
-                BUILTIN_TYPES::MAGIC_INT => return None,
-                BUILTIN_TYPES::BOOL => return None,
-                BUILTIN_TYPES::STRING => return None,
-                BUILTIN_TYPES::OBJECT => return None,
-                BUILTIN_TYPES::FLOAT => return None,
-            },
-            BUILTIN_TYPES::STRING => match b {
-                BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::STRING),
-                BUILTIN_TYPES::BOOL => return None,
-                BUILTIN_TYPES::STRING => Some(BUILTIN_TYPES::STRING),
-                BUILTIN_TYPES::OBJECT => return None,
-                BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::STRING),
-            },
-            BUILTIN_TYPES::OBJECT => match b {
-                BUILTIN_TYPES::MAGIC_INT => return None,
-                BUILTIN_TYPES::BOOL => return None,
-                BUILTIN_TYPES::STRING => return None,
-                BUILTIN_TYPES::OBJECT => return None,
-                BUILTIN_TYPES::FLOAT => return None,
-            },
-            BUILTIN_TYPES::FLOAT => match b {
-                BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::FLOAT),
-                BUILTIN_TYPES::BOOL => return None,
-                BUILTIN_TYPES::STRING => Some(BUILTIN_TYPES::STRING),
-                BUILTIN_TYPES::OBJECT => return None,
-                BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::FLOAT),
-            },
+            BUILTIN_TYPES::MAGIC_INT =>
+                match b {
+                    BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::MAGIC_INT),
+                    BUILTIN_TYPES::BOOL => {
+                        return None;
+                    }
+                    BUILTIN_TYPES::STRING => Some(BUILTIN_TYPES::STRING),
+                    BUILTIN_TYPES::OBJECT => {
+                        return None;
+                    }
+                    BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::FLOAT),
+                }
+            BUILTIN_TYPES::BOOL =>
+                None,
+            BUILTIN_TYPES::STRING =>
+                match b {
+                    BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::STRING),
+                    BUILTIN_TYPES::BOOL => {
+                        return None;
+                    }
+                    BUILTIN_TYPES::STRING => Some(BUILTIN_TYPES::STRING),
+                    BUILTIN_TYPES::OBJECT => {
+                        return None;
+                    }
+                    BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::STRING),
+                }
+            BUILTIN_TYPES::OBJECT =>
+                None,
+            BUILTIN_TYPES::FLOAT =>
+                match b {
+                    BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::FLOAT),
+                    BUILTIN_TYPES::BOOL => {
+                        return None;
+                    }
+                    BUILTIN_TYPES::STRING => Some(BUILTIN_TYPES::STRING),
+                    BUILTIN_TYPES::OBJECT => {
+                        return None;
+                    }
+                    BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::FLOAT),
+                }
         };
         self.stack.push_back(result.clone().unwrap());
         return result;
@@ -135,41 +169,37 @@ impl CompileTimeHelper {
         let a = self.stack.pop_back().unwrap();
         let b = self.stack.pop_back().unwrap();
         let result = match a {
-            BUILTIN_TYPES::MAGIC_INT => match b {
-                BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::MAGIC_INT),
-                BUILTIN_TYPES::BOOL => return None,
-                BUILTIN_TYPES::STRING => return None,
-                BUILTIN_TYPES::OBJECT => return None,
-                BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::FLOAT),
-            },
-            BUILTIN_TYPES::BOOL => match b {
-                BUILTIN_TYPES::MAGIC_INT => return None,
-                BUILTIN_TYPES::BOOL => return None,
-                BUILTIN_TYPES::STRING => return None,
-                BUILTIN_TYPES::OBJECT => return None,
-                BUILTIN_TYPES::FLOAT => return None,
-            },
-            BUILTIN_TYPES::STRING => match b {
-                BUILTIN_TYPES::MAGIC_INT => return None,
-                BUILTIN_TYPES::BOOL => return None,
-                BUILTIN_TYPES::STRING => return None,
-                BUILTIN_TYPES::OBJECT => return None,
-                BUILTIN_TYPES::FLOAT => return None,
-            },
-            BUILTIN_TYPES::OBJECT => match b {
-                BUILTIN_TYPES::MAGIC_INT => return None,
-                BUILTIN_TYPES::BOOL => return None,
-                BUILTIN_TYPES::STRING => return None,
-                BUILTIN_TYPES::OBJECT => return None,
-                BUILTIN_TYPES::FLOAT => return None,
-            },
-            BUILTIN_TYPES::FLOAT => match b {
-                BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::FLOAT),
-                BUILTIN_TYPES::BOOL => return None,
-                BUILTIN_TYPES::STRING => return None,
-                BUILTIN_TYPES::OBJECT => return None,
-                BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::FLOAT),
-            },
+            BUILTIN_TYPES::MAGIC_INT =>
+                match b {
+                    BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::MAGIC_INT),
+                    BUILTIN_TYPES::BOOL => {
+                        return None;
+                    }
+                    BUILTIN_TYPES::STRING => {
+                        return None;
+                    }
+                    BUILTIN_TYPES::OBJECT => {
+                        return None;
+                    }
+                    BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::FLOAT),
+                }
+            BUILTIN_TYPES::BOOL => None,
+            BUILTIN_TYPES::STRING => None,
+            BUILTIN_TYPES::OBJECT => None, 
+            BUILTIN_TYPES::FLOAT =>
+                match b {
+                    BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::FLOAT),
+                    BUILTIN_TYPES::BOOL => {
+                        return None;
+                    }
+                    BUILTIN_TYPES::STRING => {
+                        return None;
+                    }
+                    BUILTIN_TYPES::OBJECT => {
+                        return None;
+                    }
+                    BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::FLOAT),
+                }
         };
         self.stack.push_back(result.clone().unwrap());
         return result;
@@ -178,41 +208,52 @@ impl CompileTimeHelper {
         let a = self.stack.pop_back().unwrap();
         let b = self.stack.pop_back().unwrap();
         let result = match a {
-            BUILTIN_TYPES::MAGIC_INT => match b {
-                BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::BOOL),
-                BUILTIN_TYPES::BOOL => return None,
-                BUILTIN_TYPES::STRING => return None,
-                BUILTIN_TYPES::OBJECT => return None,
-                BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::BOOL),
-            },
-            BUILTIN_TYPES::BOOL => match b {
-                BUILTIN_TYPES::MAGIC_INT => return None,
-                BUILTIN_TYPES::BOOL => Some(BUILTIN_TYPES::BOOL),
-                BUILTIN_TYPES::STRING => return None,
-                BUILTIN_TYPES::OBJECT => return None,
-                BUILTIN_TYPES::FLOAT => return None,
-            },
-            BUILTIN_TYPES::STRING => match b {
-                BUILTIN_TYPES::MAGIC_INT => return None,
-                BUILTIN_TYPES::BOOL => return None,
-                BUILTIN_TYPES::STRING => return None,
-                BUILTIN_TYPES::OBJECT => return None,
-                BUILTIN_TYPES::FLOAT => return None,
-            },
-            BUILTIN_TYPES::OBJECT => match b {
-                BUILTIN_TYPES::MAGIC_INT => return None,
-                BUILTIN_TYPES::BOOL => return None,
-                BUILTIN_TYPES::STRING => return None,
-                BUILTIN_TYPES::OBJECT => return None,
-                BUILTIN_TYPES::FLOAT => return None,
-            },
-            BUILTIN_TYPES::FLOAT => match b {
-                BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::BOOL),
-                BUILTIN_TYPES::BOOL => return None,
-                BUILTIN_TYPES::STRING => return None,
-                BUILTIN_TYPES::OBJECT => return None,
-                BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::BOOL),
-            },
+            BUILTIN_TYPES::MAGIC_INT =>
+                match b {
+                    BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::BOOL),
+                    BUILTIN_TYPES::BOOL => {
+                        return None;
+                    }
+                    BUILTIN_TYPES::STRING => {
+                        return None;
+                    }
+                    BUILTIN_TYPES::OBJECT => {
+                        return None;
+                    }
+                    BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::BOOL),
+                }
+            BUILTIN_TYPES::BOOL =>
+                match b {
+                    BUILTIN_TYPES::MAGIC_INT => {
+                        return None;
+                    }
+                    BUILTIN_TYPES::BOOL => Some(BUILTIN_TYPES::BOOL),
+                    BUILTIN_TYPES::STRING => {
+                        return None;
+                    }
+                    BUILTIN_TYPES::OBJECT => {
+                        return None;
+                    }
+                    BUILTIN_TYPES::FLOAT => {
+                        return None;
+                    }
+                }
+            BUILTIN_TYPES::STRING => None,
+            BUILTIN_TYPES::OBJECT => None,
+            BUILTIN_TYPES::FLOAT =>
+                match b {
+                    BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::BOOL),
+                    BUILTIN_TYPES::BOOL => {
+                        return None;
+                    }
+                    BUILTIN_TYPES::STRING => {
+                        return None;
+                    }
+                    BUILTIN_TYPES::OBJECT => {
+                        return None;
+                    }
+                    BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::BOOL),
+                }
         };
         self.stack.push_back(result.clone().unwrap());
         return result;
