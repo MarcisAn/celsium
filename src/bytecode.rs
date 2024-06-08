@@ -58,7 +58,6 @@ pub enum OPTCODE {
         steps: usize,
     },
     DEFINE_VAR {
-        data_type: BUILTIN_TYPES,
         id: usize,
     },
     DefineArray {
@@ -89,7 +88,7 @@ pub enum OPTCODE {
         name: String,
         field_names: Vec<String>,
     },
-    CALL_SPECIAL_FUNCTION {
+    CallSpecialFunction {
         function: super::SpecialFunctions,
     },
     SimpleLoop {

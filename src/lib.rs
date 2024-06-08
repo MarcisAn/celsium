@@ -11,7 +11,7 @@ use num::BigInt;
 use rand::prelude::*;
 
 extern crate js_sys;
-pub mod compile_time_checker;
+pub mod compiletime_helper;
 pub mod block;
 pub mod module;
 mod vm;
@@ -39,7 +39,7 @@ pub enum BUILTIN_TYPES {
     BOOL,
     STRING,
     OBJECT,
-    FLOAT,
+    FLOAT
 }
 
 pub struct ObjectBuilder {
@@ -128,7 +128,7 @@ impl CelsiumProgram {
                 OPTCODE::OR => vm.aritmethics("or"),
                 OPTCODE::AND => vm.aritmethics("and"),
                 OPTCODE::XOR => vm.aritmethics("xor"),
-                OPTCODE::DEFINE_VAR { data_type: _, id } => vm.define_var(*id),
+                OPTCODE::DEFINE_VAR { id } => vm.define_var(*id),
                 OPTCODE::LOAD_VAR { id } => vm.load_var(*id),
                 OPTCODE::ASSIGN_VAR { id } => vm.assign_var(*id),
                 OPTCODE::DefineArray { id, init_values_count } => {
@@ -137,7 +137,8 @@ impl CelsiumProgram {
                         init_values.push(vm.pop());
                     }
                     init_values.reverse();
-                    vm.define_var(0);
+                    vm.stack.push_back(StackValue::ARRAY { value: init_values });
+                    vm.define_var(*id);
                 }
                 OPTCODE::GET_FROM_ARRAY { id } => vm.get_from_array(*id),
                 OPTCODE::PUSH_TO_ARRAY { id } => vm.push_to_array(*id),
@@ -165,7 +166,7 @@ impl CelsiumProgram {
                         value: fields,
                     });
                 }
-                OPTCODE::CALL_SPECIAL_FUNCTION { function } =>
+                OPTCODE::CallSpecialFunction { function } =>
                     match function {
                         SpecialFunctions::PRINT { newline } => {
                             let printable = &vm.format_for_print(*newline);
@@ -224,28 +225,17 @@ mod tests {
 
     use super::*;
 
-    use compile_time_checker::CompileTimeChecker;
+    use compiletime_helper::CompileTimeHelper;
 
     #[test]
     fn it_works() {
         let mut celsium = CelsiumProgram::new();
         let mut main_module = Module::new("main", &mut celsium);
-        let mut main_block = Block::new();
-        let mut typestack = CompileTimeChecker::new("".to_string(), "".to_string());
+        let mut main_block = Block::new(0);
+        let mut helper = CompileTimeHelper::new("".to_string(), "".to_string());
 
         main_block.load_const(BUILTIN_TYPES::STRING, "John");
-        typestack.push(BUILTIN_TYPES::STRING);
-        main_block.load_const(BUILTIN_TYPES::MAGIC_INT, "37");
-        typestack.push(BUILTIN_TYPES::OBJECT);
-        let res = typestack.binop(BINOP::ADD);
-        main_block.binop(BINOP::ADD);
-        main_block.call_special_function(SpecialFunctions::PRINT { newline: true });
-        println!("{:?}", res);
-
-        //main_block.create_object("Person", vec!["name", "age"]);
-        //main_block.define_variable(BUILTIN_TYPES::OBJECT, VISIBILITY::PUBLIC, "person_1");
-        //main_block.load_variable("person_1");
-        //main_block.call_special_function(SpecialFunctions::PRINT{newline: true});
+        helper.push(BUILTIN_TYPES::STRING);
 
         let mut i = 0;
         while i < main_block.bytecode.len() {

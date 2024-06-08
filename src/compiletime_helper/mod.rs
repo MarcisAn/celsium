@@ -11,18 +11,16 @@ pub struct CompileTimeVariable {
 
 #[derive(Clone, Debug)]
 pub struct CompileTimeArray {
-    name: String,
-    data_type: BUILTIN_TYPES,
-    length: usize
+    pub name: String,
+    pub data_type: BUILTIN_TYPES,
+    pub length: usize,
+    pub scope: usize
+
 } 
 
-#[derive(Clone, Debug)]
-pub struct BlockNode{
-    id: usize,
-    parrent: usize
-}
 
-pub struct CompileTimeChecker {
+
+pub struct CompileTimeHelper {
     stack: LinkedList<BUILTIN_TYPES>,
     pub source_files: Vec<String>,
     pub source_file_paths: Vec<String>,
@@ -33,9 +31,9 @@ pub struct CompileTimeChecker {
 
 }
 
-impl CompileTimeChecker {
-    pub fn new(source_file: String, path: String) -> CompileTimeChecker {
-        CompileTimeChecker {
+impl CompileTimeHelper {
+    pub fn new(source_file: String, path: String) -> CompileTimeHelper {
+        CompileTimeHelper {
             stack: LinkedList::new(),
             source_files: vec![source_file],
             source_file_paths: vec![path],
@@ -55,8 +53,8 @@ impl CompileTimeChecker {
         self.defined_variables.push(CompileTimeVariable { name, data_type, scope });
         return self.defined_variables.len() -1;
     }
-    pub fn def_array(&mut self, name: &str, data_type: BUILTIN_TYPES, initial_length: usize ) -> usize {
-        self.defined_arrays.push(CompileTimeArray { name: name.to_string(), data_type, length: initial_length  });
+    pub fn def_array(&mut self, name: &str, data_type: BUILTIN_TYPES, initial_length: usize, scope: usize ) -> usize {
+        self.defined_arrays.push(CompileTimeArray { name: name.to_string(), data_type, length: initial_length, scope  });
         return self.defined_arrays.len() -1;
     }
 

@@ -2,6 +2,7 @@ use rand::Rng;
 use crate::module::FunctionSignature;
 use crate::SpecialFunctions;
 use crate::{ module::VISIBILITY, BINOP, BUILTIN_TYPES, OPTCODE };
+mod array;
 
 #[derive(Clone, Debug)]
 pub struct Block {
@@ -105,12 +106,10 @@ impl Block {
     }
     pub fn define_variable(
         &mut self,
-        data_type: BUILTIN_TYPES,
         id: usize,
     ) {
         self.bytecode.push(OPTCODE::DEFINE_VAR {
-            data_type,
-            id,
+            id
         });
     }
     pub fn define_function(
@@ -128,26 +127,7 @@ impl Block {
     pub fn return_from_function(&mut self) {
         self.bytecode.push(OPTCODE::RETURN_FROM_FUNCTION);
     }
-    pub fn define_array(&mut self, init_values_count: usize, id: usize) {
-        self.bytecode.push(OPTCODE::DefineArray { id, init_values_count })
-    }
-
-    pub fn load_from_array(&mut self, id: usize) {
-        self.bytecode.push(OPTCODE::GET_FROM_ARRAY { id })
-    }
-
-    pub fn assign_to_array(&mut self, id: usize) {
-        self.bytecode.push(OPTCODE::ASSIGN_AT_ARRAY_INDEX { id });
-    }
-
-    pub fn call_method_on_variable(method_name: String) {}
-
-    pub fn get_array_length(&mut self, id: usize) {
-        self.bytecode.push(OPTCODE::GET_ARRAY_LENGTH { id });
-    }
-    pub fn push_to_array(&mut self, id: usize) {
-        self.bytecode.push(OPTCODE::PUSH_TO_ARRAY { id })
-    }
+    
     pub fn assign_variable(&mut self, id: usize) {
         self.bytecode.push(OPTCODE::ASSIGN_VAR { id })
     }
@@ -155,7 +135,7 @@ impl Block {
         self.bytecode.push(OPTCODE::LOAD_VAR { id })
     }
     pub fn call_special_function(&mut self, function: SpecialFunctions) {
-        self.bytecode.push(OPTCODE::CALL_SPECIAL_FUNCTION { function });
+        self.bytecode.push(OPTCODE::CallSpecialFunction { function });
     }
     pub fn create_object(&mut self, name: &str, field_names: Vec<&str>) {
         let mut owned_names: Vec<String> = vec![];
