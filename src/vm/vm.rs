@@ -153,28 +153,7 @@ impl VM {
     pub fn call_function(&mut self, name: &String, program: &mut CelsiumProgram) {
         for function in &program.modules.clone()[0].functions {
             if function.signature.name == name.to_string() {
-                let mut argument_names_to_replace = HashMap::new();
-                let mut func_args = function.clone().signature.args;
-                func_args.reverse();
-                for arg in func_args {
-                    let var_name =
-                        "__".to_string() + &arg.name.to_string() + &generate_rand_varname(5);
-                    self.define_var(9999999999); //TODO argument id's
-                    argument_names_to_replace.insert(arg.clone().name, var_name);
-                }
-                let mut replaced_bytecode: Vec<OPTCODE> = vec![];
-                for optcode in &function.body.bytecode.clone() {
-                    match optcode {
-                        OPTCODE::LOAD_VAR { id } =>
-                            match argument_names_to_replace.get(name) {
-                                Some(ref new_name) =>
-                                    replaced_bytecode.push(OPTCODE::LOAD_VAR { id: *id }),
-                                None => replaced_bytecode.push(OPTCODE::LOAD_VAR { id: *id }),
-                            }
-                        _ => replaced_bytecode.push(optcode.clone()),
-                    }
-                }
-                program.run(self, &replaced_bytecode);
+                program.run(self, &function.body.bytecode);
             }
         }
     }
