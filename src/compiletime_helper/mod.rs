@@ -78,6 +78,14 @@ impl CompileTimeHelper {
         }
         None
     }
+    pub fn get_func_args(&mut self, id: usize) -> Option<Vec<FuncArg>> {
+        for func in self.defined_functions.clone() {
+            if func.id == id {
+                return Some(func.arguments);
+            }
+        }
+        None
+    }
     pub fn def_var(&mut self, name: String, data_type: BUILTIN_TYPES, scope: usize) -> usize {
         self.defined_variables.push(CompileTimeVariable {
             name,
