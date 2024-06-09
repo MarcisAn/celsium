@@ -1,6 +1,6 @@
 use std::collections::LinkedList;
 
-use crate::{ bytecode::BINOP, module::Function, vm::vm::Variable, BUILTIN_TYPES };
+use crate::{ bytecode::BINOP, module::{ FuncArg, Function }, vm::vm::Variable, BUILTIN_TYPES };
 
 #[derive(Clone, Debug)]
 pub struct CompileTimeVariable {
@@ -19,12 +19,21 @@ pub struct CompileTimeArray {
     pub scope: usize,
 }
 
+#[derive(Clone, Debug)]
+pub struct CompileTimeFunction {
+    pub id: usize,
+    pub name: String,
+    pub arguments: Vec<FuncArg>,
+    pub scope: usize,
+    pub return_type: BUILTIN_TYPES
+}
+
 pub struct CompileTimeHelper {
     stack: LinkedList<BUILTIN_TYPES>,
     pub source_files: Vec<String>,
     pub source_file_paths: Vec<String>,
     pub current_file: usize,
-    pub defined_functions: Vec<Function>,
+    pub defined_functions: Vec<CompileTimeFunction>,
     pub defined_variables: Vec<CompileTimeVariable>,
     pub defined_arrays: Vec<CompileTimeArray>,
     definition_counter: usize,
@@ -48,6 +57,26 @@ impl CompileTimeHelper {
     }
     pub fn pop(&mut self) -> Option<BUILTIN_TYPES> {
         self.stack.pop_back()
+    }
+    pub fn def_function(&mut self, name: String, arguments: Vec<FuncArg>, scope: usize) -> usize {
+        let return_type = self.pop().unwrap();
+        self.defined_functions.push(CompileTimeFunction {
+            id: self.definition_counter,
+            name: name,
+            arguments: arguments,
+            scope: scope,
+            return_type: return_type
+        });
+        self.definition_counter += 1;
+        return  self.definition_counter - 1;
+    }
+    pub fn get_func_return_type(&mut self, id: usize) -> Option<BUILTIN_TYPES> {
+        for func in self.defined_functions.clone() {
+            if func.id == id {
+                return Some(func.return_type);
+            }
+        }
+        None
     }
     pub fn def_var(&mut self, name: String, data_type: BUILTIN_TYPES, scope: usize) -> usize {
         self.defined_variables.push(CompileTimeVariable {
@@ -133,8 +162,7 @@ impl CompileTimeHelper {
                     }
                     BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::FLOAT),
                 }
-            BUILTIN_TYPES::BOOL =>
-                None,
+            BUILTIN_TYPES::BOOL => None,
             BUILTIN_TYPES::STRING =>
                 match b {
                     BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::STRING),
@@ -147,8 +175,7 @@ impl CompileTimeHelper {
                     }
                     BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::STRING),
                 }
-            BUILTIN_TYPES::OBJECT =>
-                None,
+            BUILTIN_TYPES::OBJECT => None,
             BUILTIN_TYPES::FLOAT =>
                 match b {
                     BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::FLOAT),
@@ -162,7 +189,6 @@ impl CompileTimeHelper {
                     BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::FLOAT),
                 }
         };
-        self.stack.push_back(result.clone().unwrap());
         return result;
     }
     fn subtract(&mut self) -> Option<BUILTIN_TYPES> {
@@ -185,7 +211,7 @@ impl CompileTimeHelper {
                 }
             BUILTIN_TYPES::BOOL => None,
             BUILTIN_TYPES::STRING => None,
-            BUILTIN_TYPES::OBJECT => None, 
+            BUILTIN_TYPES::OBJECT => None,
             BUILTIN_TYPES::FLOAT =>
                 match b {
                     BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::FLOAT),
@@ -201,7 +227,6 @@ impl CompileTimeHelper {
                     BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::FLOAT),
                 }
         };
-        self.stack.push_back(result.clone().unwrap());
         return result;
     }
     fn compare(&mut self) -> Option<BUILTIN_TYPES> {
@@ -255,7 +280,6 @@ impl CompileTimeHelper {
                     BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::BOOL),
                 }
         };
-        self.stack.push_back(result.clone().unwrap());
         return result;
     }
 }
