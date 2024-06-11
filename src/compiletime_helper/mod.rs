@@ -1,13 +1,14 @@
 use std::collections::LinkedList;
 
-use crate::{ bytecode::BINOP, module::{ FuncArg, Function }, vm::vm::Variable, BUILTIN_TYPES };
+
+use crate::{ bytecode::BINOP, module::{ FuncArg, Function }, vm::vm::Variable, Scope, BUILTIN_TYPES };
 
 #[derive(Clone, Debug)]
 pub struct CompileTimeVariable {
     pub id: usize,
     pub name: String,
     pub data_type: BUILTIN_TYPES,
-    pub scope: usize,
+    pub scope: Scope,
 }
 
 #[derive(Clone, Debug)]
@@ -16,7 +17,7 @@ pub struct CompileTimeArray {
     pub name: String,
     pub data_type: BUILTIN_TYPES,
     pub length: usize,
-    pub scope: usize,
+    pub scope: Scope,
 }
 
 #[derive(Clone, Debug)]
@@ -24,7 +25,7 @@ pub struct CompileTimeFunction {
     pub id: usize,
     pub name: String,
     pub arguments: Vec<FuncArg>,
-    pub scope: usize,
+    pub scope: Scope,
     pub return_type: BUILTIN_TYPES
 }
 
@@ -44,7 +45,7 @@ impl CompileTimeHelper {
         CompileTimeHelper {
             stack: LinkedList::new(),
             source_files: vec![source_file],
-            source_file_paths: vec![path],
+            source_file_paths: vec![path.clone()],
             current_file: 0,
             defined_functions: vec![],
             defined_variables: vec![],
@@ -52,13 +53,18 @@ impl CompileTimeHelper {
             definition_counter: 0,
         }
     }
+    pub fn change_module(&mut self, file_content: String, path: String){
+        self.source_files.push(file_content.clone());
+        self.source_file_paths.push(path.clone());
+        self.current_file += 1;
+    }
     pub fn push(&mut self, pushable_type: BUILTIN_TYPES) {
         self.stack.push_back(pushable_type);
     }
     pub fn pop(&mut self) -> Option<BUILTIN_TYPES> {
         self.stack.pop_back()
     }
-    pub fn def_function(&mut self, name: String, arguments: Vec<FuncArg>, scope: usize) -> usize {
+    pub fn def_function(&mut self, name: String, arguments: Vec<FuncArg>, scope: Scope) -> usize {
         let return_type = self.pop().unwrap();
         self.defined_functions.push(CompileTimeFunction {
             id: self.definition_counter,
@@ -86,7 +92,7 @@ impl CompileTimeHelper {
         }
         None
     }
-    pub fn def_var(&mut self, name: String, data_type: BUILTIN_TYPES, scope: usize) -> usize {
+    pub fn def_var(&mut self, name: String, data_type: BUILTIN_TYPES, scope: Scope) -> usize {
         self.defined_variables.push(CompileTimeVariable {
             name,
             data_type,
@@ -109,7 +115,7 @@ impl CompileTimeHelper {
         name: &str,
         data_type: BUILTIN_TYPES,
         initial_length: usize,
-        scope: usize
+        scope: Scope
     ) -> usize {
         self.defined_arrays.push(CompileTimeArray {
             name: name.to_string(),

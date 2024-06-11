@@ -39,7 +39,7 @@ pub enum BUILTIN_TYPES {
     BOOL,
     STRING,
     OBJECT,
-    FLOAT
+    FLOAT,
 }
 
 pub struct ObjectBuilder {
@@ -66,6 +66,20 @@ pub enum SpecialFunctions {
 }
 pub struct CelsiumProgram {
     modules: Vec<Module>,
+}
+
+#[derive(Clone, Debug)]
+pub struct Scope {
+    pub ast_id: usize,
+    pub module_path: String,
+}
+
+impl Scope {
+    pub fn change_ast_id(&mut self, new_id: usize) -> Scope {
+        let mut new = self.clone();
+        new.ast_id = new_id;
+        return new;
+    }
 }
 
 impl CelsiumProgram {
@@ -205,7 +219,8 @@ impl CelsiumProgram {
                         }
                     }
                 OPTCODE::ASSIGN_AT_ARRAY_INDEX { id } => vm.set_at_array(*id),
-                OPTCODE::SimpleLoop { body_block } => vm.simple_loop(self, body_block.bytecode.clone()),
+                OPTCODE::SimpleLoop { body_block } =>
+                    vm.simple_loop(self, body_block.bytecode.clone()),
             }
             index += 1;
         }

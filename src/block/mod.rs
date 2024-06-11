@@ -1,13 +1,14 @@
+
 use rand::Rng;
 use crate::module::FunctionSignature;
-use crate::SpecialFunctions;
+use crate::{Scope, SpecialFunctions};
 use crate::{ module::VISIBILITY, BINOP, BUILTIN_TYPES, OPTCODE };
 mod array;
 
 #[derive(Clone, Debug)]
 pub struct Block {
     pub bytecode: Vec<OPTCODE>,
-    pub ast_id: usize
+    pub scope: Scope
 }
 fn generate_rand_varname(length: usize) -> String {
     const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
@@ -27,8 +28,8 @@ fn generate_rand_varname(length: usize) -> String {
 }
 
 impl Block {
-    pub fn new(ast_id: usize) -> Block {
-        Block { bytecode: vec![], ast_id }
+    pub fn new(scope: Scope) -> Block {
+        Block { bytecode: vec![], scope }
     }
     pub fn load_const(&mut self, data_type: BUILTIN_TYPES, value: &str) {
         self.bytecode.push(OPTCODE::LOAD_CONST {
