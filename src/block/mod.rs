@@ -148,4 +148,8 @@ impl Block {
             field_names: owned_names,
         });
     }
+    pub fn add_blocks_bytecode(&mut self, block: Block){
+        let mut other = block.bytecode;
+        self.bytecode.append(&mut other);
+    }
 }

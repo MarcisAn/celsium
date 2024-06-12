@@ -9,6 +9,7 @@ pub struct CompileTimeVariable {
     pub name: String,
     pub data_type: BUILTIN_TYPES,
     pub scope: Scope,
+    is_exported: bool
 }
 
 #[derive(Clone, Debug)]
@@ -58,6 +59,9 @@ impl CompileTimeHelper {
         self.source_file_paths.push(path.clone());
         self.current_file += 1;
     }
+    pub fn switch_to_prev_module(&mut self) {
+        self.current_file -= 1;
+    }
     pub fn push(&mut self, pushable_type: BUILTIN_TYPES) {
         self.stack.push_back(pushable_type);
     }
@@ -92,12 +96,13 @@ impl CompileTimeHelper {
         }
         None
     }
-    pub fn def_var(&mut self, name: String, data_type: BUILTIN_TYPES, scope: Scope) -> usize {
+    pub fn def_var(&mut self, name: String, data_type: BUILTIN_TYPES, scope: Scope, is_exported: bool) -> usize {
         self.defined_variables.push(CompileTimeVariable {
             name,
             data_type,
             scope,
             id: self.definition_counter,
+            is_exported
         });
         self.definition_counter += 1;
         return self.definition_counter - 1;
