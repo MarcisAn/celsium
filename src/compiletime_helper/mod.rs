@@ -1,7 +1,12 @@
 use std::collections::LinkedList;
 
-
-use crate::{ bytecode::BINOP, module::{ FuncArg, Function }, vm::vm::Variable, Scope, BUILTIN_TYPES };
+use crate::{
+    bytecode::BINOP,
+    module::{ FuncArg, Function },
+    vm::vm::Variable,
+    Scope,
+    BUILTIN_TYPES,
+};
 
 #[derive(Clone, Debug)]
 pub struct CompileTimeVariable {
@@ -9,8 +14,16 @@ pub struct CompileTimeVariable {
     pub name: String,
     pub data_type: BUILTIN_TYPES,
     pub scope: Scope,
-    is_exported: bool
+    pub is_exported: bool,
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CompileTimeImport {
+    pub name: String,
+    pub origin: String,
+    pub imported_into: String,
+}
+
 
 #[derive(Clone, Debug)]
 pub struct CompileTimeArray {
@@ -19,6 +32,8 @@ pub struct CompileTimeArray {
     pub data_type: BUILTIN_TYPES,
     pub length: usize,
     pub scope: Scope,
+    pub is_exported: bool,
+
 }
 
 #[derive(Clone, Debug)]
@@ -27,7 +42,9 @@ pub struct CompileTimeFunction {
     pub name: String,
     pub arguments: Vec<FuncArg>,
     pub scope: Scope,
-    pub return_type: BUILTIN_TYPES
+    pub return_type: BUILTIN_TYPES,
+    pub is_exported: bool,
+
 }
 
 pub struct CompileTimeHelper {
@@ -39,6 +56,7 @@ pub struct CompileTimeHelper {
     pub defined_variables: Vec<CompileTimeVariable>,
     pub defined_arrays: Vec<CompileTimeArray>,
     definition_counter: usize,
+    pub imports: Vec<CompileTimeImport>,
 }
 
 impl CompileTimeHelper {
@@ -52,9 +70,10 @@ impl CompileTimeHelper {
             defined_variables: vec![],
             defined_arrays: vec![],
             definition_counter: 0,
+            imports: vec![],
         }
     }
-    pub fn change_module(&mut self, file_content: String, path: String){
+    pub fn change_module(&mut self, file_content: String, path: String) {
         self.source_files.push(file_content.clone());
         self.source_file_paths.push(path.clone());
         self.current_file += 1;
@@ -62,23 +81,27 @@ impl CompileTimeHelper {
     pub fn switch_to_prev_module(&mut self) {
         self.current_file -= 1;
     }
+    pub fn import(&mut self, name: String, origin: String, imported_into: String) {
+        self.imports.push(CompileTimeImport { name, origin, imported_into });
+    }
     pub fn push(&mut self, pushable_type: BUILTIN_TYPES) {
         self.stack.push_back(pushable_type);
     }
     pub fn pop(&mut self) -> Option<BUILTIN_TYPES> {
         self.stack.pop_back()
     }
-    pub fn def_function(&mut self, name: String, arguments: Vec<FuncArg>, scope: Scope) -> usize {
+    pub fn def_function(&mut self, name: String, arguments: Vec<FuncArg>, scope: Scope, is_exported: bool) -> usize {
         let return_type = self.pop().unwrap();
         self.defined_functions.push(CompileTimeFunction {
             id: self.definition_counter,
             name: name,
             arguments: arguments,
             scope: scope,
-            return_type: return_type
+            return_type: return_type,
+            is_exported
         });
         self.definition_counter += 1;
-        return  self.definition_counter - 1;
+        return self.definition_counter - 1;
     }
     pub fn get_func_return_type(&mut self, id: usize) -> Option<BUILTIN_TYPES> {
         for func in self.defined_functions.clone() {
@@ -96,13 +119,19 @@ impl CompileTimeHelper {
         }
         None
     }
-    pub fn def_var(&mut self, name: String, data_type: BUILTIN_TYPES, scope: Scope, is_exported: bool) -> usize {
+    pub fn def_var(
+        &mut self,
+        name: String,
+        data_type: BUILTIN_TYPES,
+        scope: Scope,
+        is_exported: bool
+    ) -> usize {
         self.defined_variables.push(CompileTimeVariable {
             name,
             data_type,
             scope,
             id: self.definition_counter,
-            is_exported
+            is_exported,
         });
         self.definition_counter += 1;
         return self.definition_counter - 1;
@@ -120,7 +149,8 @@ impl CompileTimeHelper {
         name: &str,
         data_type: BUILTIN_TYPES,
         initial_length: usize,
-        scope: Scope
+        scope: Scope,
+        is_exported: bool
     ) -> usize {
         self.defined_arrays.push(CompileTimeArray {
             name: name.to_string(),
@@ -128,6 +158,7 @@ impl CompileTimeHelper {
             length: initial_length,
             scope,
             id: self.definition_counter,
+            is_exported
         });
 
         self.definition_counter += 1;
