@@ -68,7 +68,7 @@ pub struct CelsiumProgram {
     modules: Vec<Module>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Scope {
     pub ast_id: usize,
     pub module_path: String,

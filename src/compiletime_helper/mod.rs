@@ -8,7 +8,7 @@ use crate::{
     BUILTIN_TYPES,
 };
 
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct CompileTimeVariable {
     pub id: usize,
     pub name: String,
@@ -24,7 +24,6 @@ pub struct CompileTimeImport {
     pub imported_into: String,
 }
 
-
 #[derive(Clone, Debug)]
 pub struct CompileTimeArray {
     pub id: usize,
@@ -33,7 +32,6 @@ pub struct CompileTimeArray {
     pub length: usize,
     pub scope: Scope,
     pub is_exported: bool,
-
 }
 
 #[derive(Clone, Debug)]
@@ -44,9 +42,9 @@ pub struct CompileTimeFunction {
     pub scope: Scope,
     pub return_type: BUILTIN_TYPES,
     pub is_exported: bool,
-
 }
 
+#[derive(Clone, Debug)]
 pub struct CompileTimeHelper {
     stack: LinkedList<BUILTIN_TYPES>,
     pub source_files: Vec<String>,
@@ -90,7 +88,13 @@ impl CompileTimeHelper {
     pub fn pop(&mut self) -> Option<BUILTIN_TYPES> {
         self.stack.pop_back()
     }
-    pub fn def_function(&mut self, name: String, arguments: Vec<FuncArg>, scope: Scope, is_exported: bool) -> usize {
+    pub fn def_function(
+        &mut self,
+        name: String,
+        arguments: Vec<FuncArg>,
+        scope: Scope,
+        is_exported: bool
+    ) -> usize {
         let return_type = self.pop().unwrap();
         self.defined_functions.push(CompileTimeFunction {
             id: self.definition_counter,
@@ -98,7 +102,7 @@ impl CompileTimeHelper {
             arguments: arguments,
             scope: scope,
             return_type: return_type,
-            is_exported
+            is_exported,
         });
         self.definition_counter += 1;
         return self.definition_counter - 1;
@@ -125,16 +129,27 @@ impl CompileTimeHelper {
         data_type: BUILTIN_TYPES,
         scope: Scope,
         is_exported: bool
-    ) -> usize {
-        self.defined_variables.push(CompileTimeVariable {
+    ) -> Result<usize, &str> {
+        let to_be_defined = CompileTimeVariable {
             name,
             data_type,
-            scope,
+            scope: scope.clone(),
             id: self.definition_counter,
             is_exported,
-        });
+        };
+        for def in &self.defined_variables {
+            if def.name == to_be_defined.name && def.scope == to_be_defined.scope {
+                return Err("already_defined");
+            }
+        }
+        for import in &self.imports{
+            if import.name == to_be_defined.name && import.imported_into == scope.module_path{
+                return Err("already_imported");
+            }
+        }
+        self.defined_variables.push(to_be_defined);
         self.definition_counter += 1;
-        return self.definition_counter - 1;
+        return Ok(self.definition_counter - 1);
     }
     pub fn get_var_type(&mut self, var_id: usize) -> Option<BUILTIN_TYPES> {
         for var in self.defined_variables.clone() {
@@ -158,7 +173,7 @@ impl CompileTimeHelper {
             length: initial_length,
             scope,
             id: self.definition_counter,
-            is_exported
+            is_exported,
         });
 
         self.definition_counter += 1;
