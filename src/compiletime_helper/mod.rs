@@ -40,7 +40,7 @@ pub struct CompileTimeFunction {
     pub name: String,
     pub arguments: Vec<FuncArg>,
     pub scope: Scope,
-    pub return_type: BUILTIN_TYPES,
+    pub return_type: Option<BUILTIN_TYPES>,
     pub is_exported: bool,
 }
 
@@ -95,7 +95,7 @@ impl CompileTimeHelper {
         scope: Scope,
         is_exported: bool
     ) -> usize {
-        let return_type = self.pop().unwrap();
+        let return_type = self.pop();
         self.defined_functions.push(CompileTimeFunction {
             id: self.definition_counter,
             name: name,
@@ -107,7 +107,7 @@ impl CompileTimeHelper {
         self.definition_counter += 1;
         return self.definition_counter - 1;
     }
-    pub fn get_func_return_type(&mut self, id: usize) -> Option<BUILTIN_TYPES> {
+    pub fn get_func_return_type(&mut self, id: usize) -> Option<Option<BUILTIN_TYPES>> {
         for func in self.defined_functions.clone() {
             if func.id == id {
                 return Some(func.return_type);
