@@ -33,28 +33,15 @@ extern "C" {
     async fn wasm_input() -> JsValue;
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum BUILTIN_TYPES {
     MAGIC_INT,
     BOOL,
     STRING,
-    OBJECT,
+    OBJECT {name: String, fields: Vec<ObjectField>},
     FLOAT,
 }
 
-pub struct ObjectBuilder {
-    name: String,
-    fields: Vec<ObjectField>,
-}
-
-impl ObjectBuilder {
-    pub fn new(object_name: String) -> ObjectBuilder {
-        ObjectBuilder {
-            name: object_name,
-            fields: vec![],
-        }
-    }
-}
 
 #[derive(Clone, Debug)]
 pub enum SpecialFunctions {
@@ -164,22 +151,6 @@ impl CelsiumProgram {
                         visibility: visibility.clone(),
                     }),
 
-                OPTCODE::CREATE_OBJECT { name, field_names } => {
-                    let mut fields: Vec<ObjectField> = vec![];
-                    let mut field_names_mut = field_names.clone();
-                    field_names_mut.reverse();
-                    for name in field_names_mut {
-                        fields.push(ObjectField {
-                            name: name.to_string(),
-                            value: vm.pop(),
-                        });
-                    }
-                    fields.reverse();
-                    vm.push_stackvalue(StackValue::OBJECT {
-                        name: name.to_string(),
-                        value: fields,
-                    });
-                }
                 OPTCODE::CallSpecialFunction { function } =>
                     match function {
                         SpecialFunctions::PRINT { newline } => {

@@ -57,7 +57,7 @@ impl VM {
                 self.stack.push_back(StackValue::STRING {
                     value: data.to_string(),
                 }),
-            BUILTIN_TYPES::OBJECT => panic!(),
+            BUILTIN_TYPES::OBJECT{name: _, fields: _} => panic!("object should not appear in bytecode"),
             BUILTIN_TYPES::FLOAT =>
                 self.stack.push_back(StackValue::FLOAT { value: data.parse().unwrap() }),
         }

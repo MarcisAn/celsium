@@ -3,7 +3,7 @@ use std::collections::LinkedList;
 use crate::{
     bytecode::BINOP,
     module::{ FuncArg, Function },
-    vm::vm::Variable,
+    vm::{vm::Variable, ObjectField},
     Scope,
     BUILTIN_TYPES,
 };
@@ -44,6 +44,14 @@ pub struct CompileTimeFunction {
     pub is_exported: bool,
 }
 
+#[derive(Debug, Clone)]
+pub struct ObjectDefinition {
+    pub module_defined_in: String,
+    pub name: String,
+    pub fields: Vec<ObjectField>,
+}
+
+
 #[derive(Clone, Debug)]
 pub struct CompileTimeHelper {
     stack: LinkedList<BUILTIN_TYPES>,
@@ -53,6 +61,7 @@ pub struct CompileTimeHelper {
     pub defined_functions: Vec<CompileTimeFunction>,
     pub defined_variables: Vec<CompileTimeVariable>,
     pub defined_arrays: Vec<CompileTimeArray>,
+    pub defined_struct_definitions: Vec<ObjectDefinition>,
     definition_counter: usize,
     pub imports: Vec<CompileTimeImport>,
 }
@@ -69,8 +78,26 @@ impl CompileTimeHelper {
             defined_arrays: vec![],
             definition_counter: 0,
             imports: vec![],
+            defined_struct_definitions: vec![]
         }
     }
+    pub fn define_struct(&mut self, name: String, fields: Vec<ObjectField>) {
+        self.defined_struct_definitions.push(ObjectDefinition {
+            module_defined_in: self.source_file_paths[self.current_file].clone(),
+            name,
+            fields,
+        });
+    }
+
+    pub fn struct_exists(&mut self, name: &str) -> Option<ObjectDefinition> {
+        for object in &self.defined_struct_definitions{
+            if object.name == name && object.module_defined_in == self.source_file_paths[self.current_file]{
+                return Some(object.clone());
+            }
+        }
+        return None;
+    }
+
     pub fn change_module(&mut self, file_content: String, path: String) {
         self.source_files.push(file_content.clone());
         self.source_file_paths.push(path.clone());
@@ -142,8 +169,8 @@ impl CompileTimeHelper {
                 return Err("already_defined");
             }
         }
-        for import in &self.imports{
-            if import.name == to_be_defined.name && import.imported_into == scope.module_path{
+        for import in &self.imports {
+            if import.name == to_be_defined.name && import.imported_into == scope.module_path {
                 return Err("already_imported");
             }
         }
@@ -222,7 +249,7 @@ impl CompileTimeHelper {
                         return None;
                     }
                     BUILTIN_TYPES::STRING => Some(BUILTIN_TYPES::STRING),
-                    BUILTIN_TYPES::OBJECT => {
+                    BUILTIN_TYPES::OBJECT  { name: _, fields: _ } => {
                         return None;
                     }
                     BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::FLOAT),
@@ -235,12 +262,12 @@ impl CompileTimeHelper {
                         return None;
                     }
                     BUILTIN_TYPES::STRING => Some(BUILTIN_TYPES::STRING),
-                    BUILTIN_TYPES::OBJECT => {
+                    BUILTIN_TYPES::OBJECT { name: _, fields: _ } => {
                         return None;
                     }
                     BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::STRING),
                 }
-            BUILTIN_TYPES::OBJECT => None,
+            BUILTIN_TYPES::OBJECT { name: _, fields: _ } => None,
             BUILTIN_TYPES::FLOAT =>
                 match b {
                     BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::FLOAT),
@@ -248,7 +275,7 @@ impl CompileTimeHelper {
                         return None;
                     }
                     BUILTIN_TYPES::STRING => Some(BUILTIN_TYPES::STRING),
-                    BUILTIN_TYPES::OBJECT => {
+                    BUILTIN_TYPES::OBJECT { name: _, fields: _ } => {
                         return None;
                     }
                     BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::FLOAT),
@@ -269,14 +296,14 @@ impl CompileTimeHelper {
                     BUILTIN_TYPES::STRING => {
                         return None;
                     }
-                    BUILTIN_TYPES::OBJECT => {
+                    BUILTIN_TYPES::OBJECT { name: _, fields: _ } => {
                         return None;
                     }
                     BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::FLOAT),
                 }
             BUILTIN_TYPES::BOOL => None,
             BUILTIN_TYPES::STRING => None,
-            BUILTIN_TYPES::OBJECT => None,
+            BUILTIN_TYPES::OBJECT { name: _, fields: _ } => None,
             BUILTIN_TYPES::FLOAT =>
                 match b {
                     BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::FLOAT),
@@ -286,7 +313,7 @@ impl CompileTimeHelper {
                     BUILTIN_TYPES::STRING => {
                         return None;
                     }
-                    BUILTIN_TYPES::OBJECT => {
+                    BUILTIN_TYPES::OBJECT { name: _, fields: _ } => {
                         return None;
                     }
                     BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::FLOAT),
@@ -307,7 +334,7 @@ impl CompileTimeHelper {
                     BUILTIN_TYPES::STRING => {
                         return None;
                     }
-                    BUILTIN_TYPES::OBJECT => {
+                    BUILTIN_TYPES::OBJECT { name: _, fields: _ } => {
                         return None;
                     }
                     BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::BOOL),
@@ -321,7 +348,7 @@ impl CompileTimeHelper {
                     BUILTIN_TYPES::STRING => {
                         return None;
                     }
-                    BUILTIN_TYPES::OBJECT => {
+                    BUILTIN_TYPES::OBJECT { name: _, fields: _ } => {
                         return None;
                     }
                     BUILTIN_TYPES::FLOAT => {
@@ -329,7 +356,7 @@ impl CompileTimeHelper {
                     }
                 }
             BUILTIN_TYPES::STRING => None,
-            BUILTIN_TYPES::OBJECT => None,
+            BUILTIN_TYPES::OBJECT { name: _, fields: _ } => None,
             BUILTIN_TYPES::FLOAT =>
                 match b {
                     BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::BOOL),
@@ -339,7 +366,7 @@ impl CompileTimeHelper {
                     BUILTIN_TYPES::STRING => {
                         return None;
                     }
-                    BUILTIN_TYPES::OBJECT => {
+                    BUILTIN_TYPES::OBJECT { name: _, fields: _ } => {
                         return None;
                     }
                     BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::BOOL),

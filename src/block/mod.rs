@@ -138,16 +138,6 @@ impl Block {
     pub fn call_special_function(&mut self, function: SpecialFunctions) {
         self.bytecode.push(OPTCODE::CallSpecialFunction { function });
     }
-    pub fn create_object(&mut self, name: &str, field_names: Vec<&str>) {
-        let mut owned_names: Vec<String> = vec![];
-        for name in field_names {
-            owned_names.push(name.to_string());
-        }
-        self.bytecode.push(OPTCODE::CREATE_OBJECT {
-            name: name.to_string(),
-            field_names: owned_names,
-        });
-    }
     pub fn add_blocks_bytecode(&mut self, block: Block){
         let mut other = block.bytecode;
         self.bytecode.append(&mut other);

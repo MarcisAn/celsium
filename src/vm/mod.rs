@@ -13,7 +13,6 @@ pub enum StackValue {
     FLOAT {value: f64},
     STRING { value: String },
     ARRAY { value: Vec<StackValue> },
-    OBJECT {name: String, value: Vec<ObjectField>},
 }
 #[derive(Debug, PartialEq, Clone,Serialize, Deserialize)]
 pub struct ObjectField {
