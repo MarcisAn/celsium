@@ -120,9 +120,9 @@ impl CompileTimeHelper {
         name: String,
         arguments: Vec<FuncArg>,
         scope: Scope,
-        is_exported: bool
+        is_exported: bool,
+        return_type: Option<BUILTIN_TYPES>
     ) -> usize {
-        let return_type = self.pop();
         self.defined_functions.push(CompileTimeFunction {
             id: self.definition_counter,
             name: name,
@@ -221,7 +221,7 @@ impl CompileTimeHelper {
         Subtraction, multiplication, division and getting remainder
         are identical in the way types ar handled
         */
-        match binop {
+        let result_type = match binop {
             BINOP::ADD => self.add(),
             BINOP::SUBTRACT => self.subtract(),
             BINOP::MULTIPLY => self.subtract(),
@@ -236,6 +236,13 @@ impl CompileTimeHelper {
             BINOP::AND => self.compare(),
             BINOP::OR => self.compare(),
             BINOP::XOR => self.compare(),
+        };
+        if result_type.is_some(){
+            self.stack.push_back(result_type.clone().unwrap());
+            return result_type;
+        }
+        else{
+            return None;
         }
     }
     fn add(&mut self) -> Option<BUILTIN_TYPES> {
