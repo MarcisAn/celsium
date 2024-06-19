@@ -14,7 +14,7 @@ extern crate js_sys;
 pub mod compiletime_helper;
 pub mod block;
 pub mod module;
-mod vm;
+pub mod vm;
 use vm::vm::VM;
 use vm::ObjectField;
 use vm::StackValue;
@@ -32,13 +32,18 @@ extern "C" {
     fn wasm_print(s: &str);
     async fn wasm_input() -> JsValue;
 }
+#[derive(Clone, Debug, PartialEq)]
+pub struct ObjectFieldType{
+    pub name: String,
+    pub data_type: BUILTIN_TYPES
+}
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum BUILTIN_TYPES {
     MAGIC_INT,
     BOOL,
     STRING,
-    OBJECT {name: String, fields: Vec<ObjectField>},
+    OBJECT {fields: Vec<ObjectFieldType>},
     FLOAT,
 }
 

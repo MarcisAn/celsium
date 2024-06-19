@@ -15,7 +15,7 @@ pub enum StackValue {
     ARRAY { value: Vec<StackValue> },
 }
 #[derive(Debug, PartialEq, Clone,Serialize, Deserialize)]
-pub struct ObjectField {
-    pub(crate) name: String,
-    pub(crate) value: StackValue
+pub struct  ObjectField {
+    pub name: String,
+    pub value: StackValue
 }

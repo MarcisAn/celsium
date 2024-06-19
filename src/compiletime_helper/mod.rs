@@ -1,11 +1,7 @@
 use std::collections::LinkedList;
 
 use crate::{
-    bytecode::BINOP,
-    module::{ FuncArg, Function },
-    vm::{vm::Variable, ObjectField},
-    Scope,
-    BUILTIN_TYPES,
+    bytecode::BINOP, module::{ FuncArg, Function }, vm::{vm::Variable, ObjectField}, ObjectFieldType, Scope, BUILTIN_TYPES
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -48,7 +44,7 @@ pub struct CompileTimeFunction {
 pub struct ObjectDefinition {
     pub module_defined_in: String,
     pub name: String,
-    pub fields: Vec<ObjectField>,
+    pub fields: Vec<ObjectFieldType>,
 }
 
 
@@ -81,7 +77,7 @@ impl CompileTimeHelper {
             defined_struct_definitions: vec![]
         }
     }
-    pub fn define_struct(&mut self, name: String, fields: Vec<ObjectField>) {
+    pub fn define_struct(&mut self, name: String, fields: Vec<ObjectFieldType>) {
         self.defined_struct_definitions.push(ObjectDefinition {
             module_defined_in: self.source_file_paths[self.current_file].clone(),
             name,
@@ -256,7 +252,7 @@ impl CompileTimeHelper {
                         return None;
                     }
                     BUILTIN_TYPES::STRING => Some(BUILTIN_TYPES::STRING),
-                    BUILTIN_TYPES::OBJECT  { name: _, fields: _ } => {
+                    BUILTIN_TYPES::OBJECT  { fields: _ } => {
                         return None;
                     }
                     BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::FLOAT),
@@ -269,12 +265,12 @@ impl CompileTimeHelper {
                         return None;
                     }
                     BUILTIN_TYPES::STRING => Some(BUILTIN_TYPES::STRING),
-                    BUILTIN_TYPES::OBJECT { name: _, fields: _ } => {
+                    BUILTIN_TYPES::OBJECT { fields: _ } => {
                         return None;
                     }
                     BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::STRING),
                 }
-            BUILTIN_TYPES::OBJECT { name: _, fields: _ } => None,
+            BUILTIN_TYPES::OBJECT {  fields: _ } => None,
             BUILTIN_TYPES::FLOAT =>
                 match b {
                     BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::FLOAT),
@@ -282,7 +278,7 @@ impl CompileTimeHelper {
                         return None;
                     }
                     BUILTIN_TYPES::STRING => Some(BUILTIN_TYPES::STRING),
-                    BUILTIN_TYPES::OBJECT { name: _, fields: _ } => {
+                    BUILTIN_TYPES::OBJECT { fields: _ } => {
                         return None;
                     }
                     BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::FLOAT),
@@ -303,14 +299,14 @@ impl CompileTimeHelper {
                     BUILTIN_TYPES::STRING => {
                         return None;
                     }
-                    BUILTIN_TYPES::OBJECT { name: _, fields: _ } => {
+                    BUILTIN_TYPES::OBJECT {  fields: _ } => {
                         return None;
                     }
                     BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::FLOAT),
                 }
             BUILTIN_TYPES::BOOL => None,
             BUILTIN_TYPES::STRING => None,
-            BUILTIN_TYPES::OBJECT { name: _, fields: _ } => None,
+            BUILTIN_TYPES::OBJECT {  fields: _ } => None,
             BUILTIN_TYPES::FLOAT =>
                 match b {
                     BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::FLOAT),
@@ -320,7 +316,7 @@ impl CompileTimeHelper {
                     BUILTIN_TYPES::STRING => {
                         return None;
                     }
-                    BUILTIN_TYPES::OBJECT { name: _, fields: _ } => {
+                    BUILTIN_TYPES::OBJECT { fields: _ } => {
                         return None;
                     }
                     BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::FLOAT),
@@ -341,7 +337,7 @@ impl CompileTimeHelper {
                     BUILTIN_TYPES::STRING => {
                         return None;
                     }
-                    BUILTIN_TYPES::OBJECT { name: _, fields: _ } => {
+                    BUILTIN_TYPES::OBJECT {  fields: _ } => {
                         return None;
                     }
                     BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::BOOL),
@@ -355,7 +351,7 @@ impl CompileTimeHelper {
                     BUILTIN_TYPES::STRING => {
                         return None;
                     }
-                    BUILTIN_TYPES::OBJECT { name: _, fields: _ } => {
+                    BUILTIN_TYPES::OBJECT { fields: _ } => {
                         return None;
                     }
                     BUILTIN_TYPES::FLOAT => {
@@ -363,7 +359,7 @@ impl CompileTimeHelper {
                     }
                 }
             BUILTIN_TYPES::STRING => None,
-            BUILTIN_TYPES::OBJECT { name: _, fields: _ } => None,
+            BUILTIN_TYPES::OBJECT {  fields: _ } => None,
             BUILTIN_TYPES::FLOAT =>
                 match b {
                     BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::BOOL),
@@ -373,7 +369,7 @@ impl CompileTimeHelper {
                     BUILTIN_TYPES::STRING => {
                         return None;
                     }
-                    BUILTIN_TYPES::OBJECT { name: _, fields: _ } => {
+                    BUILTIN_TYPES::OBJECT { fields: _ } => {
                         return None;
                     }
                     BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::BOOL),
