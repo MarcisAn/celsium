@@ -1,7 +1,12 @@
-use std::collections::LinkedList;
+use std::collections::{ HashMap, LinkedList };
 
 use crate::{
-    bytecode::BINOP, module::{ FuncArg, Function }, vm::{vm::Variable, ObjectField}, ObjectFieldType, Scope, BUILTIN_TYPES
+    bytecode::BINOP,
+    module::{ FuncArg, Function },
+    vm::{ vm::Variable, ObjectField },
+    ObjectFieldType,
+    Scope,
+    BUILTIN_TYPES,
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -41,12 +46,17 @@ pub struct CompileTimeFunction {
 }
 
 #[derive(Debug, Clone)]
-pub struct ObjectDefinition {
+pub struct ObjectDefinitionDefinition {
     pub module_defined_in: String,
     pub name: String,
     pub fields: Vec<ObjectFieldType>,
 }
 
+#[derive(Debug, Clone)]
+pub struct ObjectDefinition {
+    pub field_var_ids: HashMap<String, usize>,
+    pub name: String,
+}
 
 #[derive(Clone, Debug)]
 pub struct CompileTimeHelper {
@@ -57,7 +67,8 @@ pub struct CompileTimeHelper {
     pub defined_functions: Vec<CompileTimeFunction>,
     pub defined_variables: Vec<CompileTimeVariable>,
     pub defined_arrays: Vec<CompileTimeArray>,
-    pub defined_struct_definitions: Vec<ObjectDefinition>,
+    pub defined_object_definitions: Vec<ObjectDefinitionDefinition>,
+    pub defined_objects: Vec<ObjectDefinition>,
     definition_counter: usize,
     pub imports: Vec<CompileTimeImport>,
 }
@@ -74,20 +85,24 @@ impl CompileTimeHelper {
             defined_arrays: vec![],
             definition_counter: 0,
             imports: vec![],
-            defined_struct_definitions: vec![]
+            defined_object_definitions: vec![],
+            defined_objects: vec![],
         }
     }
     pub fn define_struct(&mut self, name: String, fields: Vec<ObjectFieldType>) {
-        self.defined_struct_definitions.push(ObjectDefinition {
+        self.defined_object_definitions.push(ObjectDefinitionDefinition {
             module_defined_in: self.source_file_paths[self.current_file].clone(),
             name,
             fields,
         });
     }
 
-    pub fn struct_exists(&mut self, name: &str) -> Option<ObjectDefinition> {
-        for object in &self.defined_struct_definitions{
-            if object.name == name && object.module_defined_in == self.source_file_paths[self.current_file]{
+    pub fn struct_exists(&mut self, name: &str) -> Option<ObjectDefinitionDefinition> {
+        for object in &self.defined_object_definitions {
+            if
+                object.name == name &&
+                object.module_defined_in == self.source_file_paths[self.current_file]
+            {
                 return Some(object.clone());
             }
         }
@@ -174,6 +189,16 @@ impl CompileTimeHelper {
         self.definition_counter += 1;
         return Ok(self.definition_counter - 1);
     }
+    pub fn def_object(
+        &mut self,
+        name: String,
+        data_type: BUILTIN_TYPES,
+        scope: Scope,
+        is_exported: bool,
+        fields: HashMap<String, usize>
+    ) {
+        let object = ObjectDefinition { field_var_ids: todo!(), name };
+    }
     pub fn get_var_type(&mut self, var_id: usize) -> Option<BUILTIN_TYPES> {
         for var in self.defined_variables.clone() {
             if var.id == var_id {
@@ -233,11 +258,10 @@ impl CompileTimeHelper {
             BINOP::OR => self.compare(),
             BINOP::XOR => self.compare(),
         };
-        if result_type.is_some(){
+        if result_type.is_some() {
             self.stack.push_back(result_type.clone().unwrap());
             return result_type;
-        }
-        else{
+        } else {
             return None;
         }
     }
@@ -252,7 +276,7 @@ impl CompileTimeHelper {
                         return None;
                     }
                     BUILTIN_TYPES::STRING => Some(BUILTIN_TYPES::STRING),
-                    BUILTIN_TYPES::OBJECT  { fields: _ } => {
+                    BUILTIN_TYPES::OBJECT { fields: _ } => {
                         return None;
                     }
                     BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::FLOAT),
@@ -270,7 +294,7 @@ impl CompileTimeHelper {
                     }
                     BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::STRING),
                 }
-            BUILTIN_TYPES::OBJECT {  fields: _ } => None,
+            BUILTIN_TYPES::OBJECT { fields: _ } => None,
             BUILTIN_TYPES::FLOAT =>
                 match b {
                     BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::FLOAT),
@@ -299,14 +323,14 @@ impl CompileTimeHelper {
                     BUILTIN_TYPES::STRING => {
                         return None;
                     }
-                    BUILTIN_TYPES::OBJECT {  fields: _ } => {
+                    BUILTIN_TYPES::OBJECT { fields: _ } => {
                         return None;
                     }
                     BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::FLOAT),
                 }
             BUILTIN_TYPES::BOOL => None,
             BUILTIN_TYPES::STRING => None,
-            BUILTIN_TYPES::OBJECT {  fields: _ } => None,
+            BUILTIN_TYPES::OBJECT { fields: _ } => None,
             BUILTIN_TYPES::FLOAT =>
                 match b {
                     BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::FLOAT),
@@ -337,7 +361,7 @@ impl CompileTimeHelper {
                     BUILTIN_TYPES::STRING => {
                         return None;
                     }
-                    BUILTIN_TYPES::OBJECT {  fields: _ } => {
+                    BUILTIN_TYPES::OBJECT { fields: _ } => {
                         return None;
                     }
                     BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::BOOL),
@@ -359,7 +383,7 @@ impl CompileTimeHelper {
                     }
                 }
             BUILTIN_TYPES::STRING => None,
-            BUILTIN_TYPES::OBJECT {  fields: _ } => None,
+            BUILTIN_TYPES::OBJECT { fields: _ } => None,
             BUILTIN_TYPES::FLOAT =>
                 match b {
                     BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::BOOL),
