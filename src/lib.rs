@@ -32,13 +32,14 @@ extern "C" {
     fn wasm_print(s: &str);
     async fn wasm_input() -> JsValue;
 }
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ObjectFieldType{
     pub name: String,
     pub data_type: BUILTIN_TYPES
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+
 pub enum BUILTIN_TYPES {
     MAGIC_INT,
     BOOL,
