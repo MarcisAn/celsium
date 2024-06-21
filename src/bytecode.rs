@@ -60,6 +60,10 @@ pub enum OPTCODE {
     DEFINE_VAR {
         id: usize,
     },
+    DefineObject {
+        id: usize,
+        field_names: Vec<String>
+    },
     DefineArray {
         id: usize,
         init_values_count: usize

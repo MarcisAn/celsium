@@ -56,7 +56,7 @@ pub fn format_for_print(value: StackValue, newline: bool) -> String {
                 printable_str += "]";
             }
             return printable_str;
-        }/* 
+        }
         StackValue::OBJECT { name, value: fields } => {
             let mut printable_object = format!("{} {{\n", name);
             let mut index = 0;
@@ -78,7 +78,7 @@ pub fn format_for_print(value: StackValue, newline: bool) -> String {
             } else {
                 return format!("{}\n", printable_object);
             }
-        }*/
+        }
         StackValue::FLOAT { value } => {
             if !newline {
                 return format!("{}", value.to_string().replace(".", ","));

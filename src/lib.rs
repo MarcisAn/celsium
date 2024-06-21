@@ -15,6 +15,7 @@ pub mod compiletime_helper;
 pub mod block;
 pub mod module;
 pub mod vm;
+use vm::vm::Variable;
 use vm::vm::VM;
 use vm::ObjectField;
 use vm::StackValue;
@@ -136,6 +137,13 @@ impl CelsiumProgram {
                 OPTCODE::AND => vm.aritmethics("and"),
                 OPTCODE::XOR => vm.aritmethics("xor"),
                 OPTCODE::DEFINE_VAR { id } => vm.define_var(*id),
+                OPTCODE::DefineObject { id, field_names } => {
+                    let fields: Vec<StackValue> = vec![];
+                    for field in field_names {
+                        fi
+                    }
+                    vm.variables.insert(id, Variable{ id: id, value: StackValue::OBJECT { value: (), name: () } })
+                },
                 OPTCODE::LOAD_VAR { id } => vm.load_var(*id),
                 OPTCODE::ASSIGN_VAR { id } => vm.assign_var(*id),
                 OPTCODE::DefineArray { id, init_values_count } => {

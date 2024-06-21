@@ -113,6 +113,16 @@ impl Block {
             id
         });
     }
+    pub fn define_object(
+        &mut self,
+        id: usize,
+        field_names: Vec<String>
+    ) {
+        self.bytecode.push(OPTCODE::DefineObject {
+            id,
+            field_names
+        });
+    }
     pub fn define_function(
         &mut self,
         body_block: Block,

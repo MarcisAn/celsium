@@ -55,8 +55,8 @@ pub struct ObjectDefinitionDefinition {
 
 #[derive(Debug, Clone)]
 pub struct ObjectDefinition {
-    pub field_var_ids: HashMap<String, usize>,
     pub name: String,
+    pub fields: Vec<ObjectFieldType>,
 }
 
 #[derive(Clone, Debug)]
@@ -197,10 +197,8 @@ impl CompileTimeHelper {
         scope: Scope,
         is_exported: bool,
         fields: Vec<ObjectFieldType>,
-        block: &mut Block
     ) -> Result<usize, &str> {
-        let mut field_to_varid_map: HashMap<String, usize> = HashMap::new();
-        let mut reversed_fields = fields;
+        let mut reversed_fields = fields.clone();
         reversed_fields.reverse();
         for field in reversed_fields.clone() {
             let field_type = field.data_type;
@@ -213,7 +211,6 @@ impl CompileTimeHelper {
                         scope.clone(),
                         is_exported,
                         reversed_fields.clone(),
-                        block
                     ),
                 _ => {
                     let varid = self.def_var(
@@ -222,13 +219,11 @@ impl CompileTimeHelper {
                         scope.clone(),
                         is_exported
                     );
-                    block.define_variable(varid.unwrap());
                     varid
                 }
             };
-            field_to_varid_map.insert(field.name.clone(), field_var_id.unwrap());
         }
-        let object: ObjectDefinition = ObjectDefinition { field_var_ids: field_to_varid_map, name };
+        let object: ObjectDefinition = ObjectDefinition { fields, name };
         self.defined_objects.push(object);
         self.definition_counter += 1;
         return Ok(self.definition_counter - 1);
