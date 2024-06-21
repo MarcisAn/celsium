@@ -54,9 +54,12 @@ pub struct ObjectDefinitionDefinition {
 }
 
 #[derive(Debug, Clone)]
-pub struct ObjectDefinition {
+pub struct CompileTimeObject {
+    pub id: usize,
     pub name: String,
-    pub fields: Vec<ObjectFieldType>,
+    pub data_type: BUILTIN_TYPES,
+    pub scope: Scope,
+    pub is_exported: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -69,7 +72,7 @@ pub struct CompileTimeHelper {
     pub defined_variables: Vec<CompileTimeVariable>,
     pub defined_arrays: Vec<CompileTimeArray>,
     pub defined_object_definitions: Vec<ObjectDefinitionDefinition>,
-    pub defined_objects: Vec<ObjectDefinition>,
+    pub defined_objects: Vec<CompileTimeObject>,
     definition_counter: usize,
     pub imports: Vec<CompileTimeImport>,
 }
@@ -181,6 +184,16 @@ impl CompileTimeHelper {
                 return Err("already_defined");
             }
         }
+        for def in &self.defined_objects {
+            if def.name == to_be_defined.name && def.scope == to_be_defined.scope {
+                return Err("already_defined");
+            }
+        }
+        for def in &self.defined_arrays {
+            if def.name == to_be_defined.name && def.scope == to_be_defined.scope {
+                return Err("already_defined");
+            }
+        }
         for import in &self.imports {
             if import.name == to_be_defined.name && import.imported_into == scope.module_path {
                 return Err("already_imported");
@@ -196,48 +209,55 @@ impl CompileTimeHelper {
         data_type: BUILTIN_TYPES,
         scope: Scope,
         is_exported: bool,
-        fields: Vec<ObjectFieldType>,
+        fields: Vec<ObjectFieldType>
     ) -> Result<usize, &str> {
-        let mut reversed_fields = fields.clone();
-        reversed_fields.reverse();
-        for field in reversed_fields.clone() {
-            let field_type = field.data_type;
-            let field_name = name.clone() + &field.name.clone();
-            let field_var_id = match field_type {
-                BUILTIN_TYPES::OBJECT { fields } =>
-                    self.def_object(
-                        field_name,
-                        data_type.clone(),
-                        scope.clone(),
-                        is_exported,
-                        reversed_fields.clone(),
-                    ),
-                _ => {
-                    let varid = self.def_var(
-                        field_name,
-                        data_type.clone(),
-                        scope.clone(),
-                        is_exported
-                    );
-                    varid
-                }
-            };
+
+        let object: CompileTimeObject = CompileTimeObject {
+            data_type: BUILTIN_TYPES::OBJECT { fields: fields },
+            name,
+            id: self.definition_counter,
+            scope: scope.clone(),
+            is_exported,
+        };
+        for def in &self.defined_variables {
+            if def.name == object.name && def.scope == object.scope {
+                return Err("already_defined");
+            }
         }
-        let object: ObjectDefinition = ObjectDefinition { fields, name };
+        for def in &self.defined_objects {
+            if def.name == object.name && def.scope == object.scope {
+                return Err("already_defined");
+            }
+        }
+        for def in &self.defined_arrays {
+            if def.name == object.name && def.scope == object.scope {
+                return Err("already_defined");
+            }
+        }
+        for import in &self.imports {
+            if import.name == object.name && import.imported_into == scope.module_path {
+                return Err("already_imported");
+            }
+        }
         self.defined_objects.push(object);
         self.definition_counter += 1;
         return Ok(self.definition_counter - 1);
     }
-    pub fn get_object_if_exists(&mut self, name: &str) -> Option<ObjectDefinition> {
-        for object in &self.defined_objects{
-            if object.name == name{
+    pub fn get_object_if_exists(&mut self, name: &str) -> Option<CompileTimeObject> {
+        for object in &self.defined_objects {
+            if object.name == name {
                 return Some(object.clone());
-            }
+            } 
         }
         None
     }
     pub fn get_var_type(&mut self, var_id: usize) -> Option<BUILTIN_TYPES> {
         for var in self.defined_variables.clone() {
+            if var.id == var_id {
+                return Some(var.data_type);
+            }
+        }
+        for var in self.defined_objects.clone() {
             if var.id == var_id {
                 return Some(var.data_type);
             }

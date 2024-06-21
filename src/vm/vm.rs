@@ -131,7 +131,8 @@ impl VM {
         if getter.is_none() {
             panic!("Cound not found vairable id {}", id);
         } else {
-            self.stack.push_back(getter.unwrap().value.clone());
+            let value = getter.unwrap().value.clone();
+            self.stack.push_back(value);
         }
     }
 

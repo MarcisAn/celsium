@@ -1,4 +1,4 @@
-use crate::{ block::Block, module::{ FunctionSignature, VISIBILITY }, BUILTIN_TYPES };
+use crate::{ block::Block, module::{ FunctionSignature, VISIBILITY }, vm::ObjectField, BUILTIN_TYPES };
 
 #[derive(Clone, Debug)]
 pub enum BINOP {
@@ -64,6 +64,9 @@ pub enum OPTCODE {
         id: usize,
         field_names: Vec<String>
     },
+    CreateObject {
+        field_names: Vec<String>
+    },
     DefineArray {
         id: usize,
         init_values_count: usize
@@ -93,5 +96,6 @@ pub enum OPTCODE {
     },
     SimpleLoop {
         body_block: Block
-    }
+    },
+    
 }

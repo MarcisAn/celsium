@@ -1,6 +1,7 @@
 
 use rand::Rng;
 use crate::module::FunctionSignature;
+use crate::vm::ObjectField;
 use crate::{Scope, SpecialFunctions};
 use crate::{ module::VISIBILITY, BINOP, BUILTIN_TYPES, OPTCODE };
 mod array;
@@ -122,6 +123,10 @@ impl Block {
             id,
             field_names
         });
+    }
+    pub fn create_object(&mut self, field_names: Vec<String>){
+
+        self.bytecode.push(OPTCODE::CreateObject { field_names });
     }
     pub fn define_function(
         &mut self,

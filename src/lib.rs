@@ -34,21 +34,21 @@ extern "C" {
     async fn wasm_input() -> JsValue;
 }
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub struct ObjectFieldType{
+pub struct ObjectFieldType {
     pub name: String,
-    pub data_type: BUILTIN_TYPES
+    pub data_type: BUILTIN_TYPES,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-
 pub enum BUILTIN_TYPES {
     MAGIC_INT,
     BOOL,
     STRING,
-    OBJECT {fields: Vec<ObjectFieldType>},
+    OBJECT {
+        fields: Vec<ObjectFieldType>,
+    },
     FLOAT,
 }
-
 
 #[derive(Clone, Debug)]
 pub enum SpecialFunctions {
@@ -138,12 +138,9 @@ impl CelsiumProgram {
                 OPTCODE::XOR => vm.aritmethics("xor"),
                 OPTCODE::DEFINE_VAR { id } => vm.define_var(*id),
                 OPTCODE::DefineObject { id, field_names } => {
-                    let fields: Vec<StackValue> = vec![];
-                    for field in field_names {
-                        fi
-                    }
-                    vm.variables.insert(id, Variable{ id: id, value: StackValue::OBJECT { value: (), name: () } })
-                },
+                    let object = vm.pop();
+                    let _ = vm.variables.insert(*id, Variable { id: *id, value: object });
+                }
                 OPTCODE::LOAD_VAR { id } => vm.load_var(*id),
                 OPTCODE::ASSIGN_VAR { id } => vm.assign_var(*id),
                 OPTCODE::DefineArray { id, init_values_count } => {
@@ -206,6 +203,13 @@ impl CelsiumProgram {
                 OPTCODE::ASSIGN_AT_ARRAY_INDEX { id } => vm.set_at_array(*id),
                 OPTCODE::SimpleLoop { body_block } =>
                     vm.simple_loop(self, body_block.bytecode.clone()),
+                OPTCODE::CreateObject { field_names } => {
+                    let mut fields = vec![];
+                    for fieldname in field_names{
+                        fields.push(ObjectField { name: fieldname.to_string(), value: vm.pop() });
+                    }
+                    vm.push_stackvalue(StackValue::OBJECT { value: fields.clone() })
+                },
             }
             index += 1;
         }
@@ -215,35 +219,4 @@ impl CelsiumProgram {
 fn truncate_biguint_to_i64(a: &BigInt) -> i64 {
     let mask = BigInt::from(u64::MAX);
     (a & mask).to_i64().unwrap()
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::block::Block;
-
-    use self::module::VISIBILITY;
-
-    use super::*;
-
-    use compiletime_helper::CompileTimeHelper;
-
-    #[test]
-    fn it_works() {
-        let mut celsium = CelsiumProgram::new();
-        let mut main_module = Module::new("main", &mut celsium);
-        let mut main_block = Block::new(0);
-        let mut helper = CompileTimeHelper::new("".to_string(), "".to_string());
-
-        main_block.load_const(BUILTIN_TYPES::STRING, "John");
-        helper.push(BUILTIN_TYPES::STRING);
-
-        let mut i = 0;
-        while i < main_block.bytecode.len() {
-            println!("{} {:?}", i, main_block.bytecode[i]);
-            i += 1;
-        }
-        main_module.add_main_block(main_block);
-        celsium.add_module(&main_module);
-        celsium.run_program();
-    }
 }

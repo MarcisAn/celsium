@@ -57,8 +57,8 @@ pub fn format_for_print(value: StackValue, newline: bool) -> String {
             }
             return printable_str;
         }
-        StackValue::OBJECT { name, value: fields } => {
-            let mut printable_object = format!("{} {{\n", name);
+        StackValue::OBJECT { value: fields } => {
+            let mut printable_object = format!("Objekts {{\n");
             let mut index = 0;
             let length = &fields.len();
             for field in fields {
