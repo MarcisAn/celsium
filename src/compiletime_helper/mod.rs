@@ -1,6 +1,7 @@
 use std::collections::{ HashMap, LinkedList };
 
 use crate::{
+    block::Block,
     bytecode::BINOP,
     module::{ FuncArg, Function },
     vm::{ vm::Variable, ObjectField },
@@ -195,9 +196,50 @@ impl CompileTimeHelper {
         data_type: BUILTIN_TYPES,
         scope: Scope,
         is_exported: bool,
-        fields: HashMap<String, usize>
-    ) {
-        let object = ObjectDefinition { field_var_ids: todo!(), name };
+        fields: Vec<ObjectFieldType>,
+        block: &mut Block
+    ) -> Result<usize, &str> {
+        let mut field_to_varid_map: HashMap<String, usize> = HashMap::new();
+        let mut reversed_fields = fields;
+        reversed_fields.reverse();
+        for field in reversed_fields.clone() {
+            let field_type = field.data_type;
+            let field_name = name.clone() + &field.name.clone();
+            let field_var_id = match field_type {
+                BUILTIN_TYPES::OBJECT { fields } =>
+                    self.def_object(
+                        field_name,
+                        data_type.clone(),
+                        scope.clone(),
+                        is_exported,
+                        reversed_fields.clone(),
+                        block
+                    ),
+                _ => {
+                    let varid = self.def_var(
+                        field_name,
+                        data_type.clone(),
+                        scope.clone(),
+                        is_exported
+                    );
+                    block.define_variable(varid.unwrap());
+                    varid
+                }
+            };
+            field_to_varid_map.insert(field.name.clone(), field_var_id.unwrap());
+        }
+        let object: ObjectDefinition = ObjectDefinition { field_var_ids: field_to_varid_map, name };
+        self.defined_objects.push(object);
+        self.definition_counter += 1;
+        return Ok(self.definition_counter - 1);
+    }
+    pub fn get_object_if_exists(&mut self, name: &str) -> Option<ObjectDefinition> {
+        for object in &self.defined_objects{
+            if object.name == name{
+                return Some(object.clone());
+            }
+        }
+        None
     }
     pub fn get_var_type(&mut self, var_id: usize) -> Option<BUILTIN_TYPES> {
         for var in self.defined_variables.clone() {
