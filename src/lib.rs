@@ -205,7 +205,9 @@ impl CelsiumProgram {
                     vm.simple_loop(self, body_block.bytecode.clone()),
                 OPTCODE::CreateObject { field_names } => {
                     let mut fields = vec![];
-                    for fieldname in field_names{
+                    let mut field_names_reversed = field_names.clone();
+                    field_names_reversed.reverse();
+                    for fieldname in field_names_reversed {
                         fields.push(ObjectField { name: fieldname.to_string(), value: vm.pop() });
                     }
                     vm.push_stackvalue(StackValue::OBJECT { value: fields.clone() })
