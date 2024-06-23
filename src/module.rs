@@ -1,5 +1,5 @@
 use crate::block::Block;
-use crate::{CelsiumProgram, BUILTIN_TYPES, OPTCODE};
+use crate::{CelsiumProgram, BuiltinTypes};
 #[derive(Clone)]
 pub struct Module {
     pub name: String,
@@ -35,7 +35,7 @@ impl FunctionSignature {
 #[derive(Clone, Debug)]
 pub struct FuncArg {
     pub name: String,
-    pub arg_type: BUILTIN_TYPES,
+    pub arg_type: BuiltinTypes,
 }
 #[derive(Clone, Debug)]
 pub enum VISIBILITY {
@@ -46,17 +46,9 @@ pub enum VISIBILITY {
 pub struct Function {
     pub(crate) signature: FunctionSignature,
     pub(crate) body: Block,
-    pub(crate) visibility: VISIBILITY,
 }
 
-fn load_function_bytecode(name: String, module: &Module) -> Result<Vec<OPTCODE>, String> {
-    for func in &module.functions {
-        if func.signature.name == name {
-            return Ok(func.clone().body.bytecode);
-        }
-    }
-    Err(format!("Could not find function {} in module", { name }))
-}
+
 
 impl Module {
     pub fn new(name: &str, celsius_program: &mut CelsiumProgram) -> Module {

@@ -5,7 +5,7 @@
 ```rust
 use celsium::block::Block;
 use celsium::module::Module;
-use celsium::{CelsiumProgram, BINOP, BUILTIN_TYPES};
+use celsium::{CelsiumProgram, BINOP, BuiltinTypes};
 
 fn main() {
     let mut celsium = CelsiumProgram::new();
@@ -13,9 +13,9 @@ fn main() {
 
     let mut main_block = Block::new();
     {
-        main_block.load_const(BUILTIN_TYPES::MAGIC_INT, "1");
-        main_block.load_const(BUILTIN_TYPES::MAGIC_INT, "2");
-        main_block.binop(BINOP::ADD);
+        main_block.load_const(BuiltinTypes::MagicInt, "1");
+        main_block.load_const(BuiltinTypes::MagicInt, "2");
+        main_block.binop(BINOP::Add);
         main_block.main_block.call_special_function(SpecialFunctions::PRINT{newline: true});
     }
     //println!("{:?}", main_block.bytecode);
@@ -34,10 +34,10 @@ let mut celsium = CelsiumProgram::new();
 let mut main_module = Module::new("main", &mut celsium);
 let mut main_block = Block::new();
 {
-    main_block.load_const(BUILTIN_TYPES::BOOL, "1");
+    main_block.load_const(BuiltinTypes::Bool, "1");
     let mut if_block = Block::new();
     {
-        if_block.load_const(BUILTIN_TYPES::STRING, "executed if block");
+        if_block.load_const(BuiltinTypes::String, "executed if block");
         if_block.main_block.call_special_function(SpecialFunctions::PRINT{newline: true});
     }
     main_block.define_if_block(if_block);
@@ -56,15 +56,15 @@ let mut celsium = CelsiumProgram::new();
 let mut main_module = Module::new("main", &mut celsium);
 let mut main_block = Block::new();
 {
-    main_block.load_const(BUILTIN_TYPES::BOOL, "1");
+    main_block.load_const(BuiltinTypes::Bool, "1");
     let mut if_block = Block::new();
     {
-        if_block.load_const(BUILTIN_TYPES::STRING, "executed if block");
+        if_block.load_const(BuiltinTypes::String, "executed if block");
         if_block.main_block.call_special_function(SpecialFunctions::PRINT{newline: true});
     }
     let mut else_block = Block::new();
     {
-        else_block.load_const(BUILTIN_TYPES::STRING, "executed else block");
+        else_block.load_const(BuiltinTypes::String, "executed else block");
         else_block.main_block.call_special_function(SpecialFunctions::PRINT{newline: true});
     }
     main_block.define_if_else_block(if_block, else_block);
@@ -81,7 +81,7 @@ let mut main_block = Block::new();
 ```rust
 use celsium::block::Block;
 use celsium::module::Module;
-use celsium::{CelsiumProgram, BINOP, BUILTIN_TYPES};
+use celsium::{CelsiumProgram, BINOP, BuiltinTypes};
 
 fn main() {
     let mut celsium = CelsiumProgram::new();
@@ -90,7 +90,7 @@ fn main() {
     let mut main_block = Block::new();
 
     let mut fn_block = Block::new();
-        fn_block.load_const(BUILTIN_TYPES::STRING, "aaa");
+        fn_block.load_const(BuiltinTypes::String, "aaa");
         fn_block.main_block.call_special_function(SpecialFunctions::PRINT{newline: true});
 
         main_module.define_function(
@@ -118,15 +118,15 @@ fn main() {
 ```rust
 use celsium::block::Block;
 use celsium::module::Module;
-use celsium::{CelsiumProgram, BINOP, BUILTIN_TYPES};
+use celsium::{CelsiumProgram, BINOP, BuiltinTypes};
 
 fn main() {
     let mut celsium = CelsiumProgram::new(false);
     let mut main_module = Module::new("main", &mut celsium);
     let mut main_block = Block::new();
     {
-        main_block.load_const(BUILTIN_TYPES::MAGIC_INT, "2");
-        main_block.define_variable(BUILTIN_TYPES::MAGIC_INT, VISIBILITY::PRIVATE,   "test_var");
+        main_block.load_const(BuiltinTypes::MagicInt, "2");
+        main_block.define_variable(BuiltinTypes::MagicInt, VISIBILITY::PRIVATE,   "test_var");
         //variable is defined
         main_block.load_variable("test_var");
         main_block.main_block.call_special_function(SpecialFunctions::PRINT{newline: true});
@@ -143,7 +143,7 @@ fn main() {
 ```rust
 use celsium::block::Block;
 use celsium::module::Module;
-use celsium::{CelsiumProgram, BINOP, BUILTIN_TYPES};
+use celsium::{CelsiumProgram, BINOP, BuiltinTypes};
 
 fn main() {
         let mut celsium = CelsiumProgram::new(false);
@@ -152,14 +152,14 @@ fn main() {
 
         let mut loop_block = Block::new();
         {
-            loop_block.load_const(BUILTIN_TYPES::STRING, "I'm printing many times");
+            loop_block.load_const(BuiltinTypes::String, "I'm printing many times");
             loop_block.main_block.call_special_function(SpecialFunctions::PRINT{newline: true});
         }
         let mut loop_count_block = Block::new();
         {
-            loop_count_block.load_const(BUILTIN_TYPES::MAGIC_INT, "3");
-            loop_count_block.load_const(BUILTIN_TYPES::MAGIC_INT, "3");
-            loop_count_block.binop(BINOP::ADD);
+            loop_count_block.load_const(BuiltinTypes::MagicInt, "3");
+            loop_count_block.load_const(BuiltinTypes::MagicInt, "3");
+            loop_count_block.binop(BINOP::Add);
         }
 
         main_block.define_simple_loop(loop_block, loop_count_block);
@@ -171,7 +171,7 @@ fn main() {
 ```rust
 use celsium::block::Block;
 use celsium::module::Module;
-use celsium::{CelsiumProgram, BINOP, BUILTIN_TYPES};
+use celsium::{CelsiumProgram, BINOP, BuiltinTypes};
 
 fn main() {
     let mut celsium = CelsiumProgram::new();
@@ -180,13 +180,13 @@ fn main() {
 
     let mut conditional_block = Block::new();
     {
-        conditional_block.load_const(BUILTIN_TYPES::MAGIC_INT, "1");
-        conditional_block.load_const(BUILTIN_TYPES::MAGIC_INT, "1");
-        conditional_block.binop(BINOP::EQ);
+        conditional_block.load_const(BuiltinTypes::MagicInt, "1");
+        conditional_block.load_const(BuiltinTypes::MagicInt, "1");
+        conditional_block.binop(BINOP::Eq);
     }
     let mut loop_block = Block::new();
     {
-        loop_block.load_const(BUILTIN_TYPES::MAGIC_INT, "20");
+        loop_block.load_const(BuiltinTypes::MagicInt, "20");
         loop_block.main_block.call_special_function(SpecialFunctions::PRINT{newline: true});
     }
     main_block.define_while_loop(loop_block, conditional_block);
@@ -203,18 +203,18 @@ fn main() {
 ```rust
 use celsium::block::Block;
 use celsium::module::Module;
-use celsium::{CelsiumProgram, BINOP, BUILTIN_TYPES};
+use celsium::{CelsiumProgram, BINOP, BuiltinTypes};
 
 fn main() {
     let mut celsium = CelsiumProgram::new();
     let mut main_module = Module::new("main", &mut celsium);
     let mut main_block = Block::new();
 
-    main_block.load_const(BUILTIN_TYPES::STRING, "John");
-    main_block.load_const(BUILTIN_TYPES::MAGIC_INT, "37");
+    main_block.load_const(BuiltinTypes::String, "John");
+    main_block.load_const(BuiltinTypes::MagicInt, "37");
 
     main_block.create_object("Person", vec!["name", "age"]);
-    main_block.define_variable(BUILTIN_TYPES::OBJECT, VISIBILITY::PUBLIC, "person_1");
+    main_block.define_variable(BuiltinTypes::Object, VISIBILITY::PUBLIC, "person_1");
     main_block.load_variable("person_1");
     main_block.main_block.call_special_function(SpecialFunctions::PRINT{newline: true});
 

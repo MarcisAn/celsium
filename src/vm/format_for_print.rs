@@ -2,7 +2,7 @@ use super::StackValue;
 
 pub fn format_for_print(value: StackValue, newline: bool) -> String {
     match value {
-        StackValue::BOOL { value } => {
+        StackValue::Bool { value } => {
             if !newline {
                 if value {
                     return "1".to_owned();
@@ -24,7 +24,7 @@ pub fn format_for_print(value: StackValue, newline: bool) -> String {
                 return format!("{}\n", value);
             }
         }
-        StackValue::STRING { value } => {
+        StackValue::String { value } => {
             if !newline {
                 return format!("{}", value);
             } else {
@@ -37,7 +37,7 @@ pub fn format_for_print(value: StackValue, newline: bool) -> String {
             for i in &value {
                 let formated: String = format_for_print(i.clone(), false).as_str().to_owned();
                 match i {
-                    StackValue::STRING { value: _ } => {
+                    StackValue::String { value: _ } => {
                         printable_str = printable_str + "\"" + &formated + "\"";
                     }
                     _ => {
@@ -57,7 +57,7 @@ pub fn format_for_print(value: StackValue, newline: bool) -> String {
             }
             return printable_str;
         }
-        StackValue::OBJECT { value: fields } => {
+        StackValue::Object { value: fields } => {
             let mut printable_object = format!("Objekts {{\n");
             let mut index = 0;
             let length = &fields.len();
@@ -79,7 +79,7 @@ pub fn format_for_print(value: StackValue, newline: bool) -> String {
                 return format!("{}\n", printable_object);
             }
         }
-        StackValue::FLOAT { value } => {
+        StackValue::Float { value } => {
             if !newline {
                 return format!("{}", value.to_string().replace(".", ","));
             } else {

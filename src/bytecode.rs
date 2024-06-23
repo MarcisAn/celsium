@@ -1,68 +1,67 @@
-use crate::{ block::Block, module::{ FunctionSignature, VISIBILITY }, vm::ObjectField, BUILTIN_TYPES };
+use crate::{ block::Block, module::{ FunctionSignature, VISIBILITY }, BuiltinTypes };
 
 #[derive(Clone, Debug)]
 pub enum BINOP {
-    ADD,
-    SUBTRACT,
-    MULTIPLY,
-    DIVIDE,
-    REMAINDER,
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
+    Remainder,
     LessThan,
     LargerThan,
     LessOrEq,
     LargerOrEq,
     NotEq,
-    EQ,
-    AND,
-    OR,
-    XOR,
+    Eq,
+    And,
+    Or,
+    Xor,
 }
 
 #[derive(Clone, Debug)]
 pub enum OPTCODE {
-    LOAD_CONST {
-        data_type: BUILTIN_TYPES,
+    LoadConst {
+        data_type: BuiltinTypes,
         data: String,
     },
-    LOAD_VAR {
+    LoadVar {
         id: usize,
     },
-    CALL_FUNCTION {
+    CallFunction {
         name: String,
     },
-    CALL_FUNCTION_WITH_BYTECODE {
+    CallFunctionWithBytecode {
         bytecode: Vec<OPTCODE>,
     },
-    RETURN_FROM_FUNCTION,
-    ADD,
-    SUBTRACT,
-    MULTIPLY,
-    DIVIDE,
-    REMAINDER,
-    LESS_THAN,
-    LARGER_THAN,
-    LESS_OR_EQ,
-    LARGER_OR_EQ,
-    NOT_EQ,
-    EQ,
-    OR,
-    AND,
-    XOR,
-    JUMP_IF_FALSE {
+    ReturnFromFunction,
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
+    Remainder,
+    LessThan,
+    LargerThan,
+    LessOrEq,
+    LargerOrEq,
+    NotEq,
+    Eq,
+    Or,
+    And,
+    Xor,
+    JumpIfFalse {
         steps: usize,
     },
-    JUMP {
+    Jump {
         steps: usize,
     },
-    JUMP_BACK {
+    JumpBack {
         steps: usize,
     },
-    DEFINE_VAR {
+    DefineVar {
         id: usize,
     },
     DefineObject {
         id: usize,
-        field_names: Vec<String>
     },
     CreateObject {
         field_names: Vec<String>
@@ -71,22 +70,22 @@ pub enum OPTCODE {
         id: usize,
         init_values_count: usize
     },
-    GET_FROM_ARRAY {
+    GetFromArray {
         id: usize,
     },
-    ASSIGN_AT_ARRAY_INDEX {
+    AssignAtArrayIndex {
         id: usize,
     },
-    PUSH_TO_ARRAY {
+    PushToArray {
         id: usize,
     },
-    GET_ARRAY_LENGTH {
+    GettArrayLength {
         id: usize,
     },
-    ASSIGN_VAR {
+    AssignVar {
         id: usize,
     },
-    DEFINE_FUNCTION {
+    DefineFunction {
         body_block: Block,
         visibility: VISIBILITY,
         signature: FunctionSignature,

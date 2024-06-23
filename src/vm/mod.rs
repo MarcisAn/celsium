@@ -8,12 +8,12 @@ mod format_for_print;
 #[derive(Debug, PartialEq, Clone,Serialize, Deserialize)]
 
 pub enum StackValue {
-    BOOL { value: bool },
+    Bool { value: bool },
     BIGINT { value: BigInt },
-    FLOAT {value: f64},
-    STRING { value: String },
+    Float {value: f64},
+    String { value: String },
     ARRAY { value: Vec<StackValue> },
-    OBJECT {value: Vec<ObjectField>}
+    Object {value: Vec<ObjectField>}
 }
 #[derive(Debug, PartialEq, Clone,Serialize, Deserialize)]
 pub struct  ObjectField {

@@ -1,9 +1,7 @@
 
-use rand::Rng;
 use crate::module::FunctionSignature;
-use crate::vm::ObjectField;
 use crate::{Scope, SpecialFunctions};
-use crate::{ module::VISIBILITY, BINOP, BUILTIN_TYPES, OPTCODE };
+use crate::{ module::VISIBILITY, BINOP, BuiltinTypes, OPTCODE };
 mod array;
 
 #[derive(Clone, Debug)]
@@ -11,54 +9,39 @@ pub struct Block {
     pub bytecode: Vec<OPTCODE>,
     pub scope: Scope
 }
-fn generate_rand_varname(length: usize) -> String {
-    const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
-                            abcdefghijklmnopqrstuvwxyz\
-                            0123456789\
-                            ~!@#$%^&*()-_+=";
 
-    let mut rng = rand::thread_rng();
-    let randstring: String = (0..length)
-        .map(|_| {
-            let idx = rng.gen_range(0..CHARSET.len());
-            CHARSET[idx] as char
-        })
-        .collect();
-
-    randstring
-}
 
 impl Block {
     pub fn new(scope: Scope) -> Block {
         Block { bytecode: vec![], scope }
     }
-    pub fn load_const(&mut self, data_type: BUILTIN_TYPES, value: &str) {
-        self.bytecode.push(OPTCODE::LOAD_CONST {
+    pub fn load_const(&mut self, data_type: BuiltinTypes, value: &str) {
+        self.bytecode.push(OPTCODE::LoadConst {
             data: value.to_owned(),
             data_type,
         });
     }
     pub fn binop(&mut self, operator: BINOP) {
         self.bytecode.push(match operator {
-            BINOP::ADD => OPTCODE::ADD,
-            BINOP::SUBTRACT => OPTCODE::SUBTRACT,
-            BINOP::MULTIPLY => OPTCODE::MULTIPLY,
-            BINOP::DIVIDE => OPTCODE::DIVIDE,
-            BINOP::REMAINDER => OPTCODE::REMAINDER,
-            BINOP::LessThan => OPTCODE::LESS_THAN,
-            BINOP::LargerThan => OPTCODE::LARGER_THAN,
-            BINOP::LessOrEq => OPTCODE::LESS_OR_EQ,
-            BINOP::LargerOrEq => OPTCODE::LARGER_OR_EQ,
-            BINOP::NotEq => OPTCODE::NOT_EQ,
-            BINOP::EQ => OPTCODE::EQ,
-            BINOP::AND => OPTCODE::AND,
-            BINOP::OR => OPTCODE::OR,
-            BINOP::XOR => OPTCODE::XOR,
+            BINOP::Add => OPTCODE::Add,
+            BINOP::Subtract => OPTCODE::Subtract,
+            BINOP::Multiply => OPTCODE::Multiply,
+            BINOP::Divide => OPTCODE::Divide,
+            BINOP::Remainder => OPTCODE::Remainder,
+            BINOP::LessThan => OPTCODE::LessThan,
+            BINOP::LargerThan => OPTCODE::LargerThan,
+            BINOP::LessOrEq => OPTCODE::LessOrEq,
+            BINOP::LargerOrEq => OPTCODE::LargerOrEq,
+            BINOP::NotEq => OPTCODE::NotEq,
+            BINOP::Eq => OPTCODE::Eq,
+            BINOP::And => OPTCODE::And,
+            BINOP::Or => OPTCODE::Or,
+            BINOP::Xor => OPTCODE::Xor,
         });
     }
     pub fn define_if_block(&mut self, block: Block) {
         let block_length = block.bytecode.len();
-        self.bytecode.push(OPTCODE::JUMP_IF_FALSE {
+        self.bytecode.push(OPTCODE::JumpIfFalse {
             steps: block_length,
         });
         for optcode in block.bytecode {
@@ -69,13 +52,13 @@ impl Block {
         //println!("{:?}", else_block);
         let if_block_length = if_block.bytecode.len();
         let else_block_length = else_block.bytecode.len();
-        self.bytecode.push(OPTCODE::JUMP_IF_FALSE {
+        self.bytecode.push(OPTCODE::JumpIfFalse {
             steps: if_block_length + 1,
         });
         for optcode in if_block.bytecode {
             self.bytecode.push(optcode);
         }
-        self.bytecode.push(OPTCODE::JUMP {
+        self.bytecode.push(OPTCODE::Jump {
             steps: else_block_length,
         });
         for optcode in else_block.bytecode {
@@ -83,7 +66,7 @@ impl Block {
         }
     }
     pub fn call_function(&mut self, name: &str) {
-        self.bytecode.push(OPTCODE::CALL_FUNCTION {
+        self.bytecode.push(OPTCODE::CallFunction {
             name: name.to_string(),
         });
     }
@@ -96,13 +79,13 @@ impl Block {
         for optcode in &conditional_block.bytecode {
             self.bytecode.push(optcode.clone());
         }
-        self.bytecode.push(OPTCODE::JUMP_IF_FALSE {
+        self.bytecode.push(OPTCODE::JumpIfFalse {
             steps: block_length + 1,
         });
         for optcode in loop_block.bytecode {
             self.bytecode.push(optcode);
         }
-        self.bytecode.push(OPTCODE::JUMP_BACK {
+        self.bytecode.push(OPTCODE::JumpBack {
             steps: block_length + &conditional_block.bytecode.len() + 2,
         });
     }
@@ -110,18 +93,16 @@ impl Block {
         &mut self,
         id: usize,
     ) {
-        self.bytecode.push(OPTCODE::DEFINE_VAR {
+        self.bytecode.push(OPTCODE::DefineVar {
             id
         });
     }
     pub fn define_object(
         &mut self,
         id: usize,
-        field_names: Vec<String>
     ) {
         self.bytecode.push(OPTCODE::DefineObject {
             id,
-            field_names
         });
     }
     pub fn create_object(&mut self, field_names: Vec<String>){
@@ -134,21 +115,21 @@ impl Block {
         visibility: VISIBILITY,
         signature: FunctionSignature
     ) {
-        self.bytecode.push(OPTCODE::DEFINE_FUNCTION {
+        self.bytecode.push(OPTCODE::DefineFunction {
             signature: signature,
             visibility: visibility,
             body_block,
         })
     }
     pub fn return_from_function(&mut self) {
-        self.bytecode.push(OPTCODE::RETURN_FROM_FUNCTION);
+        self.bytecode.push(OPTCODE::ReturnFromFunction);
     }
     
     pub fn assign_variable(&mut self, id: usize) {
-        self.bytecode.push(OPTCODE::ASSIGN_VAR { id })
+        self.bytecode.push(OPTCODE::AssignVar { id })
     }
     pub fn load_variable(&mut self, id: usize) {
-        self.bytecode.push(OPTCODE::LOAD_VAR { id })
+        self.bytecode.push(OPTCODE::LoadVar { id })
     }
     pub fn call_special_function(&mut self, function: SpecialFunctions) {
         self.bytecode.push(OPTCODE::CallSpecialFunction { function });

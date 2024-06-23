@@ -1,25 +1,9 @@
 use super::{ format_for_print::format_for_print, math_operators::*, StackValue };
-use crate::{ block::Block, bytecode::OPTCODE, module::VISIBILITY, CelsiumProgram, BUILTIN_TYPES };
+use crate::{ bytecode::OPTCODE, CelsiumProgram, BuiltinTypes };
 use num::BigInt;
-use rand::Rng;
 use std::{ collections::{ HashMap, LinkedList }, io::{ self, BufRead, Write }, str::FromStr };
 
-fn generate_rand_varname(length: usize) -> String {
-    const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
-                            abcdefghijklmnopqrstuvwxyz\
-                            0123456789\
-                            ~!@#$%^&*()-_+=";
 
-    let mut rng = rand::thread_rng();
-    let randstring: String = (0..length)
-        .map(|_| {
-            let idx = rng.gen_range(0..CHARSET.len());
-            CHARSET[idx] as char
-        })
-        .collect();
-
-    randstring
-}
 
 pub struct VM {
     pub(crate) stack: LinkedList<StackValue>,
@@ -40,26 +24,26 @@ impl VM {
             variables: HashMap::new(),
         }
     }
-    pub fn push(&mut self, data_type: &BUILTIN_TYPES, data: &String) {
+    pub fn push(&mut self, data_type: &BuiltinTypes, data: &String) {
         match data_type {
-            BUILTIN_TYPES::MAGIC_INT =>
+            BuiltinTypes::MagicInt =>
                 self.stack.push_back(StackValue::BIGINT {
                     value: BigInt::from_str(&data).unwrap(),
                 }),
-            BUILTIN_TYPES::BOOL => {
+            BuiltinTypes::Bool => {
                 if data == "1" {
-                    self.stack.push_back(StackValue::BOOL { value: true })
+                    self.stack.push_back(StackValue::Bool { value: true })
                 } else if data == "0" {
-                    self.stack.push_back(StackValue::BOOL { value: false })
+                    self.stack.push_back(StackValue::Bool { value: false })
                 }
             }
-            BUILTIN_TYPES::STRING =>
-                self.stack.push_back(StackValue::STRING {
+            BuiltinTypes::String =>
+                self.stack.push_back(StackValue::String {
                     value: data.to_string(),
                 }),
-            BUILTIN_TYPES::OBJECT{ fields: _} => panic!("object should not appear in bytecode"),
-            BUILTIN_TYPES::FLOAT =>
-                self.stack.push_back(StackValue::FLOAT { value: data.parse().unwrap() }),
+            BuiltinTypes::Object{ fields: _} => panic!("object should not appear in bytecode"),
+            BuiltinTypes::Float =>
+                self.stack.push_back(StackValue::Float { value: data.parse().unwrap() }),
         }
     }
     pub fn push_stackvalue(&mut self, stackvalue: StackValue) {
@@ -103,13 +87,13 @@ impl VM {
                     value: BigInt::from(0),
                 }) ||
             value ==
-                (StackValue::STRING {
+                (StackValue::String {
                     value: "".to_string(),
                 })
         {
             return true;
         }
-        return value == StackValue::BOOL { value: false };
+        return value == StackValue::Bool { value: false };
     }
 
     pub fn define_var(&mut self, id: usize) {
@@ -146,7 +130,7 @@ impl VM {
             .next()
             .unwrap()
             .map(|x| x.trim_end().to_owned());
-        self.stack.push_back(StackValue::STRING {
+        self.stack.push_back(StackValue::String {
             value: res.unwrap(),
         });
     }

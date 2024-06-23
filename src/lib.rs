@@ -36,18 +36,18 @@ extern "C" {
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ObjectFieldType {
     pub name: String,
-    pub data_type: BUILTIN_TYPES,
+    pub data_type: BuiltinTypes,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub enum BUILTIN_TYPES {
-    MAGIC_INT,
-    BOOL,
-    STRING,
-    OBJECT {
+pub enum BuiltinTypes {
+    MagicInt,
+    Bool,
+    String,
+    Object {
         fields: Vec<ObjectFieldType>,
     },
-    FLOAT,
+    Float,
 }
 
 #[derive(Clone, Debug)]
@@ -56,7 +56,7 @@ pub enum SpecialFunctions {
         newline: bool,
     },
     INPUT,
-    RANDOM,
+    RAndOM,
 }
 pub struct CelsiumProgram {
     modules: Vec<Module>,
@@ -101,48 +101,48 @@ impl CelsiumProgram {
             let optcode = &bytecode[index as usize];
             //println!("running optcode {:?}", optcode);
             match optcode {
-                OPTCODE::LOAD_CONST { data_type, data } => vm.push(&data_type, &data),
-                OPTCODE::CALL_FUNCTION { name } => {
+                OPTCODE::LoadConst { data_type, data } => vm.push(&data_type, &data),
+                OPTCODE::CallFunction { name } => {
                     vm.call_function(name, self);
                 }
-                OPTCODE::RETURN_FROM_FUNCTION => {
+                OPTCODE::ReturnFromFunction => {
                     break;
                 }
-                OPTCODE::CALL_FUNCTION_WITH_BYTECODE { bytecode: _ } => {
+                OPTCODE::CallFunctionWithBytecode { bytecode: _ } => {
                     panic!();
                 }
-                OPTCODE::ADD => vm.aritmethics("+"),
-                OPTCODE::SUBTRACT => vm.aritmethics("-"),
-                OPTCODE::MULTIPLY => vm.aritmethics("*"),
-                OPTCODE::DIVIDE => vm.aritmethics("/"),
-                OPTCODE::REMAINDER => vm.aritmethics("%"),
-                OPTCODE::JUMP_IF_FALSE { steps } => {
+                OPTCODE::Add => vm.aritmethics("+"),
+                OPTCODE::Subtract => vm.aritmethics("-"),
+                OPTCODE::Multiply => vm.aritmethics("*"),
+                OPTCODE::Divide => vm.aritmethics("/"),
+                OPTCODE::Remainder => vm.aritmethics("%"),
+                OPTCODE::JumpIfFalse { steps } => {
                     if vm.must_jump() {
                         index += *steps as isize;
                     }
                 }
-                OPTCODE::JUMP { steps } => {
+                OPTCODE::Jump { steps } => {
                     index += *steps as isize;
                 }
-                OPTCODE::JUMP_BACK { steps } => {
+                OPTCODE::JumpBack { steps } => {
                     index -= *steps as isize;
                 }
-                OPTCODE::LESS_THAN => vm.aritmethics("<"),
-                OPTCODE::LARGER_THAN => vm.aritmethics(">"),
-                OPTCODE::LESS_OR_EQ => vm.aritmethics("<="),
-                OPTCODE::LARGER_OR_EQ => vm.aritmethics(">="),
-                OPTCODE::NOT_EQ => vm.aritmethics("!="),
-                OPTCODE::EQ => vm.aritmethics("=="),
-                OPTCODE::OR => vm.aritmethics("or"),
-                OPTCODE::AND => vm.aritmethics("and"),
-                OPTCODE::XOR => vm.aritmethics("xor"),
-                OPTCODE::DEFINE_VAR { id } => vm.define_var(*id),
-                OPTCODE::DefineObject { id, field_names } => {
+                OPTCODE::LessThan => vm.aritmethics("<"),
+                OPTCODE::LargerThan => vm.aritmethics(">"),
+                OPTCODE::LessOrEq => vm.aritmethics("<="),
+                OPTCODE::LargerOrEq => vm.aritmethics(">="),
+                OPTCODE::NotEq => vm.aritmethics("!="),
+                OPTCODE::Eq => vm.aritmethics("=="),
+                OPTCODE::Or => vm.aritmethics("or"),
+                OPTCODE::And => vm.aritmethics("and"),
+                OPTCODE::Xor => vm.aritmethics("xor"),
+                OPTCODE::DefineVar { id } => vm.define_var(*id),
+                OPTCODE::DefineObject { id } => {
                     let object = vm.pop();
                     let _ = vm.variables.insert(*id, Variable { id: *id, value: object });
                 }
-                OPTCODE::LOAD_VAR { id } => vm.load_var(*id),
-                OPTCODE::ASSIGN_VAR { id } => vm.assign_var(*id),
+                OPTCODE::LoadVar { id } => vm.load_var(*id),
+                OPTCODE::AssignVar { id } => vm.assign_var(*id),
                 OPTCODE::DefineArray { id, init_values_count } => {
                     let mut init_values: Vec<StackValue> = vec![];
                     for _ in 0..*init_values_count {
@@ -152,14 +152,13 @@ impl CelsiumProgram {
                     vm.stack.push_back(StackValue::ARRAY { value: init_values });
                     vm.define_var(*id);
                 }
-                OPTCODE::GET_FROM_ARRAY { id } => vm.get_from_array(*id),
-                OPTCODE::PUSH_TO_ARRAY { id } => vm.push_to_array(*id),
-                OPTCODE::GET_ARRAY_LENGTH { id } => vm.get_array_length(*id),
-                OPTCODE::DEFINE_FUNCTION { body_block, visibility, signature } =>
+                OPTCODE::GetFromArray { id } => vm.get_from_array(*id),
+                OPTCODE::PushToArray { id } => vm.push_to_array(*id),
+                OPTCODE::GettArrayLength { id } => vm.get_array_length(*id),
+                OPTCODE::DefineFunction { body_block, visibility:_, signature } =>
                     self.modules[0].functions.push(Function {
                         signature: signature.clone(),
                         body: body_block.clone(),
-                        visibility: visibility.clone(),
                     }),
 
                 OPTCODE::CallSpecialFunction { function } =>
@@ -172,16 +171,16 @@ impl CelsiumProgram {
                         }
                         SpecialFunctions::INPUT => {
                             #[cfg(target_family = "wasm")]
-                            vm.push(&BUILTIN_TYPES::STRING, &"asdfghjkl".to_string());
+                            vm.push(&BuiltinTypes::String, &"asdfghjkl".to_string());
                             #[cfg(target_family = "wasm")]
                             async {
                                 let value = &wasm_input().await.as_string().unwrap();
-                                vm.push(&BUILTIN_TYPES::STRING, value);
+                                vm.push(&BuiltinTypes::String, value);
                             };
                             #[cfg(not(target_family = "wasm"))]
                             vm.input("");
                         }
-                        SpecialFunctions::RANDOM => {
+                        SpecialFunctions::RAndOM => {
                             let value = {
                                 let max = match vm.pop() {
                                     StackValue::BIGINT { value } => truncate_biguint_to_i64(&value),
@@ -200,7 +199,7 @@ impl CelsiumProgram {
                             });
                         }
                     }
-                OPTCODE::ASSIGN_AT_ARRAY_INDEX { id } => vm.set_at_array(*id),
+                OPTCODE::AssignAtArrayIndex { id } => vm.set_at_array(*id),
                 OPTCODE::SimpleLoop { body_block } =>
                     vm.simple_loop(self, body_block.bytecode.clone()),
                 OPTCODE::CreateObject { field_names } => {
@@ -210,7 +209,7 @@ impl CelsiumProgram {
                     for fieldname in field_names_reversed {
                         fields.push(ObjectField { name: fieldname.to_string(), value: vm.pop() });
                     }
-                    vm.push_stackvalue(StackValue::OBJECT { value: fields.clone() })
+                    vm.push_stackvalue(StackValue::Object { value: fields.clone() })
                 },
             }
             index += 1;

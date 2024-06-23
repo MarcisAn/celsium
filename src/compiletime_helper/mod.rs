@@ -1,20 +1,17 @@
-use std::collections::{ HashMap, LinkedList };
-
+use std::collections::LinkedList;
 use crate::{
-    block::Block,
     bytecode::BINOP,
-    module::{ FuncArg, Function },
-    vm::{ vm::Variable, ObjectField },
+    module::FuncArg,
     ObjectFieldType,
     Scope,
-    BUILTIN_TYPES,
+    BuiltinTypes,
 };
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CompileTimeVariable {
     pub id: usize,
     pub name: String,
-    pub data_type: BUILTIN_TYPES,
+    pub data_type: BuiltinTypes,
     pub scope: Scope,
     pub is_exported: bool,
 }
@@ -30,7 +27,7 @@ pub struct CompileTimeImport {
 pub struct CompileTimeArray {
     pub id: usize,
     pub name: String,
-    pub data_type: BUILTIN_TYPES,
+    pub data_type: BuiltinTypes,
     pub length: usize,
     pub scope: Scope,
     pub is_exported: bool,
@@ -42,7 +39,7 @@ pub struct CompileTimeFunction {
     pub name: String,
     pub arguments: Vec<FuncArg>,
     pub scope: Scope,
-    pub return_type: Option<BUILTIN_TYPES>,
+    pub return_type: Option<BuiltinTypes>,
     pub is_exported: bool,
 }
 
@@ -57,14 +54,14 @@ pub struct ObjectDefinitionDefinition {
 pub struct CompileTimeObject {
     pub id: usize,
     pub name: String,
-    pub data_type: BUILTIN_TYPES,
+    pub data_type: BuiltinTypes,
     pub scope: Scope,
     pub is_exported: bool,
 }
 
 #[derive(Clone, Debug)]
 pub struct CompileTimeHelper {
-    stack: LinkedList<BUILTIN_TYPES>,
+    stack: LinkedList<BuiltinTypes>,
     pub source_files: Vec<String>,
     pub source_file_paths: Vec<String>,
     pub current_file: usize,
@@ -124,10 +121,10 @@ impl CompileTimeHelper {
     pub fn import(&mut self, name: String, origin: String, imported_into: String) {
         self.imports.push(CompileTimeImport { name, origin, imported_into });
     }
-    pub fn push(&mut self, pushable_type: BUILTIN_TYPES) {
+    pub fn push(&mut self, pushable_type: BuiltinTypes) {
         self.stack.push_back(pushable_type);
     }
-    pub fn pop(&mut self) -> Option<BUILTIN_TYPES> {
+    pub fn pop(&mut self) -> Option<BuiltinTypes> {
         self.stack.pop_back()
     }
     pub fn def_function(
@@ -136,7 +133,7 @@ impl CompileTimeHelper {
         arguments: Vec<FuncArg>,
         scope: Scope,
         is_exported: bool,
-        return_type: Option<BUILTIN_TYPES>
+        return_type: Option<BuiltinTypes>
     ) -> usize {
         self.defined_functions.push(CompileTimeFunction {
             id: self.definition_counter,
@@ -149,7 +146,7 @@ impl CompileTimeHelper {
         self.definition_counter += 1;
         return self.definition_counter - 1;
     }
-    pub fn get_func_return_type(&mut self, id: usize) -> Option<Option<BUILTIN_TYPES>> {
+    pub fn get_func_return_type(&mut self, id: usize) -> Option<Option<BuiltinTypes>> {
         for func in self.defined_functions.clone() {
             if func.id == id {
                 return Some(func.return_type);
@@ -168,7 +165,7 @@ impl CompileTimeHelper {
     pub fn def_var(
         &mut self,
         name: String,
-        data_type: BUILTIN_TYPES,
+        data_type: BuiltinTypes,
         scope: Scope,
         is_exported: bool
     ) -> Result<usize, &str> {
@@ -206,14 +203,13 @@ impl CompileTimeHelper {
     pub fn def_object(
         &mut self,
         name: String,
-        data_type: BUILTIN_TYPES,
         scope: Scope,
         is_exported: bool,
         fields: Vec<ObjectFieldType>
     ) -> Result<usize, &str> {
 
         let object: CompileTimeObject = CompileTimeObject {
-            data_type: BUILTIN_TYPES::OBJECT { fields: fields },
+            data_type: BuiltinTypes::Object { fields: fields },
             name,
             id: self.definition_counter,
             scope: scope.clone(),
@@ -251,7 +247,7 @@ impl CompileTimeHelper {
         }
         None
     }
-    pub fn get_var_type(&mut self, var_id: usize) -> Option<BUILTIN_TYPES> {
+    pub fn get_var_type(&mut self, var_id: usize) -> Option<BuiltinTypes> {
         for var in self.defined_variables.clone() {
             if var.id == var_id {
                 return Some(var.data_type);
@@ -267,7 +263,7 @@ impl CompileTimeHelper {
     pub fn def_array(
         &mut self,
         name: &str,
-        data_type: BUILTIN_TYPES,
+        data_type: BuiltinTypes,
         initial_length: usize,
         scope: Scope,
         is_exported: bool
@@ -286,7 +282,7 @@ impl CompileTimeHelper {
         return self.definition_counter - 1;
     }
 
-    pub fn get_array_type_and_length(&mut self, id: usize) -> Option<(BUILTIN_TYPES, usize)> {
+    pub fn get_array_type_and_length(&mut self, id: usize) -> Option<(BuiltinTypes, usize)> {
         for array in &self.defined_arrays {
             if array.id == id {
                 return Some((array.data_type.clone(), array.length));
@@ -294,26 +290,26 @@ impl CompileTimeHelper {
         }
         None
     }
-    pub fn binop(&mut self, binop: BINOP) -> Option<BUILTIN_TYPES> {
+    pub fn binop(&mut self, binop: BINOP) -> Option<BuiltinTypes> {
         /*
         Subtraction, multiplication, division and getting remainder
         are identical in the way types ar handled
         */
         let result_type = match binop {
-            BINOP::ADD => self.add(),
-            BINOP::SUBTRACT => self.subtract(),
-            BINOP::MULTIPLY => self.subtract(),
-            BINOP::DIVIDE => self.subtract(),
-            BINOP::REMAINDER => self.subtract(),
+            BINOP::Add => self.add(),
+            BINOP::Subtract => self.subtract(),
+            BINOP::Multiply => self.subtract(),
+            BINOP::Divide => self.subtract(),
+            BINOP::Remainder => self.subtract(),
             BINOP::LessThan => self.compare(),
             BINOP::LargerThan => self.compare(),
             BINOP::LessOrEq => self.compare(),
             BINOP::LargerOrEq => self.compare(),
             BINOP::NotEq => self.compare(),
-            BINOP::EQ => self.compare(),
-            BINOP::AND => self.compare(),
-            BINOP::OR => self.compare(),
-            BINOP::XOR => self.compare(),
+            BINOP::Eq => self.compare(),
+            BINOP::And => self.compare(),
+            BINOP::Or => self.compare(),
+            BINOP::Xor => self.compare(),
         };
         if result_type.is_some() {
             self.stack.push_back(result_type.clone().unwrap());
@@ -322,138 +318,138 @@ impl CompileTimeHelper {
             return None;
         }
     }
-    fn add(&mut self) -> Option<BUILTIN_TYPES> {
+    fn add(&mut self) -> Option<BuiltinTypes> {
         let a = self.stack.pop_back().unwrap();
         let b = self.stack.pop_back().unwrap();
         let result = match a {
-            BUILTIN_TYPES::MAGIC_INT =>
+            BuiltinTypes::MagicInt =>
                 match b {
-                    BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::MAGIC_INT),
-                    BUILTIN_TYPES::BOOL => {
+                    BuiltinTypes::MagicInt => Some(BuiltinTypes::MagicInt),
+                    BuiltinTypes::Bool => {
                         return None;
                     }
-                    BUILTIN_TYPES::STRING => Some(BUILTIN_TYPES::STRING),
-                    BUILTIN_TYPES::OBJECT { fields: _ } => {
+                    BuiltinTypes::String => Some(BuiltinTypes::String),
+                    BuiltinTypes::Object { fields: _ } => {
                         return None;
                     }
-                    BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::FLOAT),
+                    BuiltinTypes::Float => Some(BuiltinTypes::Float),
                 }
-            BUILTIN_TYPES::BOOL => None,
-            BUILTIN_TYPES::STRING =>
+            BuiltinTypes::Bool => None,
+            BuiltinTypes::String =>
                 match b {
-                    BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::STRING),
-                    BUILTIN_TYPES::BOOL => {
+                    BuiltinTypes::MagicInt => Some(BuiltinTypes::String),
+                    BuiltinTypes::Bool => {
                         return None;
                     }
-                    BUILTIN_TYPES::STRING => Some(BUILTIN_TYPES::STRING),
-                    BUILTIN_TYPES::OBJECT { fields: _ } => {
+                    BuiltinTypes::String => Some(BuiltinTypes::String),
+                    BuiltinTypes::Object { fields: _ } => {
                         return None;
                     }
-                    BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::STRING),
+                    BuiltinTypes::Float => Some(BuiltinTypes::String),
                 }
-            BUILTIN_TYPES::OBJECT { fields: _ } => None,
-            BUILTIN_TYPES::FLOAT =>
+            BuiltinTypes::Object { fields: _ } => None,
+            BuiltinTypes::Float =>
                 match b {
-                    BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::FLOAT),
-                    BUILTIN_TYPES::BOOL => {
+                    BuiltinTypes::MagicInt => Some(BuiltinTypes::Float),
+                    BuiltinTypes::Bool => {
                         return None;
                     }
-                    BUILTIN_TYPES::STRING => Some(BUILTIN_TYPES::STRING),
-                    BUILTIN_TYPES::OBJECT { fields: _ } => {
+                    BuiltinTypes::String => Some(BuiltinTypes::String),
+                    BuiltinTypes::Object { fields: _ } => {
                         return None;
                     }
-                    BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::FLOAT),
+                    BuiltinTypes::Float => Some(BuiltinTypes::Float),
                 }
         };
         return result;
     }
-    fn subtract(&mut self) -> Option<BUILTIN_TYPES> {
+    fn subtract(&mut self) -> Option<BuiltinTypes> {
         let a = self.stack.pop_back().unwrap();
         let b = self.stack.pop_back().unwrap();
         let result = match a {
-            BUILTIN_TYPES::MAGIC_INT =>
+            BuiltinTypes::MagicInt =>
                 match b {
-                    BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::MAGIC_INT),
-                    BUILTIN_TYPES::BOOL => {
+                    BuiltinTypes::MagicInt => Some(BuiltinTypes::MagicInt),
+                    BuiltinTypes::Bool => {
                         return None;
                     }
-                    BUILTIN_TYPES::STRING => {
+                    BuiltinTypes::String => {
                         return None;
                     }
-                    BUILTIN_TYPES::OBJECT { fields: _ } => {
+                    BuiltinTypes::Object { fields: _ } => {
                         return None;
                     }
-                    BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::FLOAT),
+                    BuiltinTypes::Float => Some(BuiltinTypes::Float),
                 }
-            BUILTIN_TYPES::BOOL => None,
-            BUILTIN_TYPES::STRING => None,
-            BUILTIN_TYPES::OBJECT { fields: _ } => None,
-            BUILTIN_TYPES::FLOAT =>
+            BuiltinTypes::Bool => None,
+            BuiltinTypes::String => None,
+            BuiltinTypes::Object { fields: _ } => None,
+            BuiltinTypes::Float =>
                 match b {
-                    BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::FLOAT),
-                    BUILTIN_TYPES::BOOL => {
+                    BuiltinTypes::MagicInt => Some(BuiltinTypes::Float),
+                    BuiltinTypes::Bool => {
                         return None;
                     }
-                    BUILTIN_TYPES::STRING => {
+                    BuiltinTypes::String => {
                         return None;
                     }
-                    BUILTIN_TYPES::OBJECT { fields: _ } => {
+                    BuiltinTypes::Object { fields: _ } => {
                         return None;
                     }
-                    BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::FLOAT),
+                    BuiltinTypes::Float => Some(BuiltinTypes::Float),
                 }
         };
         return result;
     }
-    fn compare(&mut self) -> Option<BUILTIN_TYPES> {
+    fn compare(&mut self) -> Option<BuiltinTypes> {
         let a = self.stack.pop_back().unwrap();
         let b = self.stack.pop_back().unwrap();
         let result = match a {
-            BUILTIN_TYPES::MAGIC_INT =>
+            BuiltinTypes::MagicInt =>
                 match b {
-                    BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::BOOL),
-                    BUILTIN_TYPES::BOOL => {
+                    BuiltinTypes::MagicInt => Some(BuiltinTypes::Bool),
+                    BuiltinTypes::Bool => {
                         return None;
                     }
-                    BUILTIN_TYPES::STRING => {
+                    BuiltinTypes::String => {
                         return None;
                     }
-                    BUILTIN_TYPES::OBJECT { fields: _ } => {
+                    BuiltinTypes::Object { fields: _ } => {
                         return None;
                     }
-                    BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::BOOL),
+                    BuiltinTypes::Float => Some(BuiltinTypes::Bool),
                 }
-            BUILTIN_TYPES::BOOL =>
+            BuiltinTypes::Bool =>
                 match b {
-                    BUILTIN_TYPES::MAGIC_INT => {
+                    BuiltinTypes::MagicInt => {
                         return None;
                     }
-                    BUILTIN_TYPES::BOOL => Some(BUILTIN_TYPES::BOOL),
-                    BUILTIN_TYPES::STRING => {
+                    BuiltinTypes::Bool => Some(BuiltinTypes::Bool),
+                    BuiltinTypes::String => {
                         return None;
                     }
-                    BUILTIN_TYPES::OBJECT { fields: _ } => {
+                    BuiltinTypes::Object { fields: _ } => {
                         return None;
                     }
-                    BUILTIN_TYPES::FLOAT => {
+                    BuiltinTypes::Float => {
                         return None;
                     }
                 }
-            BUILTIN_TYPES::STRING => None,
-            BUILTIN_TYPES::OBJECT { fields: _ } => None,
-            BUILTIN_TYPES::FLOAT =>
+            BuiltinTypes::String => None,
+            BuiltinTypes::Object { fields: _ } => None,
+            BuiltinTypes::Float =>
                 match b {
-                    BUILTIN_TYPES::MAGIC_INT => Some(BUILTIN_TYPES::BOOL),
-                    BUILTIN_TYPES::BOOL => {
+                    BuiltinTypes::MagicInt => Some(BuiltinTypes::Bool),
+                    BuiltinTypes::Bool => {
                         return None;
                     }
-                    BUILTIN_TYPES::STRING => {
+                    BuiltinTypes::String => {
                         return None;
                     }
-                    BUILTIN_TYPES::OBJECT { fields: _ } => {
+                    BuiltinTypes::Object { fields: _ } => {
                         return None;
                     }
-                    BUILTIN_TYPES::FLOAT => Some(BUILTIN_TYPES::BOOL),
+                    BuiltinTypes::Float => Some(BuiltinTypes::Bool),
                 }
         };
         return result;
