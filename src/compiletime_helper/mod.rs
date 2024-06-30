@@ -1,11 +1,5 @@
 use std::collections::LinkedList;
-use crate::{
-    bytecode::BINOP,
-    module::FuncArg,
-    ObjectFieldType,
-    Scope,
-    BuiltinTypes,
-};
+use crate::{ bytecode::BINOP, module::FuncArg, ObjectFieldType, Scope, BuiltinTypes };
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CompileTimeVariable {
@@ -207,7 +201,6 @@ impl CompileTimeHelper {
         is_exported: bool,
         fields: Vec<ObjectFieldType>
     ) -> Result<usize, &str> {
-
         let object: CompileTimeObject = CompileTimeObject {
             data_type: BuiltinTypes::Object { fields: fields },
             name,
@@ -243,7 +236,7 @@ impl CompileTimeHelper {
         for object in &self.defined_objects {
             if object.name == name {
                 return Some(object.clone());
-            } 
+            }
         }
         None
     }
@@ -256,6 +249,11 @@ impl CompileTimeHelper {
         for var in self.defined_objects.clone() {
             if var.id == var_id {
                 return Some(var.data_type);
+            }
+        }
+        for var in self.defined_arrays.clone() {
+            if var.id == var_id {
+                return Some(BuiltinTypes::Array { element_type: Box::new(var.data_type) });
             }
         }
         None
@@ -333,6 +331,7 @@ impl CompileTimeHelper {
                         return None;
                     }
                     BuiltinTypes::Float => Some(BuiltinTypes::Float),
+                    BuiltinTypes::Array { element_type } => None,
                 }
             BuiltinTypes::Bool => None,
             BuiltinTypes::String =>
@@ -346,6 +345,7 @@ impl CompileTimeHelper {
                         return None;
                     }
                     BuiltinTypes::Float => Some(BuiltinTypes::String),
+                    BuiltinTypes::Array { element_type } => None,
                 }
             BuiltinTypes::Object { fields: _ } => None,
             BuiltinTypes::Float =>
@@ -359,7 +359,9 @@ impl CompileTimeHelper {
                         return None;
                     }
                     BuiltinTypes::Float => Some(BuiltinTypes::Float),
+                    BuiltinTypes::Array { element_type } => None,
                 }
+            BuiltinTypes::Array { element_type } => None,
         };
         return result;
     }
@@ -380,10 +382,13 @@ impl CompileTimeHelper {
                         return None;
                     }
                     BuiltinTypes::Float => Some(BuiltinTypes::Float),
+                    BuiltinTypes::Array { element_type } => None,
                 }
             BuiltinTypes::Bool => None,
             BuiltinTypes::String => None,
             BuiltinTypes::Object { fields: _ } => None,
+            BuiltinTypes::Array { element_type } => None,
+
             BuiltinTypes::Float =>
                 match b {
                     BuiltinTypes::MagicInt => Some(BuiltinTypes::Float),
@@ -397,6 +402,7 @@ impl CompileTimeHelper {
                         return None;
                     }
                     BuiltinTypes::Float => Some(BuiltinTypes::Float),
+                    BuiltinTypes::Array { element_type } => None,
                 }
         };
         return result;
@@ -418,6 +424,7 @@ impl CompileTimeHelper {
                         return None;
                     }
                     BuiltinTypes::Float => Some(BuiltinTypes::Bool),
+                    BuiltinTypes::Array { element_type } => None,
                 }
             BuiltinTypes::Bool =>
                 match b {
@@ -434,6 +441,7 @@ impl CompileTimeHelper {
                     BuiltinTypes::Float => {
                         return None;
                     }
+                    BuiltinTypes::Array { element_type } => None,
                 }
             BuiltinTypes::String => None,
             BuiltinTypes::Object { fields: _ } => None,
@@ -450,7 +458,9 @@ impl CompileTimeHelper {
                         return None;
                     }
                     BuiltinTypes::Float => Some(BuiltinTypes::Bool),
+                    BuiltinTypes::Array { element_type } => None,
                 }
+            BuiltinTypes::Array { element_type } => None,
         };
         return result;
     }

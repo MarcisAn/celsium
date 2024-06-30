@@ -47,16 +47,17 @@ pub enum BuiltinTypes {
     Object {
         fields: Vec<ObjectFieldType>,
     },
+    Array {element_type: Box<BuiltinTypes>},
     Float,
 }
 
 #[derive(Clone, Debug)]
 pub enum SpecialFunctions {
-    PRINT {
+    Print {
         newline: bool,
     },
-    INPUT,
-    RAndOM,
+    Input,
+    Random,
 }
 pub struct CelsiumProgram {
     modules: Vec<Module>,
@@ -141,6 +142,7 @@ impl CelsiumProgram {
                     let object = vm.pop();
                     let _ = vm.variables.insert(*id, Variable { id: *id, value: object });
                 }
+                OPTCODE::GetObjectField { field_name } => vm.get_object_field(field_name),
                 OPTCODE::LoadVar { id } => vm.load_var(*id),
                 OPTCODE::AssignVar { id } => vm.assign_var(*id),
                 OPTCODE::DefineArray { id, init_values_count } => {
@@ -163,13 +165,13 @@ impl CelsiumProgram {
 
                 OPTCODE::CallSpecialFunction { function } =>
                     match function {
-                        SpecialFunctions::PRINT { newline } => {
+                        SpecialFunctions::Print { newline } => {
                             let printable = &vm.format_for_print(*newline);
                             #[cfg(target_family = "wasm")]
                             wasm_print(printable);
                             print!("{}", printable);
                         }
-                        SpecialFunctions::INPUT => {
+                        SpecialFunctions::Input => {
                             #[cfg(target_family = "wasm")]
                             vm.push(&BuiltinTypes::String, &"asdfghjkl".to_string());
                             #[cfg(target_family = "wasm")]
@@ -180,7 +182,7 @@ impl CelsiumProgram {
                             #[cfg(not(target_family = "wasm"))]
                             vm.input("");
                         }
-                        SpecialFunctions::RAndOM => {
+                        SpecialFunctions::Random => {
                             let value = {
                                 let max = match vm.pop() {
                                     StackValue::BIGINT { value } => truncate_biguint_to_i64(&value),

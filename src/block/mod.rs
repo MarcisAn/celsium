@@ -138,4 +138,7 @@ impl Block {
         let mut other = block.bytecode;
         self.bytecode.append(&mut other);
     }
+    pub fn get_object_field(&mut self, field_name: String) {
+        self.bytecode.push(OPTCODE::GetObjectField { field_name });
+    }
 }
