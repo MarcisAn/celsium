@@ -46,7 +46,7 @@ pub fn format_for_print(value: StackValue, newline: bool) -> String {
                 }
 
                 if counter != value.len() - 1 {
-                    printable_str += ";";
+                    printable_str += ";\n";
                 }
                 counter += 1;
             }
@@ -63,16 +63,16 @@ pub fn format_for_print(value: StackValue, newline: bool) -> String {
             let length = &fields.len();
             for field in fields {
                 printable_object += &format!(
-                    "   {}: {}",
+                    "   {}: {}\n",
                     field.name,
                     format_for_print(field.value, false)
                 );
                 if &(index + 2) == length {
-                    printable_object += "\n";
+                    //printable_object += "\n";
                 }
                 index += 1;
             }
-            printable_object += "\n}";
+            printable_object += "}";
             if !newline {
                 return format!("{}", printable_object);
             } else {
