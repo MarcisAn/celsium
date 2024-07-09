@@ -236,7 +236,7 @@ pub fn less_than(a: StackValue, b: StackValue) -> StackValue {
             StackValue::Object { value: _} => panic!("Cannot do math with objects.")
         },
         StackValue::String { value: _ } => panic!("Cannot do comparisons  with String's"),
-        StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
+        StackValue::ARRAY { value: _ } => panic!("Cannot do comparisons with arrays"),
         StackValue::Float { value: val_a } => match b {
             StackValue::Bool { value: _ } => panic!("Cannot do comparison with bool"),
             StackValue::BIGINT { value } => StackValue::Bool {

@@ -55,7 +55,7 @@ pub struct CompileTimeObject {
 
 #[derive(Clone, Debug)]
 pub struct CompileTimeHelper {
-    stack: LinkedList<BuiltinTypes>,
+    pub stack: LinkedList<BuiltinTypes>,
     pub source_files: Vec<String>,
     pub source_file_paths: Vec<String>,
     pub current_file: usize,
