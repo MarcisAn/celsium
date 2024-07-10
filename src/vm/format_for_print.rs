@@ -46,7 +46,7 @@ pub fn format_for_print(value: StackValue, newline: bool) -> String {
                 }
 
                 if counter != value.len() - 1 {
-                    printable_str += ";\n";
+                    printable_str += ";";
                 }
                 counter += 1;
             }
