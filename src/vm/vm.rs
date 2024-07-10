@@ -8,6 +8,7 @@ use std::{ collections::{ HashMap, LinkedList }, io::{ self, BufRead, Write }, s
 pub struct VM {
     pub(crate) stack: LinkedList<StackValue>,
     pub(crate) variables: HashMap<usize, Variable>,
+    pub(crate) testing_stack: Vec<StackValue>
 }
 #[derive(Clone, Debug)]
 pub struct Variable {
@@ -22,6 +23,7 @@ impl VM {
         VM {
             stack: LinkedList::new(),
             variables: HashMap::new(),
+            testing_stack: vec![],
         }
     }
     pub fn push(&mut self, data_type: &BuiltinTypes, data: &String) {
@@ -49,6 +51,14 @@ impl VM {
     }
     pub fn push_stackvalue(&mut self, stackvalue: StackValue) {
         self.stack.push_back(stackvalue);
+    }
+    pub fn push_to_testing_stack(&mut self, duplicate_stackvalue: bool) {
+        let value = if duplicate_stackvalue {
+            self.stack.back().unwrap().to_owned()    
+        } else { 
+            self.stack.pop_back().unwrap()
+        };
+        self.testing_stack.push(value);
     }
     pub fn pop(&mut self) -> StackValue {
         return self.stack.pop_back().unwrap();

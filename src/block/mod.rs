@@ -141,4 +141,7 @@ impl Block {
     pub fn get_object_field(&mut self, field_name: String) {
         self.bytecode.push(OPTCODE::GetObjectField { field_name });
     }
+    pub fn push_to_testing_stack(&mut self, duplicate_stackvalue: bool) {
+        self.bytecode.push(OPTCODE::PushToTestingStack{duplicate_stackvalue});
+    }
 }

@@ -86,7 +86,7 @@ impl CelsiumProgram {
         self.modules.push(module.clone());
     }
 
-    pub fn run_program(&mut self) {
+    pub fn run_program(&mut self) -> Vec<StackValue> {
         let mut global_bytecode: Vec<OPTCODE> = vec![];
         for module in &self.modules {
             global_bytecode.append(&mut module.clone().main_block.unwrap().bytecode.clone());
@@ -94,6 +94,7 @@ impl CelsiumProgram {
         let mut vm = VM::new();
 
         self.run(&mut vm, &global_bytecode);
+        return vm.testing_stack;
     }
 
     pub fn run(&mut self, vm: &mut VM, bytecode: &Vec<OPTCODE>) {
@@ -102,6 +103,7 @@ impl CelsiumProgram {
             let optcode = &bytecode[index as usize];
             //println!("running optcode {:?}", optcode);
             match optcode {
+                OPTCODE::PushToTestingStack{duplicate_stackvalue} => vm.push_to_testing_stack(*duplicate_stackvalue),
                 OPTCODE::LoadConst { data_type, data } => vm.push(&data_type, &data),
                 OPTCODE::CallFunction { name } => {
                     vm.call_function(name, self);

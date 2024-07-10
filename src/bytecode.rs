@@ -99,6 +99,5 @@ pub enum OPTCODE {
     SimpleLoop {
         body_block: Block
     },
-
-    
+    PushToTestingStack {duplicate_stackvalue: bool}    
 }
