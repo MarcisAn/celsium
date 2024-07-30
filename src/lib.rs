@@ -47,7 +47,9 @@ pub enum BuiltinTypes {
     Object {
         fields: Vec<ObjectFieldType>,
     },
-    Array {element_type: Box<BuiltinTypes>},
+    Array {
+        element_type: Box<BuiltinTypes>,
+    },
     Float,
 }
 
@@ -57,7 +59,7 @@ pub enum SpecialFunctions {
         newline: bool,
     },
     Input,
-    Random,
+    Random {min: usize, max: usize},
 }
 pub struct CelsiumProgram {
     modules: Vec<Module>,
@@ -103,8 +105,10 @@ impl CelsiumProgram {
             let optcode = &bytecode[index as usize];
             //println!("running optcode {:?}", optcode);
             match optcode {
-                OPTCODE::PushToTestingStack{duplicate_stackvalue} => vm.push_to_testing_stack(*duplicate_stackvalue),
-                OPTCODE::LoadConst { data_type, data } => vm.push(&data_type, &data),
+                OPTCODE::PushToTestingStack { duplicate_stackvalue, register } =>
+                    vm.push_to_testing_stack(*register),
+                OPTCODE::LoadConst { data_type, data, register } =>
+                    vm.push(&data_type, &data, *register),
                 OPTCODE::CallFunction { name } => {
                     vm.call_function(name, self);
                 }
@@ -114,13 +118,9 @@ impl CelsiumProgram {
                 OPTCODE::CallFunctionWithBytecode { bytecode: _ } => {
                     panic!();
                 }
-                OPTCODE::Add => vm.aritmethics("+"),
-                OPTCODE::Subtract => vm.aritmethics("-"),
-                OPTCODE::Multiply => vm.aritmethics("*"),
-                OPTCODE::Divide => vm.aritmethics("/"),
-                OPTCODE::Remainder => vm.aritmethics("%"),
-                OPTCODE::JumpIfFalse { steps } => {
-                    if vm.must_jump() {
+                OPTCODE::Binop { a_reg, b_reg, result_reg, binop } => vm.aritmethics(binop.clone(), *a_reg, *b_reg, *result_reg),
+                OPTCODE::JumpIfFalse { steps, register } => {
+                    if vm.must_jump(*register) {
                         index += *steps as isize;
                     }
                 }
@@ -130,67 +130,56 @@ impl CelsiumProgram {
                 OPTCODE::JumpBack { steps } => {
                     index -= *steps as isize;
                 }
-                OPTCODE::LessThan => vm.aritmethics("<"),
-                OPTCODE::LargerThan => vm.aritmethics(">"),
-                OPTCODE::LessOrEq => vm.aritmethics("<="),
-                OPTCODE::LargerOrEq => vm.aritmethics(">="),
-                OPTCODE::NotEq => vm.aritmethics("!="),
-                OPTCODE::Eq => vm.aritmethics("=="),
-                OPTCODE::Or => vm.aritmethics("or"),
-                OPTCODE::And => vm.aritmethics("and"),
-                OPTCODE::Xor => vm.aritmethics("xor"),
-                OPTCODE::DefineVar { id } => vm.define_var(*id),
-                OPTCODE::DefineObject { id } => {
-                    let object = vm.pop();
+                OPTCODE::DefineVar { id, register } => vm.define_var(*id, *register),
+                OPTCODE::DefineObject { id, register } => {
+                    let object = vm.get_register(*register);
                     let _ = vm.variables.insert(*id, Variable { id: *id, value: object });
                 }
-                OPTCODE::GetObjectField { field_name } => vm.get_object_field(field_name),
-                OPTCODE::LoadVar { id } => vm.load_var(*id),
-                OPTCODE::AssignVar { id } => vm.assign_var(*id),
-                OPTCODE::DefineArray { id, init_values_count } => {
-                    let mut init_values: Vec<StackValue> = vec![];
-                    for _ in 0..*init_values_count {
-                        init_values.push(vm.pop());
+                OPTCODE::GetObjectField { field_name, object_register } => vm.get_object_field(field_name, *object_register),
+                OPTCODE::LoadVar { id, register } => vm.load_var(*id, *register),
+                OPTCODE::AssignVar { id, register } => vm.assign_var(*id, *register),
+                OPTCODE::DefineArray { id, init_values } => {
+                    let mut init_stackvalues: Vec<StackValue> = vec![];
+                    for reg in init_values {
+                        init_stackvalues.push(vm.get_register(*reg));
                     }
-                    init_values.reverse();
-                    vm.stack.push_back(StackValue::ARRAY { value: init_values });
-                    vm.define_var(*id);
+                    init_stackvalues.reverse();
+                    let value = StackValue::ARRAY { value: init_stackvalues };
+                    vm.define_var_with_stackvalue(*id,value);
                 }
-                OPTCODE::GetFromArray { id } => vm.get_from_array(*id),
-                OPTCODE::PushToArray { id } => vm.push_to_array(*id),
-                OPTCODE::GettArrayLength { id } => vm.get_array_length(*id),
-                OPTCODE::DefineFunction { body_block, visibility:_, signature } =>
+                OPTCODE::GetFromArray { id, register } => vm.get_from_array(*id, *register),
+                OPTCODE::PushToArray { id, register } => vm.push_to_array(*id, *register),
+                OPTCODE::GetArrayLength { id, register } => vm.get_array_length(*id, *register),
+                OPTCODE::DefineFunction { body_block, visibility: _, signature } =>
                     self.modules[0].functions.push(Function {
                         signature: signature.clone(),
                         body: body_block.clone(),
                     }),
 
-                OPTCODE::CallSpecialFunction { function } =>
+                OPTCODE::CallSpecialFunction { function, register,  } =>
                     match function {
                         SpecialFunctions::Print { newline } => {
-                            let printable = &vm.format_for_print(*newline);
+                            let printable = &vm.format_for_print(*newline, *register);
                             #[cfg(target_family = "wasm")]
                             wasm_print(printable);
                             print!("{}", printable);
                         }
                         SpecialFunctions::Input => {
                             #[cfg(target_family = "wasm")]
-                            vm.push(&BuiltinTypes::String, &"asdfghjkl".to_string());
-                            #[cfg(target_family = "wasm")]
                             async {
                                 let value = &wasm_input().await.as_string().unwrap();
                                 vm.push(&BuiltinTypes::String, value);
                             };
                             #[cfg(not(target_family = "wasm"))]
-                            vm.input("");
+                            vm.input("", *register);
                         }
-                        SpecialFunctions::Random => {
+                        SpecialFunctions::Random{min, max} => {
                             let value = {
-                                let max = match vm.pop() {
+                                let max = match vm.get_register(*max) {
                                     StackValue::BIGINT { value } => truncate_biguint_to_i64(&value),
                                     _ => panic!(),
                                 };
-                                let min = match vm.pop() {
+                                let min = match  vm.get_register(*min) {
                                     StackValue::BIGINT { value } => truncate_biguint_to_i64(&value),
                                     _ => panic!(),
                                 };
@@ -198,23 +187,25 @@ impl CelsiumProgram {
                                     ::from_i64(rand::thread_rng().gen_range(min..max))
                                     .unwrap()
                             };
-                            vm.push_stackvalue(StackValue::BIGINT {
+                            vm.registers[*register] = (StackValue::BIGINT {
                                 value: value,
                             });
                         }
                     }
-                OPTCODE::AssignAtArrayIndex { id } => vm.set_at_array(*id),
-                OPTCODE::SimpleLoop { body_block } =>
-                    vm.simple_loop(self, body_block.bytecode.clone()),
-                OPTCODE::CreateObject { field_names } => {
+                OPTCODE::AssignAtArrayIndex { id, value_reg, index_reg } => vm.set_at_array(*id, *value_reg, *index_reg),
+                OPTCODE::SimpleLoop { body_block, count_reg } =>
+                    vm.simple_loop(self, body_block.bytecode.clone(), *count_reg),
+                OPTCODE::CreateObject { field_names, target_reg, field_regs } => {
                     let mut fields = vec![];
                     let mut field_names_reversed = field_names.clone();
                     field_names_reversed.reverse();
+                    let mut counter = 0;
                     for fieldname in field_names_reversed {
-                        fields.push(ObjectField { name: fieldname.to_string(), value: vm.pop() });
+                        fields.push(ObjectField { name: fieldname.to_string(), value: vm.registers[counter].clone() });
+                        counter += 1;
                     }
-                    vm.push_stackvalue(StackValue::Object { value: fields.clone() })
-                },
+                    vm.registers[*target_reg] = StackValue::Object { value: fields.clone() };
+                }
             }
             index += 1;
         }

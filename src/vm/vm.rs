@@ -1,14 +1,12 @@
 use super::{ format_for_print::format_for_print, math_operators::*, StackValue };
-use crate::{ bytecode::OPTCODE, CelsiumProgram, BuiltinTypes };
+use crate::{ bytecode::{BINOP, OPTCODE}, BuiltinTypes, CelsiumProgram };
 use num::BigInt;
-use std::{ collections::{ HashMap, LinkedList }, io::{ self, BufRead, Write }, str::FromStr };
-
-
+use std::{ collections::{ HashMap, LinkedList }, io::{ self, BufRead, Write }, str::FromStr, vec };
 
 pub struct VM {
-    pub(crate) stack: LinkedList<StackValue>,
+    pub(crate) registers: Vec<StackValue>,
     pub(crate) variables: HashMap<usize, Variable>,
-    pub(crate) testing_stack: Vec<StackValue>
+    pub(crate) testing_stack: Vec<StackValue>,
 }
 #[derive(Clone, Debug)]
 pub struct Variable {
@@ -21,77 +19,76 @@ impl StackValue {}
 impl VM {
     pub fn new() -> VM {
         VM {
-            stack: LinkedList::new(),
+            registers: vec![],
             variables: HashMap::new(),
             testing_stack: vec![],
         }
     }
-    pub fn push(&mut self, data_type: &BuiltinTypes, data: &String) {
-        match data_type {
+    pub fn push(&mut self, data_type: &BuiltinTypes, data: &String, register: usize) {
+        let value = match data_type {
             BuiltinTypes::MagicInt =>
-                self.stack.push_back(StackValue::BIGINT {
+                StackValue::BIGINT {
                     value: BigInt::from_str(&data).unwrap(),
-                }),
+                },
             BuiltinTypes::Bool => {
                 if data == "1" {
-                    self.stack.push_back(StackValue::Bool { value: true })
+                    StackValue::Bool { value: true }
                 } else if data == "0" {
-                    self.stack.push_back(StackValue::Bool { value: false })
+                    StackValue::Bool { value: false }
+                } else {
+                    panic!("incorrect bool value")
                 }
             }
             BuiltinTypes::String =>
-                self.stack.push_back(StackValue::String {
+                StackValue::String {
                     value: data.to_string(),
-                }),
-            BuiltinTypes::Object{ fields: _} => panic!("object should not appear in bytecode"),
-            BuiltinTypes::Float =>
-                self.stack.push_back(StackValue::Float { value: data.parse().unwrap() }),
-                            BuiltinTypes::Array { element_type } => todo!(),
-        }
-    }
-    pub fn push_stackvalue(&mut self, stackvalue: StackValue) {
-        self.stack.push_back(stackvalue);
-    }
-    pub fn push_to_testing_stack(&mut self, duplicate_stackvalue: bool) {
-        let value = if duplicate_stackvalue {
-            self.stack.back().unwrap().to_owned()    
-        } else { 
-            self.stack.pop_back().unwrap()
+                },
+            BuiltinTypes::Object { fields: _ } => panic!("object should not appear in bytecode"),
+            BuiltinTypes::Float => StackValue::Float { value: data.parse().unwrap() },
+            BuiltinTypes::Array { element_type } => todo!(),
         };
-        self.testing_stack.push(value);
+        self.registers[register] = value;
     }
-    pub fn pop(&mut self) -> StackValue {
-        return self.stack.pop_back().unwrap();
+    pub fn push_stackvalue(&mut self, stackvalue: StackValue, register: usize) {
+        self.registers[register] = stackvalue;
     }
-    pub fn aritmethics(&mut self, action: &str) {
+    pub fn push_to_testing_stack(&mut self, register: usize) {
+        self.testing_stack.push(self.registers[register].clone());
+    }
+    pub fn get_register(&mut self, register: usize) -> StackValue {
+        return self.registers[register].clone()
+    }
+    pub fn aritmethics(&mut self, binop: BINOP, a_reg: usize, b_reg: usize, target: usize) {
         //println!("action {}", action);
-        let b = self.stack.pop_back().unwrap();
-        let a = self.stack.pop_back().unwrap();
-        match action {
-            "+" => self.stack.push_back(add(a, b)),
-            "-" => self.stack.push_back(subtract(a, b)),
-            "*" => self.stack.push_back(multiply(a, b)),
-            "/" => self.stack.push_back(divide(a, b)),
-            "%" => self.stack.push_back(remainder(a, b)),
-            "<" => self.stack.push_back(less_than(a, b)),
-            ">" => self.stack.push_back(larger_than(a, b)),
-            "<=" => self.stack.push_back(less_or_eq(a, b)),
-            ">=" => self.stack.push_back(larger_or_eq(a, b)),
-            "!=" => self.stack.push_back(not_eq(a, b)),
-            "==" => self.stack.push_back(eq(a, b)),
-            "and" => self.stack.push_back(and(a, b)),
-            "or" => self.stack.push_back(or(a, b)),
-            "xor" => self.stack.push_back(xor(a, b)),
+        let b = self.registers[a_reg].clone();
+        let a = self.registers[b_reg].clone();
+        
+        let result = match binop {
+            BINOP::Add => add(a, b),
+            BINOP::Subtract => subtract(a, b),
+            BINOP::Multiply => multiply(a, b),
+            BINOP::Divide => divide(a, b),
+            BINOP::Remainder => remainder(a, b),
+            BINOP::LessThan => less_than(a, b),
+            BINOP::LargerThan => larger_than(a, b),
+            BINOP::LessOrEq => less_or_eq(a, b),
+            BINOP::LargerOrEq => larger_or_eq(a, b),
+            BINOP::NotEq => not_eq(a, b),
+            BINOP::Eq => eq(a, b),
+            BINOP::And => and(a, b),
+            BINOP::Or => or(a, b),
+            BINOP::Xor => xor(a, b),
+        };
 
-            _ => panic!("Unknown arithmetics operator"),
-        }
+        self.registers[target] = result;
     }
-    pub fn format_for_print(&mut self, newline: bool) -> String {
-        return format_for_print(self.stack.pop_back().unwrap(), newline);
+    pub fn format_for_print(&mut self, newline: bool, register: usize) -> String {
+        return format_for_print(self.registers[register].clone(), newline);
     }
 
-    pub fn must_jump(&mut self) -> bool {
-        let value = self.stack.pop_back().unwrap();
+    pub fn must_jump(&mut self, register: usize) -> bool {
+        //checks if expresion is false
+        let value = self.registers[register].clone();
         if
             value ==
                 (StackValue::BIGINT {
@@ -107,12 +104,17 @@ impl VM {
         return value == StackValue::Bool { value: false };
     }
 
-    pub fn define_var(&mut self, id: usize) {
-        self.variables.insert(id, Variable { id, value: self.stack.pop_back().unwrap() });
+    pub fn define_var(&mut self, id: usize, register: usize) {
+        self.variables.insert(id, Variable { id, value: self.registers[register].clone() });
     }
 
-    pub fn assign_var(&mut self, id: usize) {
-        let value = self.stack.pop_back().unwrap();
+    pub fn define_var_with_stackvalue(&mut self, id: usize, value: StackValue) {
+        self.variables.insert(id, Variable { id, value });
+        
+    }
+
+    pub fn assign_var(&mut self, id: usize, value_reg: usize) {
+        let value = self.registers[value_reg].clone();
         let getter = self.variables.get(&id);
         if getter.is_none() {
             panic!("Cound not found vairable with ID {}", id);
@@ -121,17 +123,17 @@ impl VM {
         }
     }
 
-    pub fn load_var(&mut self, id: usize) {
+    pub fn load_var(&mut self, id: usize, target_reg: usize) {
         let getter = self.variables.get(&id);
         if getter.is_none() {
             panic!("Cound not found vairable id {}", id);
         } else {
             let value = getter.unwrap().value.clone();
-            self.stack.push_back(value);
+            self.registers[target_reg] = value;
         }
     }
 
-    pub fn input(&mut self, prompt: &str) {
+    pub fn input(&mut self, prompt: &str, target_reg: usize) {
         print!("{}", prompt);
         let _ = io::stdout().flush();
         let res = io
@@ -141,9 +143,9 @@ impl VM {
             .next()
             .unwrap()
             .map(|x| x.trim_end().to_owned());
-        self.stack.push_back(StackValue::String {
+        self.registers[target_reg] = StackValue::String {
             value: res.unwrap(),
-        });
+        };
     }
 
     pub fn call_function(&mut self, name: &String, program: &mut CelsiumProgram) {
@@ -153,8 +155,8 @@ impl VM {
             }
         }
     }
-    pub fn simple_loop(&mut self, program: &mut CelsiumProgram, loop_block: Vec<OPTCODE>) {
-        let count = self.stack.pop_back().unwrap();
+    pub fn simple_loop(&mut self, program: &mut CelsiumProgram, loop_block: Vec<OPTCODE>, count_reg: usize) {
+        let count = self.registers[count_reg].clone();
         match count {
             StackValue::BIGINT { value } => {
                 let mut counter = BigInt::from(0);
@@ -166,13 +168,13 @@ impl VM {
             _ => panic!(),
         }
     }
-    pub fn get_object_field(&mut self, field_name: &str) {
-        let object = self.stack.pop_back().unwrap();
+    pub fn get_object_field(&mut self, field_name: &str, object_reg: usize) {
+        let object = self.registers[object_reg].clone();
         match object {
             StackValue::Object { value } => {
-                for field in value{
-                    if field.name == field_name{
-                        self.stack.push_back(field.value);
+                for field in value {
+                    if field.name == field_name {
+                        self.registers[object_reg] = field.value;
                         break;
                     }
                 }
