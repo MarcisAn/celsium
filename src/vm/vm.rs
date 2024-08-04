@@ -1,10 +1,10 @@
 use super::{ format_for_print::format_for_print, math_operators::*, StackValue };
 use crate::{ bytecode::{BINOP, OPTCODE}, BuiltinTypes, CelsiumProgram };
 use num::BigInt;
-use std::{ collections::{ HashMap, LinkedList }, io::{ self, BufRead, Write }, str::FromStr, vec };
+use std::{ collections::HashMap, io::{ self, BufRead, Write }, str::FromStr, vec };
 
 pub struct VM {
-    pub(crate) registers: Vec<StackValue>,
+    pub(crate) registers: Vec<Option<StackValue>>,
     pub(crate) variables: HashMap<usize, Variable>,
     pub(crate) testing_stack: Vec<StackValue>,
 }
@@ -17,9 +17,10 @@ pub struct Variable {
 impl StackValue {}
 
 impl VM {
-    pub fn new() -> VM {
+    pub fn new(register_count: usize) -> VM {
+        let mut vec = vec![None; register_count];
         VM {
-            registers: vec![],
+            registers: vec,
             variables: HashMap::new(),
             testing_stack: vec![],
         }
@@ -47,23 +48,23 @@ impl VM {
             BuiltinTypes::Float => StackValue::Float { value: data.parse().unwrap() },
             BuiltinTypes::Array { element_type } => todo!(),
         };
-        self.registers[register] = value;
+        self.registers[register] = Some(value);
     }
     pub fn push_stackvalue(&mut self, stackvalue: StackValue, register: usize) {
-        self.registers[register] = stackvalue;
+        self.registers[register] = Some(stackvalue);
     }
     pub fn push_to_testing_stack(&mut self, register: usize) {
-        self.testing_stack.push(self.registers[register].clone());
+        self.testing_stack.push(self.registers[register].clone().unwrap());
     }
     pub fn get_register(&mut self, register: usize) -> StackValue {
-        return self.registers[register].clone()
+        return self.registers[register].clone().unwrap()
     }
     pub fn aritmethics(&mut self, binop: BINOP, a_reg: usize, b_reg: usize, target: usize) {
         //println!("action {}", action);
-        let b = self.registers[a_reg].clone();
-        let a = self.registers[b_reg].clone();
+        let b = self.registers[a_reg].clone().unwrap();
+        let a = self.registers[b_reg].clone().unwrap();
         
-        let result = match binop {
+        let result: StackValue = match binop {
             BINOP::Add => add(a, b),
             BINOP::Subtract => subtract(a, b),
             BINOP::Multiply => multiply(a, b),
@@ -80,10 +81,10 @@ impl VM {
             BINOP::Xor => xor(a, b),
         };
 
-        self.registers[target] = result;
+        self.registers[target] = Some(result);
     }
     pub fn format_for_print(&mut self, newline: bool, register: usize) -> String {
-        return format_for_print(self.registers[register].clone(), newline);
+        return format_for_print(self.registers[register].clone().unwrap(), newline);
     }
 
     pub fn must_jump(&mut self, register: usize) -> bool {
@@ -91,21 +92,21 @@ impl VM {
         let value = self.registers[register].clone();
         if
             value ==
-                (StackValue::BIGINT {
+                (Some(StackValue::BIGINT {
                     value: BigInt::from(0),
-                }) ||
+                })) ||
             value ==
-                (StackValue::String {
+                (Some(StackValue::String {
                     value: "".to_string(),
-                })
+                }))
         {
             return true;
         }
-        return value == StackValue::Bool { value: false };
+        return value == Some(StackValue::Bool { value: false });
     }
 
     pub fn define_var(&mut self, id: usize, register: usize) {
-        self.variables.insert(id, Variable { id, value: self.registers[register].clone() });
+        self.variables.insert(id, Variable { id, value: self.registers[register].clone().unwrap() });
     }
 
     pub fn define_var_with_stackvalue(&mut self, id: usize, value: StackValue) {
@@ -119,7 +120,7 @@ impl VM {
         if getter.is_none() {
             panic!("Cound not found vairable with ID {}", id);
         } else {
-            self.variables.get_mut(&id).unwrap().value = value;
+            self.variables.get_mut(&id).unwrap().value = value.unwrap();
         }
     }
 
@@ -129,7 +130,7 @@ impl VM {
             panic!("Cound not found vairable id {}", id);
         } else {
             let value = getter.unwrap().value.clone();
-            self.registers[target_reg] = value;
+            self.registers[target_reg] = Some(value);
         }
     }
 
@@ -143,9 +144,9 @@ impl VM {
             .next()
             .unwrap()
             .map(|x| x.trim_end().to_owned());
-        self.registers[target_reg] = StackValue::String {
+        self.registers[target_reg] = Some(StackValue::String {
             value: res.unwrap(),
-        };
+        });
     }
 
     pub fn call_function(&mut self, name: &String, program: &mut CelsiumProgram) {
@@ -158,7 +159,7 @@ impl VM {
     pub fn simple_loop(&mut self, program: &mut CelsiumProgram, loop_block: Vec<OPTCODE>, count_reg: usize) {
         let count = self.registers[count_reg].clone();
         match count {
-            StackValue::BIGINT { value } => {
+            Some(StackValue::BIGINT { value }) => {
                 let mut counter = BigInt::from(0);
                 while counter < value {
                     program.run(self, &loop_block);
@@ -171,10 +172,10 @@ impl VM {
     pub fn get_object_field(&mut self, field_name: &str, object_reg: usize) {
         let object = self.registers[object_reg].clone();
         match object {
-            StackValue::Object { value } => {
+            Some(StackValue::Object { value }) => {
                 for field in value {
                     if field.name == field_name {
-                        self.registers[object_reg] = field.value;
+                        self.registers[object_reg] = Some(field.value);
                         break;
                     }
                 }
