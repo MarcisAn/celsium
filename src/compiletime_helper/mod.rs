@@ -53,15 +53,9 @@ pub struct CompileTimeObject {
     pub is_exported: bool,
 }
 
-#[derive(Debug, Clone)]
-pub struct CompileTimeStackValue {
-    pub data_type: BuiltinTypes,
-    pub register_id: usize,
-}
-
 #[derive(Clone, Debug)]
 pub struct CompileTimeHelper {
-    pub stack: LinkedList<CompileTimeStackValue>,
+    pub stack: LinkedList<BuiltinTypes>,
     pub source_files: Vec<String>,
     pub source_file_paths: Vec<String>,
     pub current_file: usize,
@@ -121,17 +115,11 @@ impl CompileTimeHelper {
     pub fn import(&mut self, name: String, origin: String, imported_into: String) {
         self.imports.push(CompileTimeImport { name, origin, imported_into });
     }
-    pub fn push(&mut self, pushable_type: BuiltinTypes, register: usize) {
-        self.stack.push_back(CompileTimeStackValue {
-            data_type: pushable_type,
-            register_id: register,
-        });
+    pub fn push(&mut self, pushable_type: BuiltinTypes) {
+        self.stack.push_back(pushable_type);
     }
-    pub fn pop(&mut self) -> Option<CompileTimeStackValue> {
+    pub fn pop(&mut self) -> Option<BuiltinTypes> {
         self.stack.pop_back()
-    }
-    pub fn get_top(&mut self) -> Option<&CompileTimeStackValue> {
-        self.stack.back()
     }
     pub fn def_function(
         &mut self,
@@ -300,7 +288,7 @@ impl CompileTimeHelper {
         }
         None
     }
-    pub fn binop(&mut self, binop: BINOP, target_reg: usize) -> Option<BuiltinTypes> {
+    pub fn binop(&mut self, binop: BINOP) -> Option<BuiltinTypes> {
         /*
         Subtraction, multiplication, division and getting remainder
         are identical in the way types ar handled
@@ -322,10 +310,7 @@ impl CompileTimeHelper {
             BINOP::Xor => self.compare(),
         };
         if result_type.is_some() {
-            self.stack.push_back(CompileTimeStackValue {
-                data_type: result_type.clone().unwrap(),
-                register_id: target_reg,
-            });
+            self.stack.push_back(result_type.clone().unwrap());
             return result_type;
         } else {
             return None;
@@ -334,9 +319,9 @@ impl CompileTimeHelper {
     fn add(&mut self) -> Option<BuiltinTypes> {
         let a = self.stack.pop_back().unwrap();
         let b = self.stack.pop_back().unwrap();
-        let result = match a.data_type {
+        let result = match a {
             BuiltinTypes::MagicInt =>
-                match b.data_type {
+                match b {
                     BuiltinTypes::MagicInt => Some(BuiltinTypes::MagicInt),
                     BuiltinTypes::Bool => {
                         return None;
@@ -350,7 +335,7 @@ impl CompileTimeHelper {
                 }
             BuiltinTypes::Bool => None,
             BuiltinTypes::String =>
-                match b.data_type {
+                match b {
                     BuiltinTypes::MagicInt => Some(BuiltinTypes::String),
                     BuiltinTypes::Bool => {
                         return None;
@@ -364,7 +349,7 @@ impl CompileTimeHelper {
                 }
             BuiltinTypes::Object { fields: _ } => None,
             BuiltinTypes::Float =>
-                match b.data_type {
+                match b {
                     BuiltinTypes::MagicInt => Some(BuiltinTypes::Float),
                     BuiltinTypes::Bool => {
                         return None;
@@ -383,9 +368,9 @@ impl CompileTimeHelper {
     fn subtract(&mut self) -> Option<BuiltinTypes> {
         let a = self.stack.pop_back().unwrap();
         let b = self.stack.pop_back().unwrap();
-        let result = match a.data_type {
+        let result = match a {
             BuiltinTypes::MagicInt =>
-                match b.data_type {
+                match b {
                     BuiltinTypes::MagicInt => Some(BuiltinTypes::MagicInt),
                     BuiltinTypes::Bool => {
                         return None;
@@ -405,7 +390,7 @@ impl CompileTimeHelper {
             BuiltinTypes::Array { element_type } => None,
 
             BuiltinTypes::Float =>
-                match b.data_type {
+                match b {
                     BuiltinTypes::MagicInt => Some(BuiltinTypes::Float),
                     BuiltinTypes::Bool => {
                         return None;
@@ -425,9 +410,9 @@ impl CompileTimeHelper {
     fn compare(&mut self) -> Option<BuiltinTypes> {
         let a = self.stack.pop_back().unwrap();
         let b = self.stack.pop_back().unwrap();
-        let result = match a.data_type {
+        let result = match a {
             BuiltinTypes::MagicInt =>
-                match b.data_type {
+                match b {
                     BuiltinTypes::MagicInt => Some(BuiltinTypes::Bool),
                     BuiltinTypes::Bool => {
                         return None;
@@ -442,7 +427,7 @@ impl CompileTimeHelper {
                     BuiltinTypes::Array { element_type } => None,
                 }
             BuiltinTypes::Bool =>
-                match b.data_type {
+                match b {
                     BuiltinTypes::MagicInt => {
                         return None;
                     }
@@ -461,7 +446,7 @@ impl CompileTimeHelper {
             BuiltinTypes::String => None,
             BuiltinTypes::Object { fields: _ } => None,
             BuiltinTypes::Float =>
-                match b.data_type {
+                match b {
                     BuiltinTypes::MagicInt => Some(BuiltinTypes::Bool),
                     BuiltinTypes::Bool => {
                         return None;
