@@ -23,11 +23,9 @@ pub enum OPTCODE {
     LoadConst {
         data_type: BuiltinTypes,
         data: String,
-        register: usize
     },
     LoadVar {
         id: usize,
-        register: usize
     },
     CallFunction {
         name: String,
@@ -36,10 +34,22 @@ pub enum OPTCODE {
         bytecode: Vec<OPTCODE>,
     },
     ReturnFromFunction,
-    Binop {a_reg: usize, b_reg: usize, result_reg: usize, binop: BINOP},
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
+    Remainder,
+    LessThan,
+    LargerThan,
+    LessOrEq,
+    LargerOrEq,
+    NotEq,
+    Eq,
+    Or,
+    And,
+    Xor,
     JumpIfFalse {
         steps: usize,
-        register: usize
     },
     Jump {
         steps: usize,
@@ -49,45 +59,34 @@ pub enum OPTCODE {
     },
     DefineVar {
         id: usize,
-        register: usize
     },
     DefineObject {
         id: usize,
-        register: usize
     },
     CreateObject {
-        field_names: Vec<String>,
-        field_regs: Vec<usize>,
-        target_reg: usize
+        field_names: Vec<String>
     },
     GetObjectField {
-        field_name: String,
-        object_register: usize
+        field_name: String
     },
     DefineArray {
         id: usize,
-        init_values: Vec<usize>
+        init_values_count: usize
     },
     GetFromArray {
         id: usize,
-        register: usize
     },
     AssignAtArrayIndex {
         id: usize,
-        value_reg: usize,
-        index_reg: usize
     },
     PushToArray {
         id: usize,
-        register: usize
     },
-    GetArrayLength {
+    GettArrayLength {
         id: usize,
-        register: usize
     },
     AssignVar {
         id: usize,
-        register: usize
     },
     DefineFunction {
         body_block: Block,
@@ -96,11 +95,9 @@ pub enum OPTCODE {
     },
     CallSpecialFunction {
         function: super::SpecialFunctions,
-        register: usize
     },
     SimpleLoop {
-        body_block: Block,
-        count_reg: usize
+        body_block: Block
     },
-    PushToTestingStack {duplicate_stackvalue: bool, register: usize}    
+    PushToTestingStack {duplicate_stackvalue: bool}    
 }
