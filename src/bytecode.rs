@@ -1,6 +1,6 @@
 use crate::{ block::Block, module::{ FunctionSignature, VISIBILITY }, BuiltinTypes };
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub enum BINOP {
     Add,
     Subtract,
@@ -18,7 +18,7 @@ pub enum BINOP {
     Xor,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub enum OPTCODE {
     LoadConst {
         data_type: BuiltinTypes,
@@ -64,14 +64,14 @@ pub enum OPTCODE {
         id: usize,
     },
     CreateObject {
-        field_names: Vec<String>
+        field_names: Vec<String>,
     },
     GetObjectField {
-        field_name: String
+        field_name: String,
     },
     DefineArray {
         id: usize,
-        init_values_count: usize
+        init_values_count: usize,
     },
     GetFromArray {
         id: usize,
@@ -97,7 +97,9 @@ pub enum OPTCODE {
         function: super::SpecialFunctions,
     },
     SimpleLoop {
-        body_block: Block
+        body_block: Block,
     },
-    PushToTestingStack {duplicate_stackvalue: bool}    
+    PushToTestingStack {
+        duplicate_stackvalue: bool,
+    },
 }

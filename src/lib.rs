@@ -33,13 +33,13 @@ extern "C" {
     fn wasm_print(s: &str);
     async fn wasm_input() -> JsValue;
 }
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord,serde::Deserialize, serde::Serialize)]
 pub struct ObjectFieldType {
     pub name: String,
     pub data_type: BuiltinTypes,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord,serde::Deserialize, serde::Serialize)]
 pub enum BuiltinTypes {
     MagicInt,
     Bool,
@@ -51,7 +51,7 @@ pub enum BuiltinTypes {
     Float,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug,serde::Deserialize, serde::Serialize)]
 pub enum SpecialFunctions {
     Print {
         newline: bool,
@@ -63,7 +63,7 @@ pub struct CelsiumProgram {
     modules: Vec<Module>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq,serde::Deserialize, serde::Serialize)]
 pub struct Scope {
     pub ast_id: usize,
     pub module_path: String,
@@ -94,6 +94,8 @@ impl CelsiumProgram {
         let mut vm = VM::new();
 
         self.run(&mut vm, &global_bytecode);
+        let json_bytecode = serde_json::to_string(&global_bytecode).unwrap();
+        println!("{}", json_bytecode);
         return vm.testing_stack;
     }
 

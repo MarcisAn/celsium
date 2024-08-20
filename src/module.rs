@@ -7,12 +7,12 @@ pub struct Module {
     pub functions: Vec<Function>,
     _id: usize,
 }
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug,serde::Deserialize, serde::Serialize)]
 pub enum FunctionReturnType {
     NONE,
     BuiltinTypes,
 }
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug,serde::Deserialize, serde::Serialize)]
 pub struct FunctionSignature {
     pub name: String,
     pub return_type: FunctionReturnType,
@@ -32,12 +32,12 @@ impl FunctionSignature {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug,serde::Deserialize, serde::Serialize)]
 pub struct FuncArg {
     pub name: String,
     pub arg_type: BuiltinTypes,
 }
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug,serde::Deserialize, serde::Serialize)]
 pub enum VISIBILITY {
     PRIVATE,
     PUBLIC,

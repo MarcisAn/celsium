@@ -4,7 +4,7 @@ use crate::{Scope, SpecialFunctions};
 use crate::{ module::VISIBILITY, BINOP, BuiltinTypes, OPTCODE };
 mod array;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct Block {
     pub bytecode: Vec<OPTCODE>,
     pub scope: Scope
