@@ -145,7 +145,7 @@ impl VM {
     }
 
     pub fn call_function(&mut self, name: &String, program: &mut CelsiumProgram) {
-        for function in &program.modules.clone()[0].functions {
+        for function in  program.functions.clone() {
             if function.signature.name == name.to_string() {
                 program.run(self, &function.body.bytecode);
             }

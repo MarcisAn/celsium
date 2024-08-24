@@ -1,4 +1,4 @@
-use crate::{ block::Block, module::{ FunctionSignature, VISIBILITY }, BuiltinTypes };
+use crate::{ block::Block, BuiltinTypes };
 
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub enum BINOP {
@@ -99,11 +99,6 @@ pub enum OPTCODE {
     },
     AssignVar {
         id: usize,
-    },
-    DefineFunction {
-        body_block: Block,
-        visibility: VISIBILITY,
-        signature: FunctionSignature,
     },
     CallSpecialFunction {
         function: super::SpecialFunctions,

@@ -1,12 +1,6 @@
 use crate::block::Block;
 use crate::{CelsiumProgram, BuiltinTypes};
-#[derive(Clone)]
-pub struct Module {
-    pub name: String,
-    pub main_block: Option<Block>,
-    pub functions: Vec<Function>,
-    _id: usize,
-}
+
 #[derive(Clone, Debug,serde::Deserialize, serde::Serialize)]
 pub enum FunctionReturnType {
     NONE,
@@ -46,22 +40,4 @@ pub enum VISIBILITY {
 pub struct Function {
     pub(crate) signature: FunctionSignature,
     pub(crate) body: Block,
-}
-
-
-
-impl Module {
-    pub fn new(name: &str, celsius_program: &mut CelsiumProgram) -> Module {
-        let module = Module {
-            name: name.to_string(),
-            _id: celsius_program.modules.len(),
-            main_block: None,
-            functions: vec![],
-        };
-        module
-    }
-    pub fn add_main_block(&mut self, mut block: Block) {
-        block.bytecode = block.clone().bytecode;
-        self.main_block = Some(block);
-    }
 }

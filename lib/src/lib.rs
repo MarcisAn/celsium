@@ -1,13 +1,9 @@
-use num::FromPrimitive;
-use num::ToPrimitive;
 pub mod bytecode;
+use block::Block;
 use bytecode::{ BINOP, OPTCODE };
 use module::Function;
-use module::Module;
 extern crate serde;
 extern crate serde_json;
-use num::bigint;
-use num::BigInt;
 use rand::prelude::*;
 
 extern crate js_sys;
@@ -60,7 +56,8 @@ pub enum SpecialFunctions {
     Random,
 }
 pub struct CelsiumProgram {
-    modules: Vec<Module>,
+    main_block: Block,
+    functions: Vec<Function>
 }
 
 #[derive(Debug, Clone, PartialEq,serde::Deserialize, serde::Serialize)]
@@ -78,19 +75,14 @@ impl Scope {
 }
 
 impl CelsiumProgram {
-    pub fn new() -> CelsiumProgram {
-        CelsiumProgram { modules: vec![] }
+    pub fn new(main_block: Block, functions: Vec<Function>) -> CelsiumProgram {
+        CelsiumProgram { main_block, functions }
     }
 
-    pub fn add_module(&mut self, module: &Module) {
-        self.modules.push(module.clone());
-    }
+
 
     pub fn run_program(&mut self) -> Vec<StackValue> {
-        let mut global_bytecode: Vec<OPTCODE> = vec![];
-        for module in &self.modules {
-            global_bytecode.append(&mut module.clone().main_block.unwrap().bytecode.clone());
-        }
+        let global_bytecode: Vec<OPTCODE> = self.main_block.bytecode.clone();
         let mut vm = VM::new();
 
         self.run(&mut vm, &global_bytecode);
@@ -99,7 +91,7 @@ impl CelsiumProgram {
         return vm.testing_stack;
     }
 
-    pub fn run(&mut self, vm: &mut VM, bytecode: &Vec<OPTCODE>) {
+    fn run(&mut self, vm: &mut VM, bytecode: &Vec<OPTCODE>) {
         let mut index: isize = 0;
         while index < (bytecode.len() as isize) {
             let optcode = &bytecode[index as usize];
@@ -161,12 +153,6 @@ impl CelsiumProgram {
                 OPTCODE::GetFromArray { id } => vm.get_from_array(*id),
                 OPTCODE::PushToArray { id } => vm.push_to_array(*id),
                 OPTCODE::GettArrayLength { id } => vm.get_array_length(*id),
-                OPTCODE::DefineFunction { body_block, visibility:_, signature } =>
-                    self.modules[0].functions.push(Function {
-                        signature: signature.clone(),
-                        body: body_block.clone(),
-                    }),
-
                 OPTCODE::CallSpecialFunction { function } =>
                     match function {
                         SpecialFunctions::Print { newline } => {

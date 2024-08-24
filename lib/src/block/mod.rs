@@ -115,18 +115,6 @@ impl Block {
 
         self.bytecode.push(OPTCODE::CreateObject { field_names });
     }
-    pub fn define_function(
-        &mut self,
-        body_block: Block,
-        visibility: VISIBILITY,
-        signature: FunctionSignature
-    ) {
-        self.bytecode.push(OPTCODE::DefineFunction {
-            signature: signature,
-            visibility: visibility,
-            body_block,
-        })
-    }
     pub fn return_from_function(&mut self) {
         self.bytecode.push(OPTCODE::ReturnFromFunction);
     }
