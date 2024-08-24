@@ -9,7 +9,7 @@ mod format_for_print;
 
 pub enum StackValue {
     Bool { value: bool },
-    BIGINT { value: BigInt },
+    Int { value: i64 },
     Float {value: f64},
     String { value: String },
     ARRAY { value: Vec<StackValue> },

@@ -17,7 +17,7 @@ pub fn format_for_print(value: StackValue, newline: bool) -> String {
                 }
             }
         }
-        StackValue::BIGINT { value } => {
+        StackValue::Int { value } => {
             if !newline {
                 return format!("{}", value);
             } else {

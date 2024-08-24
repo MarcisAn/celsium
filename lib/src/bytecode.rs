@@ -24,6 +24,18 @@ pub enum OPTCODE {
         data_type: BuiltinTypes,
         data: String,
     },
+    LoadInt {
+        value: i64
+    },
+    LoadBool {
+        value: bool
+    },
+    LoadString {
+        value: String
+    },
+    LoadFloat {
+        value: f64
+    },
     LoadVar {
         id: usize,
     },

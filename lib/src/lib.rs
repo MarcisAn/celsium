@@ -41,7 +41,7 @@ pub struct ObjectFieldType {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord,serde::Deserialize, serde::Serialize)]
 pub enum BuiltinTypes {
-    MagicInt,
+    Int,
     Bool,
     String,
     Object {
@@ -189,19 +189,17 @@ impl CelsiumProgram {
                         SpecialFunctions::Random => {
                             let value = {
                                 let max = match vm.pop() {
-                                    StackValue::BIGINT { value } => truncate_biguint_to_i64(&value),
+                                    StackValue::Int { value } => value,
                                     _ => panic!(),
                                 };
                                 let min = match vm.pop() {
-                                    StackValue::BIGINT { value } => truncate_biguint_to_i64(&value),
+                                    StackValue::Int { value } => value,
                                     _ => panic!(),
                                 };
-                                bigint::BigInt
-                                    ::from_i64(rand::thread_rng().gen_range(min..max))
-                                    .unwrap()
+                                rand::thread_rng().gen_range(min..max)
                             };
-                            vm.push_stackvalue(StackValue::BIGINT {
-                                value: value,
+                            vm.push_stackvalue(StackValue::Int {
+                                value,
                             });
                         }
                     }
@@ -217,13 +215,13 @@ impl CelsiumProgram {
                     }
                     vm.push_stackvalue(StackValue::Object { value: fields.clone() })
                 },
+                OPTCODE::LoadInt { value } => vm.push_stackvalue(StackValue::Int { value: *value }),
+                OPTCODE::LoadBool { value } => vm.push_stackvalue(StackValue::Bool { value: *value }),
+                OPTCODE::LoadString { value } => vm.push_stackvalue(StackValue::String { value: value.to_string() }),
+                OPTCODE::LoadFloat { value } => vm.push_stackvalue(StackValue::Float { value: *value }),
             }
             index += 1;
         }
     }
 }
 
-fn truncate_biguint_to_i64(a: &BigInt) -> i64 {
-    let mask = BigInt::from(u64::MAX);
-    (a & mask).to_i64().unwrap()
-}

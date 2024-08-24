@@ -320,9 +320,9 @@ impl CompileTimeHelper {
         let a = self.stack.pop_back().unwrap();
         let b = self.stack.pop_back().unwrap();
         let result = match a {
-            BuiltinTypes::MagicInt =>
+            BuiltinTypes::Int =>
                 match b {
-                    BuiltinTypes::MagicInt => Some(BuiltinTypes::MagicInt),
+                    BuiltinTypes::Int => Some(BuiltinTypes::Int),
                     BuiltinTypes::Bool => {
                         return None;
                     }
@@ -336,7 +336,7 @@ impl CompileTimeHelper {
             BuiltinTypes::Bool => None,
             BuiltinTypes::String =>
                 match b {
-                    BuiltinTypes::MagicInt => Some(BuiltinTypes::String),
+                    BuiltinTypes::Int => Some(BuiltinTypes::String),
                     BuiltinTypes::Bool => {
                         return None;
                     }
@@ -350,7 +350,7 @@ impl CompileTimeHelper {
             BuiltinTypes::Object { fields: _ } => None,
             BuiltinTypes::Float =>
                 match b {
-                    BuiltinTypes::MagicInt => Some(BuiltinTypes::Float),
+                    BuiltinTypes::Int => Some(BuiltinTypes::Float),
                     BuiltinTypes::Bool => {
                         return None;
                     }
@@ -369,9 +369,9 @@ impl CompileTimeHelper {
         let a = self.stack.pop_back().unwrap();
         let b = self.stack.pop_back().unwrap();
         let result = match a {
-            BuiltinTypes::MagicInt =>
+            BuiltinTypes::Int =>
                 match b {
-                    BuiltinTypes::MagicInt => Some(BuiltinTypes::MagicInt),
+                    BuiltinTypes::Int => Some(BuiltinTypes::Int),
                     BuiltinTypes::Bool => {
                         return None;
                     }
@@ -391,7 +391,7 @@ impl CompileTimeHelper {
 
             BuiltinTypes::Float =>
                 match b {
-                    BuiltinTypes::MagicInt => Some(BuiltinTypes::Float),
+                    BuiltinTypes::Int => Some(BuiltinTypes::Float),
                     BuiltinTypes::Bool => {
                         return None;
                     }
@@ -411,9 +411,9 @@ impl CompileTimeHelper {
         let a = self.stack.pop_back().unwrap();
         let b = self.stack.pop_back().unwrap();
         let result = match a {
-            BuiltinTypes::MagicInt =>
+            BuiltinTypes::Int =>
                 match b {
-                    BuiltinTypes::MagicInt => Some(BuiltinTypes::Bool),
+                    BuiltinTypes::Int => Some(BuiltinTypes::Bool),
                     BuiltinTypes::Bool => {
                         return None;
                     }
@@ -428,7 +428,7 @@ impl CompileTimeHelper {
                 }
             BuiltinTypes::Bool =>
                 match b {
-                    BuiltinTypes::MagicInt => {
+                    BuiltinTypes::Int => {
                         return None;
                     }
                     BuiltinTypes::Bool => Some(BuiltinTypes::Bool),
@@ -447,7 +447,7 @@ impl CompileTimeHelper {
             BuiltinTypes::Object { fields: _ } => None,
             BuiltinTypes::Float =>
                 match b {
-                    BuiltinTypes::MagicInt => Some(BuiltinTypes::Bool),
+                    BuiltinTypes::Int => Some(BuiltinTypes::Bool),
                     BuiltinTypes::Bool => {
                         return None;
                     }

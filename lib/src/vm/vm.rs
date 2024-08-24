@@ -28,10 +28,8 @@ impl VM {
     }
     pub fn push(&mut self, data_type: &BuiltinTypes, data: &String) {
         match data_type {
-            BuiltinTypes::MagicInt =>
-                self.stack.push_back(StackValue::BIGINT {
-                    value: BigInt::from_str(&data).unwrap(),
-                }),
+            BuiltinTypes::Int =>
+                panic!(),
             BuiltinTypes::Bool => {
                 if data == "1" {
                     self.stack.push_back(StackValue::Bool { value: true })
@@ -94,8 +92,8 @@ impl VM {
         let value = self.stack.pop_back().unwrap();
         if
             value ==
-                (StackValue::BIGINT {
-                    value: BigInt::from(0),
+                (StackValue::Int {
+                    value: 0,
                 }) ||
             value ==
                 (StackValue::String {
@@ -156,8 +154,8 @@ impl VM {
     pub fn simple_loop(&mut self, program: &mut CelsiumProgram, loop_block: Vec<OPTCODE>) {
         let count = self.stack.pop_back().unwrap();
         match count {
-            StackValue::BIGINT { value } => {
-                let mut counter = BigInt::from(0);
+            StackValue::Int { value } => {
+                let mut counter = 0;
                 while counter < value {
                     program.run(self, &loop_block);
                     counter += 1;

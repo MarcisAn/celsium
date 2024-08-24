@@ -7,7 +7,7 @@ impl VM {
 pub fn get_from_array(&mut self, id: usize) {
     let index_stack = self.stack.pop_back().unwrap();
     let index = match index_stack {
-        StackValue::BIGINT { value } => value.to_string().parse::<usize>().unwrap(),
+        StackValue::Int { value } => value.to_string().parse::<usize>().unwrap(),
         _ => panic!("Array index is not an int"),
     };
 
@@ -28,7 +28,7 @@ pub fn get_from_array(&mut self, id: usize) {
 pub fn set_at_array(&mut self, id: usize) {
     let index_stack = self.stack.pop_back().unwrap();
     let index = match index_stack {
-        StackValue::BIGINT { value } => value.to_string().parse::<usize>().unwrap(),
+        StackValue::Int { value } => value.to_string().parse::<usize>().unwrap(),
         _ => panic!("Array index is not an int"),
     };
 
@@ -70,8 +70,8 @@ pub fn get_array_length(&mut self, id: usize) {
     } else {
         match getter.unwrap().value.to_owned() {
             StackValue::ARRAY { value } => {
-                self.stack.push_back(StackValue::BIGINT {
-                    value: BigInt::from(value.len()),
+                self.stack.push_back(StackValue::Int {
+                    value: value.len() as i64,
                 });
             }
             _ => panic!("{} is not an array", getter.unwrap().id),

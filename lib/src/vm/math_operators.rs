@@ -1,31 +1,21 @@
-use num::bigint::ToBigUint;
-use num::ToPrimitive;
-use num::{BigInt, BigUint};
-
 use super::StackValue;
 
-fn truncate_biguint_to_f64(a: &BigUint) -> f64 {
-    use std::u32;
-    let mask = BigUint::from(u32::MAX);
-    (a & mask).to_u32().unwrap() as f64
-}
-
-fn add_to_bigint(a: BigInt, b: StackValue) -> StackValue {
+fn add_to_int(a: i64, b: StackValue) -> StackValue {
     match b {
         StackValue::Bool { value: _ } => panic!("Cannot add Bool to INT"),
-        StackValue::BIGINT { value } => StackValue::BIGINT { value: a + value },
+        StackValue::Int { value } => StackValue::Int { value: a + value },
         StackValue::String { value } => StackValue::String {
             value: a.to_string() + &value,
         },
         StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
         StackValue::Float { value } => {
             if value.trunc() == value {
-                StackValue::BIGINT {
+                StackValue::Int {
                     value: a + value as i64,
                 }
             } else {
                 StackValue::Float {
-                    value: truncate_biguint_to_f64(&a.to_biguint().unwrap()) + value,
+                    value: a as f64 + value,
                 }
             }
         },
@@ -35,7 +25,7 @@ fn add_to_bigint(a: BigInt, b: StackValue) -> StackValue {
 fn add_to_string(a: String, b: StackValue) -> StackValue {
     match b {
         StackValue::Bool { value: _ } => panic!("Cannot add Bool to String"),
-        StackValue::BIGINT { value } => StackValue::String {
+        StackValue::Int { value } => StackValue::String {
             value: a + &value.to_string(),
         },
         StackValue::String { value } => StackValue::String { value: a + &value },
@@ -49,8 +39,8 @@ fn add_to_string(a: String, b: StackValue) -> StackValue {
 fn add_to_float(a: f64, b: StackValue) -> StackValue {
     match b {
         StackValue::Bool { value: _ } => panic!("Cannot add Bool to Float"),
-        StackValue::BIGINT { value } => StackValue::Float {
-            value: a + truncate_biguint_to_f64(&value.to_biguint().unwrap()),
+        StackValue::Int { value } => StackValue::Float {
+            value: a + value as f64,
         },
         StackValue::String { value } => StackValue::String {
             value: a.to_string().replace(".", ",") + &value,
@@ -63,22 +53,22 @@ fn add_to_float(a: f64, b: StackValue) -> StackValue {
 pub fn add(a: StackValue, b: StackValue) -> StackValue {
     match a {
         StackValue::Bool { value: _ } => panic!("Cannot do addition with bool's"),
-        StackValue::BIGINT { value } => add_to_bigint(value, b),
+        StackValue::Int { value } => add_to_int(value, b),
         StackValue::String { value } => add_to_string(value, b),
         StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
         StackValue::Float { value } => add_to_float(value, b),
         StackValue::Object { value: _} => panic!("Cannot do math with objects.")
     }
 }
-fn subtract_from_bigint(a: BigInt, b: StackValue) -> StackValue {
+fn subtract_from_int(a: i64, b: StackValue) -> StackValue {
     match b {
         StackValue::Bool { value: _ } => panic!("Cannot subtract Bool to INT"),
-        StackValue::BIGINT { value } => StackValue::BIGINT { value: a - value },
+        StackValue::Int { value } => StackValue::Int { value: a - value },
         StackValue::String { value: _ } => panic!("Cannot subtract string from MAGICINT"),
         StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
 
         StackValue::Float { value } => StackValue::Float {
-            value: truncate_biguint_to_f64(&a.to_biguint().unwrap()) - value,
+            value: a as f64 - value,
         },
         StackValue::Object { value: _} => panic!("Cannot do math with objects.")
     }
@@ -86,8 +76,8 @@ fn subtract_from_bigint(a: BigInt, b: StackValue) -> StackValue {
 fn subtract_from_float(a: f64, b: StackValue) -> StackValue {
     match b {
         StackValue::Bool { value: _ } => panic!("Cannot subtract Bool from Float"),
-        StackValue::BIGINT { value } => StackValue::Float {
-            value: a - truncate_biguint_to_f64(&value.to_biguint().unwrap()),
+        StackValue::Int { value } => StackValue::Float {
+            value: a - value as f64,
         },
         StackValue::String { value: _ } => panic!("Cannot subtract strings"),
         StackValue::ARRAY { value: _ } => panic!("Cannot do math with arrays"),
@@ -98,21 +88,21 @@ fn subtract_from_float(a: f64, b: StackValue) -> StackValue {
 pub fn subtract(a: StackValue, b: StackValue) -> StackValue {
     match a {
         StackValue::Bool { value: _ } => panic!("Cannot do subtraction with Bool's"),
-        StackValue::BIGINT { value } => subtract_from_bigint(value, b),
+        StackValue::Int { value } => subtract_from_int(value, b),
         StackValue::String { value: _ } => panic!("Cannot do subtraction with String's"),
         StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
         StackValue::Float { value } => subtract_from_float(value, a),
         StackValue::Object { value: _} => panic!("Cannot do math with objects.")
     }
 }
-fn multiply_with_bigint(a: BigInt, b: StackValue) -> StackValue {
+fn multiply_with_int(a: i64, b: StackValue) -> StackValue {
     match b {
         StackValue::Bool { value: _ } => panic!("Cannot multiply Bool with MAGICINT"),
-        StackValue::BIGINT { value } => StackValue::BIGINT { value: a * value },
+        StackValue::Int { value } => StackValue::Int { value: a * value },
         StackValue::String { value: _ } => panic!("Cannot multiply string with MAGICINT"),
         StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
         StackValue::Float { value } => StackValue::Float {
-            value: value * truncate_biguint_to_f64(&a.to_biguint().unwrap()),
+            value: value * a as f64,
         },
         StackValue::Object { value: _} => panic!("Cannot do math with objects.")
     }
@@ -120,8 +110,8 @@ fn multiply_with_bigint(a: BigInt, b: StackValue) -> StackValue {
 fn multiply_with_float(a: f64, b: StackValue) -> StackValue {
     match b {
         StackValue::Bool { value: _ } => panic!("Cannot multiply Bool with Float"),
-        StackValue::BIGINT { value } => StackValue::Float {
-            value: a * truncate_biguint_to_f64(&value.to_biguint().unwrap()),
+        StackValue::Int { value } => StackValue::Float {
+            value: a * value as f64,
         },
         StackValue::String { value: _ } => panic!("Cannot multiply string with MAGICINT"),
         StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
@@ -132,21 +122,21 @@ fn multiply_with_float(a: f64, b: StackValue) -> StackValue {
 pub fn multiply(a: StackValue, b: StackValue) -> StackValue {
     match a {
         StackValue::Bool { value: _ } => panic!("Cannot do multiplication with Bool's"),
-        StackValue::BIGINT { value } => multiply_with_bigint(value, b),
+        StackValue::Int { value } => multiply_with_int(value, b),
         StackValue::String { value: _ } => panic!("Cannot do multiplication with String's"),
         StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
         StackValue::Float { value } => multiply_with_float(value, b),
         StackValue::Object { value: _} => panic!("Cannot do math with objects.")
     }
 }
-fn divide_with_bigint(a: BigInt, b: StackValue) -> StackValue {
+fn divide_with_int(a: i64, b: StackValue) -> StackValue {
     match b {
         StackValue::Bool { value: _ } => panic!("Cannot divide Bool with MAGICINT"),
-        StackValue::BIGINT { value } => StackValue::BIGINT { value: a / value },
+        StackValue::Int { value } => StackValue::Int { value: a / value },
         StackValue::String { value: _ } => panic!("Cannot divide String with MAGICINT"),
         StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
         StackValue::Float { value } => StackValue::Float {
-            value: value / truncate_biguint_to_f64(&a.to_biguint().unwrap()),
+            value: value  / a as f64,
             
         },
         StackValue::Object { value: _} => panic!("Cannot do math with objects.")
@@ -155,8 +145,8 @@ fn divide_with_bigint(a: BigInt, b: StackValue) -> StackValue {
 fn divide_with_float(a: f64, b: StackValue) -> StackValue {
     match b {
         StackValue::Bool { value: _ } => panic!("Cannot multiply Bool with Float"),
-        StackValue::BIGINT { value } => StackValue::Float {
-            value: truncate_biguint_to_f64(&value.to_biguint().unwrap()) / a,
+        StackValue::Int { value } => StackValue::Float {
+            value: value as f64 / a,
         },
         StackValue::String { value: _ } => panic!("Cannot multiply string with MAGICINT"),
         StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
@@ -167,21 +157,21 @@ fn divide_with_float(a: f64, b: StackValue) -> StackValue {
 pub fn divide(a: StackValue, b: StackValue) -> StackValue {
     match a {
         StackValue::Bool { value: _ } => panic!("Cannot do division with Bool's"),
-        StackValue::BIGINT { value } => divide_with_bigint(value, b),
+        StackValue::Int { value } => divide_with_int(value, b),
         StackValue::String { value: _ } => panic!("Cannot do division with String's"),
         StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
         StackValue::Float { value } => divide_with_float(value, b),
         StackValue::Object { value: _} => panic!("Cannot do math with objects.")
     }
 }
-fn get_remainder_with_bigint(a: BigInt, b: StackValue) -> StackValue {
+fn get_remainder_with_bigint(a: i64, b: StackValue) -> StackValue {
     match b {
         StackValue::Bool { value: _ } => panic!("Cannot divide Bool with MAGICINT"),
-        StackValue::BIGINT { value } => StackValue::BIGINT { value: a % value },
+        StackValue::Int { value } => StackValue::Int { value: a % value },
         StackValue::String { value: _ } => panic!("Cannot divide String with MAGICINT"),
         StackValue::ARRAY { value: _ } => panic!("Cannot do math with arrays"),
         StackValue::Float { value } => StackValue::Float {
-            value: truncate_biguint_to_f64(&a.to_biguint().unwrap()) % value,
+            value: a as f64 % value,
         },
         StackValue::Object { value: _} => panic!("Cannot do math with objects.")
     }
@@ -189,13 +179,13 @@ fn get_remainder_with_bigint(a: BigInt, b: StackValue) -> StackValue {
 fn get_remainder_with_float(a: f64, b: StackValue) -> StackValue {
     match b {
         StackValue::Bool { value: _ } => panic!("Cannot divide Bool with MAGICINT"),
-        StackValue::BIGINT { value } => StackValue::Float {
-            value: a % truncate_biguint_to_f64(&value.to_biguint().unwrap()),
+        StackValue::Int { value } => StackValue::Float {
+            value: a % value as f64,
         },
         StackValue::String { value: _ } => panic!("Cannot divide String with MAGICINT"),
         StackValue::ARRAY { value: _ } => panic!("Cannot do math with arrays"),
         StackValue::Float { value } => StackValue::Float {
-            value: truncate_biguint_to_f64(&a.to_biguint().unwrap()) % value,
+            value: a % value,
         },
         StackValue::Object { value: _} => panic!("Cannot do math with objects.")
     }
@@ -203,7 +193,7 @@ fn get_remainder_with_float(a: f64, b: StackValue) -> StackValue {
 pub fn remainder(a: StackValue, b: StackValue) -> StackValue {
     match a {
         StackValue::Bool { value: _ } => panic!("Cannot do division with Bool's"),
-        StackValue::BIGINT { value } => get_remainder_with_bigint(value, b),
+        StackValue::Int { value } => get_remainder_with_bigint(value, b),
         StackValue::String { value: _ } => panic!("Cannot do division with String's"),
         StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
         StackValue::Float { value } => get_remainder_with_float(value, b),
@@ -216,22 +206,22 @@ pub fn less_than(a: StackValue, b: StackValue) -> StackValue {
             StackValue::Bool { value } => StackValue::Bool {
                 value: val_a < value,
             },
-            StackValue::BIGINT { value: _ } => panic!("Cannot compare MAGICINT with Bool"),
+            StackValue::Int { value: _ } => panic!("Cannot compare MAGICINT with Bool"),
             StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
             StackValue::String { value: _ } => panic!("Cannot compare MAGICINT with String"),
             StackValue::Float { value: _ } => panic!("Cannot compare Bool and Float"),
             StackValue::Object { value: _} => panic!("Cannot do math with objects.")
         },
         StackValue::Object { value: _} => panic!("Cannot do math with objects."),
-        StackValue::BIGINT { value: val_a } => match b {
+        StackValue::Int { value: val_a } => match b {
             StackValue::Bool { value: _ } => panic!("Cannot compare MAGICINT with Bool"),
-            StackValue::BIGINT { value } => StackValue::Bool {
+            StackValue::Int { value } => StackValue::Bool {
                 value: val_a < value,
             },
             StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
             StackValue::String { value: _ } => panic!("Cannot compare MAGICINT with String"),
             StackValue::Float { value } => StackValue::Bool {
-                value: truncate_biguint_to_f64(&val_a.to_biguint().unwrap()) < value,
+                value: (val_a as f64) < value,
             },
             StackValue::Object { value: _} => panic!("Cannot do math with objects.")
         },
@@ -239,8 +229,8 @@ pub fn less_than(a: StackValue, b: StackValue) -> StackValue {
         StackValue::ARRAY { value: _ } => panic!("Cannot do comparisons with arrays"),
         StackValue::Float { value: val_a } => match b {
             StackValue::Bool { value: _ } => panic!("Cannot do comparison with bool"),
-            StackValue::BIGINT { value } => StackValue::Bool {
-                value: val_a < truncate_biguint_to_f64(&value.to_biguint().unwrap()),
+            StackValue::Int { value } => StackValue::Bool {
+                value: val_a  < value as f64 ,
             },
             StackValue::Float { value } => StackValue::Bool {
                 value: val_a < value,
@@ -257,21 +247,21 @@ pub fn larger_than(a: StackValue, b: StackValue) -> StackValue {
             StackValue::Bool { value } => StackValue::Bool {
                 value: val_a > value,
             },
-            StackValue::BIGINT { value: _ } => panic!("Cannot compare MAGICINT with Bool"),
+            StackValue::Int { value: _ } => panic!("Cannot compare MAGICINT with Bool"),
             StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
             StackValue::String { value: _ } => panic!("Cannot compare MAGICINT with String"),
             StackValue::Float { value: _ } => panic!("Cannot compare Bool and Float"),
             StackValue::Object { value: _} => panic!("Cannot do math with objects.")
         },
-        StackValue::BIGINT { value: val_a } => match b {
+        StackValue::Int { value: val_a } => match b {
             StackValue::Bool { value: _ } => panic!("Cannot compare MAGICINT with Bool"),
-            StackValue::BIGINT { value } => StackValue::Bool {
+            StackValue::Int { value } => StackValue::Bool {
                 value: val_a > value,
             },
             StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
             StackValue::String { value: _ } => panic!("Cannot compare MAGICINT with String"),
             StackValue::Float { value } => StackValue::Bool {
-                value: truncate_biguint_to_f64(&val_a.to_biguint().unwrap()) > value,
+                value: val_a as f64 > value,
             },
             StackValue::Object { value: _} => panic!("Cannot do math with objects.")
         },
@@ -279,8 +269,8 @@ pub fn larger_than(a: StackValue, b: StackValue) -> StackValue {
         StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
         StackValue::Float { value: val_a } => match b {
             StackValue::Bool { value: _ } => panic!("Cannot do comparison with bool"),
-            StackValue::BIGINT { value } => StackValue::Bool {
-                value: val_a > truncate_biguint_to_f64(&value.to_biguint().unwrap()),
+            StackValue::Int { value } => StackValue::Bool {
+                value: val_a > value as f64,
             },
             StackValue::Float { value } => StackValue::Bool {
                 value: val_a > value,
@@ -298,21 +288,21 @@ pub fn less_or_eq(a: StackValue, b: StackValue) -> StackValue {
             StackValue::Bool { value } => StackValue::Bool {
                 value: val_a <= value,
             },
-            StackValue::BIGINT { value: _ } => panic!("Cannot compare MAGICINT with Bool"),
+            StackValue::Int { value: _ } => panic!("Cannot compare MAGICINT with Bool"),
             StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
             StackValue::String { value: _ } => panic!("Cannot compare MAGICINT with String"),
             StackValue::Float { value: _ } => panic!("Cannot compare Bool and Float"),
             StackValue::Object { value: _ } => panic!("Cannot do math with objects.")
         },
-        StackValue::BIGINT { value: val_a } => match b {
+        StackValue::Int { value: val_a } => match b {
             StackValue::Bool { value: _ } => panic!("Cannot compare MAGICINT with Bool"),
-            StackValue::BIGINT { value } => StackValue::Bool {
+            StackValue::Int { value } => StackValue::Bool {
                 value: val_a <= value,
             },
             StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
             StackValue::String { value: _ } => panic!("Cannot compare MAGICINT with String"),
             StackValue::Float { value } => StackValue::Bool {
-                value: truncate_biguint_to_f64(&val_a.to_biguint().unwrap()) <= value,
+                value: val_a as f64 <= value,
             },
             StackValue::Object { value: _} => panic!("Cannot do math with objects.")
         },
@@ -320,8 +310,8 @@ pub fn less_or_eq(a: StackValue, b: StackValue) -> StackValue {
         StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
         StackValue::Float { value: val_a } => match b {
             StackValue::Bool { value: _ } => panic!("Cannot do comparison with bool"),
-            StackValue::BIGINT { value } => StackValue::Bool {
-                value: val_a <= truncate_biguint_to_f64(&value.to_biguint().unwrap()),
+            StackValue::Int { value } => StackValue::Bool {
+                value: val_a <= value as f64,
             },
             StackValue::Float { value } => StackValue::Bool {
                 value: val_a <= value,
@@ -339,22 +329,22 @@ pub fn larger_or_eq(a: StackValue, b: StackValue) -> StackValue {
             StackValue::Bool { value } => StackValue::Bool {
                 value: val_a >= value,
             },
-            StackValue::BIGINT { value: _ } => panic!("Cannot compare MAGICINT with Bool"),
+            StackValue::Int { value: _ } => panic!("Cannot compare MAGICINT with Bool"),
             StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
             StackValue::String { value: _ } => panic!("Cannot compare MAGICINT with String"),
             StackValue::Float { value: _ } => panic!("Cannot compare Bool and Float"),
             StackValue::Object { value: _} => panic!("Cannot do math with objects.")
         },
         StackValue::Object { value: _} => panic!("Cannot do math with objects."),
-        StackValue::BIGINT { value: val_a } => match b {
+        StackValue::Int { value: val_a } => match b {
             StackValue::Bool { value: _ } => panic!("Cannot compare MAGICINT with Bool"),
-            StackValue::BIGINT { value } => StackValue::Bool {
+            StackValue::Int { value } => StackValue::Bool {
                 value: val_a >= value,
             },
             StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
             StackValue::String { value: _ } => panic!("Cannot compare MAGICINT with String"),
             StackValue::Float { value } => StackValue::Bool {
-                value: truncate_biguint_to_f64(&val_a.to_biguint().unwrap()) >= value,
+                value: val_a as f64 >= value,
             },
             StackValue::Object { value: _} => panic!("Cannot do math with objects.")
         },
@@ -362,8 +352,8 @@ pub fn larger_or_eq(a: StackValue, b: StackValue) -> StackValue {
         StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
         StackValue::Float { value: val_a } => match b {
             StackValue::Bool { value: _ } => panic!("Cannot do comparison with bool"),
-            StackValue::BIGINT { value } => StackValue::Bool {
-                value: val_a >= truncate_biguint_to_f64(&value.to_biguint().unwrap()),
+            StackValue::Int { value } => StackValue::Bool {
+                value: val_a >= value as f64,
             },
             StackValue::Float { value } => StackValue::Bool {
                 value: val_a >= value,
@@ -380,16 +370,16 @@ pub fn not_eq(a: StackValue, b: StackValue) -> StackValue {
             StackValue::Bool { value } => StackValue::Bool {
                 value: val_a != value,
             },
-            StackValue::BIGINT { value: _ } => panic!("Cannot compare MAGICINT with Bool"),
+            StackValue::Int { value: _ } => panic!("Cannot compare MAGICINT with Bool"),
             StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
             StackValue::String { value: _ } => panic!("Cannot compare MAGICINT with String"),
             StackValue::Float { value: _ } => panic!("Cannot compare Float with Bool"),
             StackValue::Object { value: _} => panic!("Cannot do math with objects.")
         },
-        StackValue::BIGINT { value: val_a } => match b {
+        StackValue::Int { value: val_a } => match b {
             
             StackValue::Bool { value: _ } => panic!("Cannot compare MAGICINT with Bool"),
-            StackValue::BIGINT { value } => StackValue::Bool {
+            StackValue::Int { value } => StackValue::Bool {
                 value: val_a != value,
             },
             StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
@@ -397,7 +387,7 @@ pub fn not_eq(a: StackValue, b: StackValue) -> StackValue {
             StackValue::Float { value } => {
                 if value.trunc() == value {
                     StackValue::Bool {
-                        value: val_a != BigInt::from(value as i64),
+                        value: val_a != value as i64,
                     }
                 } else {
                     StackValue::Bool { value: true }
@@ -407,7 +397,7 @@ pub fn not_eq(a: StackValue, b: StackValue) -> StackValue {
         },
         StackValue::String { value: val_a } => match b {
             StackValue::Bool { value: _ } => panic!("Cannot compare String with Bool"),
-            StackValue::BIGINT { value: _ } => panic!("Cannot compare String with BIGINT"),
+            StackValue::Int { value: _ } => panic!("Cannot compare String with Int"),
             StackValue::String { value } => StackValue::Bool {
                 value: val_a != value,
             },
@@ -418,10 +408,10 @@ pub fn not_eq(a: StackValue, b: StackValue) -> StackValue {
         StackValue::ARRAY { value: _ } => panic!("Cannot do addition with arrays"),
         StackValue::Float { value: value_a } => match b {
             StackValue::Bool { value: _ } => panic!("Cannot compare Float with Bool"),
-            StackValue::BIGINT { value } => {
+            StackValue::Int { value } => {
                 if value_a.trunc() == value_a {
                     StackValue::Bool {
-                        value: value != BigInt::from(value_a as i64),
+                        value: value != value_a as i64,
                     }
                 } else {
                     StackValue::Bool { value: false }

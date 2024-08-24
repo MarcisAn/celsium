@@ -1,7 +1,7 @@
 
 use crate::module::FunctionSignature;
 use crate::{Scope, SpecialFunctions};
-use crate::{ module::VISIBILITY, BINOP, BuiltinTypes, OPTCODE };
+use crate::{ module::VISIBILITY, BINOP, OPTCODE };
 mod array;
 
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
@@ -15,11 +15,17 @@ impl Block {
     pub fn new(scope: Scope) -> Block {
         Block { bytecode: vec![], scope }
     }
-    pub fn load_const(&mut self, data_type: BuiltinTypes, value: &str) {
-        self.bytecode.push(OPTCODE::LoadConst {
-            data: value.to_owned(),
-            data_type,
-        });
+    pub fn load_int(&mut self, value: i64){
+        self.bytecode.push(OPTCODE::LoadInt { value });
+    }
+    pub fn load_bool(&mut self, value: bool){
+        self.bytecode.push(OPTCODE::LoadBool { value });
+    }
+    pub fn load_string(&mut self, value: &str){
+        self.bytecode.push(OPTCODE::LoadString { value: value.to_string() });
+    }
+    pub fn load_float(&mut self, value: f64){
+        self.bytecode.push(OPTCODE::LoadFloat { value });
     }
     pub fn binop(&mut self, operator: BINOP) {
         self.bytecode.push(match operator {
