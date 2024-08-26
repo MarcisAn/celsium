@@ -17,6 +17,22 @@ impl TypeStack {
     pub fn pop(&mut self) -> Option<BuiltinTypes> {
         self.stack.pop_back()
     }
+    pub fn pop_multiple(&mut self, count: usize) -> Option<Vec<BuiltinTypes>>{
+        let mut result: Vec<BuiltinTypes> = vec![];
+        let mut counter = 0;
+        while counter < count{
+            let popped = self.stack.pop_back();
+            if popped.is_some(){
+                result.push(popped.unwrap());
+            }
+            else{
+                return None;
+            }
+            counter += 1;
+        }
+        return Some(result);
+
+    }
     pub fn peek(self) -> Option<BuiltinTypes>{
         self.stack.back().cloned()
     }

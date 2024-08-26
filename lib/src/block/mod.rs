@@ -103,22 +103,9 @@ impl Block {
             id
         });
     }
-    pub fn define_object(
-        &mut self,
-        id: usize,
-    ) {
-        self.bytecode.push(OPTCODE::DefineObject {
-            id,
-        });
-    }
-    pub fn create_object(&mut self, field_names: Vec<String>){
-
-        self.bytecode.push(OPTCODE::CreateObject { field_names });
-    }
     pub fn return_from_function(&mut self) {
         self.bytecode.push(OPTCODE::ReturnFromFunction);
     }
-    
     pub fn assign_variable(&mut self, id: usize) {
         self.bytecode.push(OPTCODE::AssignVar { id })
     }
@@ -131,9 +118,6 @@ impl Block {
     pub fn add_blocks_bytecode(&mut self, block: Block){
         let mut other = block.bytecode;
         self.bytecode.append(&mut other);
-    }
-    pub fn get_object_field(&mut self, field_name: String) {
-        self.bytecode.push(OPTCODE::GetObjectField { field_name });
     }
     pub fn push_to_testing_stack(&mut self, duplicate_stackvalue: bool) {
         self.bytecode.push(OPTCODE::PushToTestingStack{duplicate_stackvalue});
