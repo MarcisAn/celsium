@@ -72,6 +72,15 @@ pub enum OPTCODE {
     DefineVar {
         id: usize,
     },
+    DefineObject {
+        id: usize,
+    },
+    CreateObject {
+        field_names: Vec<String>,
+    },
+    GetObjectField {
+        field_name: String,
+    },
     DefineArray {
         id: usize,
         init_values_count: usize,
@@ -101,4 +110,3 @@ pub enum OPTCODE {
         duplicate_stackvalue: bool,
     },
 }
-

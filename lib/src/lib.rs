@@ -136,6 +136,11 @@ impl CelsiumProgram {
                 OPTCODE::And => vm.aritmethics("and"),
                 OPTCODE::Xor => vm.aritmethics("xor"),
                 OPTCODE::DefineVar { id } => vm.define_var(*id),
+                OPTCODE::DefineObject { id } => {
+                    let object = vm.pop();
+                    let _ = vm.variables.insert(*id, Variable { id: *id, value: object });
+                }
+                OPTCODE::GetObjectField { field_name } => vm.get_object_field(field_name),
                 OPTCODE::LoadVar { id } => vm.load_var(*id),
                 OPTCODE::AssignVar { id } => vm.assign_var(*id),
                 OPTCODE::DefineArray { id, init_values_count } => {
@@ -189,6 +194,15 @@ impl CelsiumProgram {
                 OPTCODE::AssignAtArrayIndex { id } => vm.set_at_array(*id),
                 OPTCODE::SimpleLoop { body_block } =>
                     vm.simple_loop(self, body_block.bytecode.clone()),
+                OPTCODE::CreateObject { field_names } => {
+                    let mut fields = vec![];
+                    let mut field_names_reversed = field_names.clone();
+                    field_names_reversed.reverse();
+                    for fieldname in field_names_reversed {
+                        fields.push(ObjectField { name: fieldname.to_string(), value: vm.pop() });
+                    }
+                    vm.push_stackvalue(StackValue::Object { value: fields.clone() })
+                },
                 OPTCODE::LoadInt { value } => vm.push_stackvalue(StackValue::Int { value: *value }),
                 OPTCODE::LoadBool { value } => vm.push_stackvalue(StackValue::Bool { value: *value }),
                 OPTCODE::LoadString { value } => vm.push_stackvalue(StackValue::String { value: value.to_string() }),
