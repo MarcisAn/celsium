@@ -1,6 +1,14 @@
 use std::collections::LinkedList;
 use crate::{ module::FuncArg, ObjectFieldType, Scope, BuiltinTypes };
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct CompileTimeVariable {
+    pub id: usize,
+    pub name: String,
+    pub data_type: BuiltinTypes,
+    pub scope: Scope,
+    pub is_exported: bool,
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CompileTimeImport {
@@ -52,6 +60,7 @@ pub struct CompileTimeHelper {
     pub source_file_paths: Vec<String>,
     pub current_file: usize,
     pub defined_functions: Vec<CompileTimeFunction>,
+    pub defined_variables: Vec<CompileTimeVariable>,
     pub defined_arrays: Vec<CompileTimeArray>,
     pub defined_object_definitions: Vec<ObjectDefinitionDefinition>,
     pub defined_objects: Vec<CompileTimeObject>,
@@ -67,6 +76,7 @@ impl CompileTimeHelper {
             source_file_paths: vec![path.clone()],
             current_file: 0,
             defined_functions: vec![],
+            defined_variables: vec![],
             defined_arrays: vec![],
             definition_counter: 0,
             imports: vec![],
@@ -146,6 +156,44 @@ impl CompileTimeHelper {
         }
         None
     }
+    pub fn def_var(
+        &mut self,
+        name: String,
+        data_type: BuiltinTypes,
+        scope: Scope,
+        is_exported: bool
+    ) -> Result<usize, &str> {
+        let to_be_defined = CompileTimeVariable {
+            name,
+            data_type,
+            scope: scope.clone(),
+            id: self.definition_counter,
+            is_exported,
+        };
+        for def in &self.defined_variables {
+            if def.name == to_be_defined.name && def.scope == to_be_defined.scope {
+                return Err("already_defined");
+            }
+        }
+        for def in &self.defined_objects {
+            if def.name == to_be_defined.name && def.scope == to_be_defined.scope {
+                return Err("already_defined");
+            }
+        }
+        for def in &self.defined_arrays {
+            if def.name == to_be_defined.name && def.scope == to_be_defined.scope {
+                return Err("already_defined");
+            }
+        }
+        for import in &self.imports {
+            if import.name == to_be_defined.name && import.imported_into == scope.module_path {
+                return Err("already_imported");
+            }
+        }
+        self.defined_variables.push(to_be_defined);
+        self.definition_counter += 1;
+        return Ok(self.definition_counter - 1);
+    }
     pub fn def_object(
         &mut self,
         name: String,
@@ -160,6 +208,11 @@ impl CompileTimeHelper {
             scope: scope.clone(),
             is_exported,
         };
+        for def in &self.defined_variables {
+            if def.name == object.name && def.scope == object.scope {
+                return Err("already_defined");
+            }
+        }
         for def in &self.defined_objects {
             if def.name == object.name && def.scope == object.scope {
                 return Err("already_defined");
@@ -188,6 +241,11 @@ impl CompileTimeHelper {
         None
     }
     pub fn get_var_type(&mut self, var_id: usize) -> Option<BuiltinTypes> {
+        for var in self.defined_variables.clone() {
+            if var.id == var_id {
+                return Some(var.data_type);
+            }
+        }
         for var in self.defined_objects.clone() {
             if var.id == var_id {
                 return Some(var.data_type);

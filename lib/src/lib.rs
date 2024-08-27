@@ -1,5 +1,4 @@
 pub mod bytecode;
-pub mod stores;
 use block::Block;
 use bytecode::{ BINOP, OPTCODE };
 use module::Function;
