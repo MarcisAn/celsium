@@ -38,6 +38,6 @@ pub enum VISIBILITY {
 }
 #[derive(Debug, Clone)]
 pub struct Function {
-    pub(crate) signature: FunctionSignature,
-    pub(crate) body: Block,
+    pub signature: FunctionSignature,
+    pub body: Block,
 }

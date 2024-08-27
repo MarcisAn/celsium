@@ -10,7 +10,7 @@ extern crate js_sys;
 pub mod compiletime_helper;
 pub mod block;
 pub mod module;
-mod vm;
+pub mod vm;
 pub mod typestack;
 use vm::vm::Variable;
 use vm::vm::VM;
