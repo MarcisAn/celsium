@@ -1,3 +1,4 @@
+pub mod bytecode_parser;
 pub mod bytecode;
 use block::Block;
 use bytecode::{ BINOP, OPTCODE };
@@ -30,13 +31,13 @@ extern "C" {
     fn wasm_print(s: &str);
     async fn wasm_input() -> JsValue;
 }
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord,serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Deserialize, serde::Serialize)]
 pub struct ObjectFieldType {
     pub name: String,
     pub data_type: BuiltinTypes,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord,serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Deserialize, serde::Serialize)]
 pub enum BuiltinTypes {
     Int,
     Bool,
@@ -44,11 +45,13 @@ pub enum BuiltinTypes {
     Object {
         fields: Vec<ObjectFieldType>,
     },
-    Array {element_type: Box<BuiltinTypes>},
+    Array {
+        element_type: Box<BuiltinTypes>,
+    },
     Float,
 }
 
-#[derive(Clone, Debug,serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub enum SpecialFunctions {
     Print {
         newline: bool,
@@ -58,10 +61,10 @@ pub enum SpecialFunctions {
 }
 pub struct CelsiumProgram {
     main_block: Block,
-    functions: Vec<Function>
+    functions: Vec<Function>,
 }
 
-#[derive(Debug, Clone, PartialEq,serde::Deserialize, serde::Serialize)]
+#[derive(Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
 pub struct Scope {
     pub ast_id: usize,
     pub module_path: String,
@@ -80,16 +83,19 @@ impl CelsiumProgram {
         CelsiumProgram { main_block, functions }
     }
 
-
-
     pub fn run_program(&mut self) -> Vec<StackValue> {
         let global_bytecode: Vec<OPTCODE> = self.main_block.bytecode.clone();
         let mut vm = VM::new();
 
         self.run(&mut vm, &global_bytecode);
-        let json_bytecode = serde_json::to_string(&global_bytecode).unwrap();
-        println!("{}", json_bytecode);
+
         return vm.testing_stack;
+    }
+
+    pub fn get_bytecode(mut self) -> String {
+        let global_bytecode: Vec<OPTCODE> = self.main_block.bytecode.clone();
+        let json_bytecode = serde_json::to_string(&global_bytecode).unwrap();
+        json_bytecode
     }
 
     fn run(&mut self, vm: &mut VM, bytecode: &Vec<OPTCODE>) {
@@ -98,8 +104,8 @@ impl CelsiumProgram {
             let optcode = &bytecode[index as usize];
             //println!("running optcode {:?}", optcode);
             match optcode {
-                OPTCODE::PushToTestingStack{duplicate_stackvalue} => vm.push_to_testing_stack(*duplicate_stackvalue),
-                OPTCODE::LoadConst { data_type, data } => vm.push(&data_type, &data),
+                OPTCODE::PushToTestingStack { duplicate_stackvalue } =>
+                    vm.push_to_testing_stack(*duplicate_stackvalue),
                 OPTCODE::CallFunction { name } => {
                     vm.call_function(name, self);
                 }
@@ -200,15 +206,17 @@ impl CelsiumProgram {
                     for fieldname in field_names_reversed {
                         fields.push(ObjectField { name: fieldname.to_string(), value: vm.pop() });
                     }
-                    vm.push_stackvalue(StackValue::Object { value: fields.clone() })
-                },
+                    vm.push_stackvalue(StackValue::Object { value: fields.clone() });
+                }
                 OPTCODE::LoadInt { value } => vm.push_stackvalue(StackValue::Int { value: *value }),
-                OPTCODE::LoadBool { value } => vm.push_stackvalue(StackValue::Bool { value: *value }),
-                OPTCODE::LoadString { value } => vm.push_stackvalue(StackValue::String { value: value.to_string() }),
-                OPTCODE::LoadFloat { value } => vm.push_stackvalue(StackValue::Float { value: *value }),
+                OPTCODE::LoadBool { value } =>
+                    vm.push_stackvalue(StackValue::Bool { value: *value }),
+                OPTCODE::LoadString { value } =>
+                    vm.push_stackvalue(StackValue::String { value: value.to_string() }),
+                OPTCODE::LoadFloat { value } =>
+                    vm.push_stackvalue(StackValue::Float { value: *value }),
             }
             index += 1;
         }
     }
 }
-

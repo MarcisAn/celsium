@@ -20,10 +20,6 @@ pub enum BINOP {
 
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub enum OPTCODE {
-    LoadConst {
-        data_type: BuiltinTypes,
-        data: String,
-    },
     LoadInt {
         value: i64
     },
