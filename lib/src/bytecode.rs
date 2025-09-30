@@ -1,4 +1,4 @@
-use crate::{ block::Block, BuiltinTypes };
+use crate::{ block::{Block, TextSpan}, BuiltinTypes };
 
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub enum BINOP {
@@ -34,6 +34,7 @@ pub enum OPTCODE {
     },
     LoadVar {
         id: usize,
+        span: TextSpan
     },
     CallFunction {
         name: String,
@@ -42,12 +43,12 @@ pub enum OPTCODE {
         bytecode: Vec<OPTCODE>,
     },
     ReturnFromFunction,
-    Add,
+    Add {span: TextSpan},
     Subtract,
     Multiply,
     Divide,
     Remainder,
-    LessThan,
+    LessThan{span: TextSpan},
     LargerThan,
     LessOrEq,
     LargerOrEq,
@@ -58,6 +59,8 @@ pub enum OPTCODE {
     Xor,
     JumpIfFalse {
         steps: usize,
+        jump_target_line: usize,
+        jump_target_column: usize
     },
     Jump {
         steps: usize,
@@ -77,8 +80,7 @@ pub enum OPTCODE {
     GetObjectField {
         field_name: String,
     },
-    DefineArray {
-        id: usize,
+    CreateArray {
         init_values_count: usize,
     },
     GetFromArray {

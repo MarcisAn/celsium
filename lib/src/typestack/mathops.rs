@@ -18,7 +18,7 @@ impl TypeStack{
                         return None;
                     }
                     BuiltinTypes::Float => Some(BuiltinTypes::Float),
-                    BuiltinTypes::Array { element_type: _ } => None,
+                    BuiltinTypes::Array { element_type: _, length:_ } => None,
                 }
             BuiltinTypes::Bool => None,
             BuiltinTypes::String =>
@@ -32,7 +32,7 @@ impl TypeStack{
                         return None;
                     }
                     BuiltinTypes::Float => Some(BuiltinTypes::String),
-                    BuiltinTypes::Array { element_type: _ } => None,
+                    BuiltinTypes::Array { element_type: _,length:_ } => None,
                 }
             BuiltinTypes::Object { fields: _ } => None,
             BuiltinTypes::Float =>
@@ -46,9 +46,9 @@ impl TypeStack{
                         return None;
                     }
                     BuiltinTypes::Float => Some(BuiltinTypes::Float),
-                    BuiltinTypes::Array { element_type: _ } => None,
+                    BuiltinTypes::Array { element_type: _,length:_ } => None,
                 }
-            BuiltinTypes::Array { element_type: _ } => None,
+            BuiltinTypes::Array { element_type: _,length:_ } => None,
         };
         return result;
     }
@@ -69,12 +69,12 @@ impl TypeStack{
                         return None;
                     }
                     BuiltinTypes::Float => Some(BuiltinTypes::Float),
-                    BuiltinTypes::Array { element_type: _ } => None,
+                    BuiltinTypes::Array { element_type: _,length:_ } => None,
                 }
             BuiltinTypes::Bool => None,
             BuiltinTypes::String => None,
             BuiltinTypes::Object { fields: _ } => None,
-            BuiltinTypes::Array { element_type: _ } => None,
+            BuiltinTypes::Array { element_type: _,length:_ } => None,
 
             BuiltinTypes::Float =>
                 match b {
@@ -89,7 +89,7 @@ impl TypeStack{
                         return None;
                     }
                     BuiltinTypes::Float => Some(BuiltinTypes::Float),
-                    BuiltinTypes::Array { element_type: _ } => None,
+                    BuiltinTypes::Array { element_type: _,length:_ } => None,
                 }
         };
         return result;
@@ -111,7 +111,7 @@ impl TypeStack{
                         return None;
                     }
                     BuiltinTypes::Float => Some(BuiltinTypes::Bool),
-                    BuiltinTypes::Array { element_type: _ } => None,
+                    BuiltinTypes::Array { element_type: _,length:_ } => None,
                 }
             BuiltinTypes::Bool =>
                 match b {
@@ -128,7 +128,7 @@ impl TypeStack{
                     BuiltinTypes::Float => {
                         return None;
                     }
-                    BuiltinTypes::Array { element_type: _ } => None,
+                    BuiltinTypes::Array { element_type: _,length:_ } => None,
                 }
             BuiltinTypes::String => None,
             BuiltinTypes::Object { fields: _ } => None,
@@ -145,9 +145,9 @@ impl TypeStack{
                         return None;
                     }
                     BuiltinTypes::Float => Some(BuiltinTypes::Bool),
-                    BuiltinTypes::Array { element_type: _ } => None,
+                    BuiltinTypes::Array { element_type: _,length:_ } => None,
                 }
-            BuiltinTypes::Array { element_type: _ } => None,
+            BuiltinTypes::Array { element_type: _,length:_ } => None,
         };
         return result;
     }

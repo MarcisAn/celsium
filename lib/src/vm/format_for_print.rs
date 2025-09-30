@@ -1,19 +1,19 @@
 use super::StackValue;
 
-pub fn format_for_print(value: StackValue, newline: bool) -> String {
+pub fn format_for_print(value: &StackValue, newline: bool) -> String {
     match value {
         StackValue::Bool { value } => {
             if !newline {
-                if value {
-                    return "1".to_owned();
+                if *value {
+                    return "PATIESS".to_owned();
                 } else {
-                    return "0".to_owned();
+                    return "NEPATIESS".to_owned();
                 }
             } else {
-                if value {
-                    return "1\n".to_owned();
+                if *value {
+                    return "PATIESS\n".to_owned();
                 } else {
-                    return "0\n".to_owned();
+                    return "NEPATIESS\n".to_owned();
                 }
             }
         }
@@ -31,11 +31,11 @@ pub fn format_for_print(value: StackValue, newline: bool) -> String {
                 return format!("{}\n", value);
             }
         }
-        StackValue::ARRAY { value } => {
+        StackValue::Array { value } => {
             let mut printable_str: String = "[".to_string();
             let mut counter = 0;
-            for i in &value {
-                let formated: String = format_for_print(i.clone(), false).as_str().to_owned();
+            for i in value {
+                let formated: String = format_for_print(&i.clone(), false).as_str().to_owned();
                 match i {
                     StackValue::String { value: _ } => {
                         printable_str = printable_str + "\"" + &formated + "\"";
@@ -65,7 +65,7 @@ pub fn format_for_print(value: StackValue, newline: bool) -> String {
                 printable_object += &format!(
                     "   {}: {}\n",
                     field.name,
-                    format_for_print(field.value, false)
+                    format_for_print(&field.value, false)
                 );
                 if &(index + 2) == length {
                     //printable_object += "\n";

@@ -66,6 +66,14 @@ pub struct CompileTimeHelper {
     pub defined_objects: Vec<CompileTimeObject>,
     definition_counter: usize,
     pub imports: Vec<CompileTimeImport>,
+    pub compile_time_errors: Vec<CompilerError>
+}
+
+#[derive(Clone, Debug)]
+pub struct CompilerError{
+    pub message: String,
+    pub line: Option<usize>,
+    pub file: String
 }
 
 impl CompileTimeHelper {
@@ -82,6 +90,7 @@ impl CompileTimeHelper {
             imports: vec![],
             defined_object_definitions: vec![],
             defined_objects: vec![],
+            compile_time_errors: vec![]
         }
     }
     pub fn define_struct(&mut self, name: String, fields: Vec<ObjectFieldType>) {
@@ -253,7 +262,7 @@ impl CompileTimeHelper {
         }
         for var in self.defined_arrays.clone() {
             if var.id == var_id {
-                return Some(BuiltinTypes::Array { element_type: Box::new(var.data_type) });
+                return Some(BuiltinTypes::Array { element_type: Box::new(var.data_type), length: Some(var.length) });
             }
         }
         None

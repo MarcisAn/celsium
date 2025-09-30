@@ -1,5 +1,6 @@
 pub mod bytecode_parser;
 pub mod bytecode;
+
 use block::Block;
 use bytecode::{ BINOP, OPTCODE };
 use module::Function;
@@ -47,6 +48,7 @@ pub enum BuiltinTypes {
     },
     Array {
         element_type: Box<BuiltinTypes>,
+        length: Option<usize>,
     },
     Float,
 }
@@ -58,6 +60,7 @@ pub enum SpecialFunctions {
     },
     Input,
     Random,
+    Length,
 }
 pub struct CelsiumProgram {
     main_block: Block,
@@ -102,7 +105,6 @@ impl CelsiumProgram {
         let mut index: isize = 0;
         while index < (bytecode.len() as isize) {
             let optcode = &bytecode[index as usize];
-            //println!("running optcode {:?}", optcode);
             match optcode {
                 OPTCODE::PushToTestingStack { duplicate_stackvalue } =>
                     vm.push_to_testing_stack(*duplicate_stackvalue),
@@ -115,13 +117,26 @@ impl CelsiumProgram {
                 OPTCODE::CallFunctionWithBytecode { bytecode: _ } => {
                     panic!();
                 }
-                OPTCODE::Add => vm.aritmethics("+"),
+                OPTCODE::Add { span } => {
+                    vm.aritmethics("+");
+                    println!(
+                        "value:{} line:{} col:{}, span:{}",
+                        vm::format_for_print::format_for_print(
+                            &vm.stack.back().unwrap().clone(),
+                            false
+                        ),
+                        span.line,
+                        span.col_start,
+                        span.length
+                    );
+                }
                 OPTCODE::Subtract => vm.aritmethics("-"),
                 OPTCODE::Multiply => vm.aritmethics("*"),
                 OPTCODE::Divide => vm.aritmethics("/"),
                 OPTCODE::Remainder => vm.aritmethics("%"),
-                OPTCODE::JumpIfFalse { steps } => {
+                OPTCODE::JumpIfFalse { steps, jump_target_column, jump_target_line } => {
                     if vm.must_jump() {
+                        println!("line: {}, col: {}", jump_target_line, jump_target_column);
                         index += *steps as isize;
                     }
                 }
@@ -131,7 +146,19 @@ impl CelsiumProgram {
                 OPTCODE::JumpBack { steps } => {
                     index -= *steps as isize;
                 }
-                OPTCODE::LessThan => vm.aritmethics("<"),
+                OPTCODE::LessThan { span } => {
+                    vm.aritmethics("<");
+                    println!(
+                        "value:{} line:{} col:{}, span:{}",
+                        vm::format_for_print::format_for_print(
+                            &vm.stack.back().unwrap().clone(),
+                            false
+                        ),
+                        span.line,
+                        span.col_start,
+                        span.length
+                    );
+                }
                 OPTCODE::LargerThan => vm.aritmethics(">"),
                 OPTCODE::LessOrEq => vm.aritmethics("<="),
                 OPTCODE::LargerOrEq => vm.aritmethics(">="),
@@ -146,16 +173,27 @@ impl CelsiumProgram {
                     let _ = vm.variables.insert(*id, Variable { id: *id, value: object });
                 }
                 OPTCODE::GetObjectField { field_name } => vm.get_object_field(field_name),
-                OPTCODE::LoadVar { id } => vm.load_var(*id),
+                OPTCODE::LoadVar { id, span } => {
+                    vm.load_var(*id);
+                    println!(
+                        "value:{} line:{} col:{}, span:{}",
+                        vm::format_for_print::format_for_print(
+                            &vm.stack.back().unwrap().clone(),
+                            false
+                        ),
+                        span.line,
+                        span.col_start,
+                        span.length
+                    );
+                },
                 OPTCODE::AssignVar { id } => vm.assign_var(*id),
-                OPTCODE::DefineArray { id, init_values_count } => {
+                OPTCODE::CreateArray { init_values_count } => {
                     let mut init_values: Vec<StackValue> = vec![];
                     for _ in 0..*init_values_count {
                         init_values.push(vm.pop());
                     }
                     init_values.reverse();
-                    vm.stack.push_back(StackValue::ARRAY { value: init_values });
-                    vm.define_var(*id);
+                    vm.stack.push_back(StackValue::Array { value: init_values });
                 }
                 OPTCODE::GetFromArray { id } => vm.get_from_array(*id),
                 OPTCODE::PushToArray { id } => vm.push_to_array(*id),
@@ -169,8 +207,6 @@ impl CelsiumProgram {
                             print!("{}", printable);
                         }
                         SpecialFunctions::Input => {
-                            #[cfg(target_family = "wasm")]
-                            vm.push(&BuiltinTypes::String, &"asdfghjkl".to_string());
                             #[cfg(target_family = "wasm")]
                             async {
                                 let value = &wasm_input().await.as_string().unwrap();
@@ -194,6 +230,18 @@ impl CelsiumProgram {
                             vm.push_stackvalue(StackValue::Int {
                                 value,
                             });
+                        }
+                        SpecialFunctions::Length => {
+                            let value = vm.pop();
+                            let length_value = match value {
+                                StackValue::Bool { value } => 1,
+                                StackValue::Int { value } => value.to_string().len(),
+                                StackValue::Float { value } => value.to_string().len(),
+                                StackValue::String { value } => value.len(),
+                                StackValue::Array { value } => value.len(),
+                                StackValue::Object { value } => value.len(),
+                            };
+                            vm.push_stackvalue(StackValue::Int { value: length_value as i64 });
                         }
                     }
                 OPTCODE::AssignAtArrayIndex { id } => vm.set_at_array(*id),

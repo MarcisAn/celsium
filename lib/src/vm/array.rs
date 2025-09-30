@@ -17,7 +17,7 @@ pub fn get_from_array(&mut self, id: usize) {
     } else {
         let stackvalue = getter.unwrap().value.to_owned();
         match stackvalue {
-            StackValue::ARRAY { value } => {
+            StackValue::Array { value } => {
                 self.stack.push_back(value[index].clone());
             }
             _ => panic!("{} is not an array", getter.unwrap().id),
@@ -37,10 +37,10 @@ pub fn set_at_array(&mut self, id: usize) {
         panic!("Cound not found vairable named {}", id);
     } else {
         match getter.unwrap().value.to_owned() {
-            StackValue::ARRAY { mut value } => {
+            StackValue::Array { mut value } => {
                 let value_to_push = self.stack.pop_back().unwrap();
                 value[index] = value_to_push;
-                self.variables.get_mut(&id).unwrap().value = StackValue::ARRAY { value: value };
+                self.variables.get_mut(&id).unwrap().value = StackValue::Array { value: value };
             }
             _ => panic!("{} is not an array", getter.unwrap().id),
         }
@@ -54,7 +54,7 @@ pub fn push_to_array(&mut self, id: usize) {
         panic!("Cound not found vairable named {}", id);
     } else {
         match getter.unwrap().value.to_owned() {
-            StackValue::ARRAY { mut value } => {
+            StackValue::Array { mut value } => {
                 let value_to_push = self.stack.pop_back().unwrap();
                 value.push(value_to_push);
             }
@@ -69,7 +69,7 @@ pub fn get_array_length(&mut self, id: usize) {
         panic!("Cound not found vairable named {}", id);
     } else {
         match getter.unwrap().value.to_owned() {
-            StackValue::ARRAY { value } => {
+            StackValue::Array { value } => {
                 self.stack.push_back(StackValue::Int {
                     value: value.len() as i64,
                 });

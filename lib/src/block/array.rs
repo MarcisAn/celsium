@@ -3,10 +3,6 @@ use crate::bytecode::OPTCODE;
 use super::Block;
 
 impl Block {
-    pub fn define_array(&mut self, init_values_count: usize, id: usize) {
-        self.bytecode.push(OPTCODE::DefineArray { id, init_values_count })
-    }
-
     pub fn load_from_array(&mut self, id: usize) {
         self.bytecode.push(OPTCODE::GetFromArray { id })
     }

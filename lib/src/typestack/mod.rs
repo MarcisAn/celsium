@@ -2,6 +2,7 @@ use std::collections::LinkedList;
 mod mathops;
 use crate::{bytecode::BINOP, BuiltinTypes};
 
+#[derive(Debug, Clone)]
 pub struct TypeStack {
     stack: LinkedList<BuiltinTypes>,
 }
@@ -19,6 +20,9 @@ impl TypeStack {
     }
     pub fn peek(self) -> Option<BuiltinTypes>{
         self.stack.back().cloned()
+    }
+    pub fn peek_level(self, depth: usize) -> Option<BuiltinTypes> {
+        self.stack.iter().nth_back(depth).cloned()
     }
     pub fn binop(&mut self, binop: BINOP) -> Option<BuiltinTypes> {
         /*

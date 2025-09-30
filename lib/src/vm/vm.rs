@@ -44,7 +44,7 @@ impl VM {
             BuiltinTypes::Object{ fields: _} => panic!("object should not appear in bytecode"),
             BuiltinTypes::Float =>
                 self.stack.push_back(StackValue::Float { value: data.parse().unwrap() }),
-                            BuiltinTypes::Array { element_type } => todo!(),
+                            BuiltinTypes::Array { element_type: _, length: _ } => todo!(),
         }
     }
     pub fn push_stackvalue(&mut self, stackvalue: StackValue) {
@@ -85,7 +85,7 @@ impl VM {
         }
     }
     pub fn format_for_print(&mut self, newline: bool) -> String {
-        return format_for_print(self.stack.pop_back().unwrap(), newline);
+        return format_for_print(&self.stack.pop_back().unwrap(), newline);
     }
 
     pub fn must_jump(&mut self) -> bool {
