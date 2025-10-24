@@ -30,6 +30,7 @@ static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 extern "C" {
     fn alert(s: &str);
     fn wasm_print(s: &str);
+    fn code_replace(replace_with: &str, line: usize, column: usize, span: usize);
     async fn wasm_input() -> JsValue;
 }
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Deserialize, serde::Serialize)]
@@ -95,7 +96,7 @@ impl CelsiumProgram {
         return vm.testing_stack;
     }
 
-    pub fn get_bytecode(mut self) -> String {
+    pub fn get_bytecode(self) -> String {
         let global_bytecode: Vec<OPTCODE> = self.main_block.bytecode.clone();
         let json_bytecode = serde_json::to_string(&global_bytecode).unwrap();
         json_bytecode
@@ -119,12 +120,15 @@ impl CelsiumProgram {
                 }
                 OPTCODE::Add { span } => {
                     vm.aritmethics("+");
+                    let replace_value = vm::format_for_print::format_for_print(
+                        &vm.stack.back().unwrap().clone(),
+                        false
+                    );
+                    #[cfg(target_family = "wasm")]
+                    code_replace(&replace_value, span.line, span.col_start, span.length);
                     println!(
                         "value:{} line:{} col:{}, span:{}",
-                        vm::format_for_print::format_for_print(
-                            &vm.stack.back().unwrap().clone(),
-                            false
-                        ),
+                        replace_value,
                         span.line,
                         span.col_start,
                         span.length
@@ -185,7 +189,7 @@ impl CelsiumProgram {
                         span.col_start,
                         span.length
                     );
-                },
+                }
                 OPTCODE::AssignVar { id } => vm.assign_var(*id),
                 OPTCODE::CreateArray { init_values_count } => {
                     let mut init_values: Vec<StackValue> = vec![];
@@ -195,7 +199,7 @@ impl CelsiumProgram {
                     init_values.reverse();
                     vm.stack.push_back(StackValue::Array { value: init_values });
                 }
-                OPTCODE::GetFromArray { id } => vm.get_from_array(*id),
+                OPTCODE::GetFromArray => vm.get_from_array(),
                 OPTCODE::PushToArray { id } => vm.push_to_array(*id),
                 OPTCODE::GettArrayLength { id } => vm.get_array_length(*id),
                 OPTCODE::CallSpecialFunction { function } =>
