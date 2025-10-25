@@ -1,4 +1,4 @@
-use crate::{ block::{Block, TextSpan}, BuiltinTypes };
+use crate::block::{Block, TextSpan};
 
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub enum BINOP {

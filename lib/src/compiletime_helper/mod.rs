@@ -1,4 +1,3 @@
-use std::collections::LinkedList;
 use crate::{ module::FuncArg, ObjectFieldType, Scope, BuiltinTypes };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -55,7 +54,6 @@ pub struct CompileTimeObject {
 
 #[derive(Clone, Debug)]
 pub struct CompileTimeHelper {
-    pub stack: LinkedList<BuiltinTypes>,
     pub source_files: Vec<String>,
     pub source_file_paths: Vec<String>,
     pub current_file: usize,
@@ -66,20 +64,11 @@ pub struct CompileTimeHelper {
     pub defined_objects: Vec<CompileTimeObject>,
     definition_counter: usize,
     pub imports: Vec<CompileTimeImport>,
-    pub compile_time_errors: Vec<CompilerError>
-}
-
-#[derive(Clone, Debug)]
-pub struct CompilerError{
-    pub message: String,
-    pub line: Option<usize>,
-    pub file: String
 }
 
 impl CompileTimeHelper {
     pub fn new(source_file: String, path: String) -> CompileTimeHelper {
         CompileTimeHelper {
-            stack: LinkedList::new(),
             source_files: vec![source_file],
             source_file_paths: vec![path.clone()],
             current_file: 0,
@@ -90,7 +79,6 @@ impl CompileTimeHelper {
             imports: vec![],
             defined_object_definitions: vec![],
             defined_objects: vec![],
-            compile_time_errors: vec![]
         }
     }
     pub fn define_struct(&mut self, name: String, fields: Vec<ObjectFieldType>) {
@@ -124,12 +112,12 @@ impl CompileTimeHelper {
     pub fn import(&mut self, name: String, origin: String, imported_into: String) {
         self.imports.push(CompileTimeImport { name, origin, imported_into });
     }
-    pub fn push(&mut self, pushable_type: BuiltinTypes) {
-        self.stack.push_back(pushable_type);
-    }
-    pub fn pop(&mut self) -> Option<BuiltinTypes> {
-        self.stack.pop_back()
-    }
+    // pub fn push(&mut self, pushable_type: BuiltinTypes) {
+    //     self.stack.push_back(pushable_type);
+    // }
+    // pub fn pop(&mut self) -> Option<BuiltinTypes> {
+    //     self.stack.pop_back()
+    // }
     pub fn def_function(
         &mut self,
         name: String,
@@ -171,7 +159,7 @@ impl CompileTimeHelper {
         data_type: BuiltinTypes,
         scope: Scope,
         is_exported: bool
-    ) -> Result<usize, &str> {
+    ) -> Option<usize> {
         let to_be_defined = CompileTimeVariable {
             name,
             data_type,
@@ -181,27 +169,27 @@ impl CompileTimeHelper {
         };
         for def in &self.defined_variables {
             if def.name == to_be_defined.name && def.scope == to_be_defined.scope {
-                return Err("already_defined");
+                return None;
             }
         }
         for def in &self.defined_objects {
             if def.name == to_be_defined.name && def.scope == to_be_defined.scope {
-                return Err("already_defined");
+                return None;
             }
         }
         for def in &self.defined_arrays {
             if def.name == to_be_defined.name && def.scope == to_be_defined.scope {
-                return Err("already_defined");
+                return None;
             }
         }
         for import in &self.imports {
             if import.name == to_be_defined.name && import.imported_into == scope.module_path {
-                return Err("already_imported");
+                return None;
             }
         }
         self.defined_variables.push(to_be_defined);
         self.definition_counter += 1;
-        return Ok(self.definition_counter - 1);
+        return Some(self.definition_counter - 1);
     }
     pub fn def_object(
         &mut self,
@@ -209,7 +197,7 @@ impl CompileTimeHelper {
         scope: Scope,
         is_exported: bool,
         fields: Vec<ObjectFieldType>
-    ) -> Result<usize, &str> {
+    ) -> Option<usize> {
         let object: CompileTimeObject = CompileTimeObject {
             data_type: BuiltinTypes::Object { fields: fields },
             name,
@@ -219,27 +207,27 @@ impl CompileTimeHelper {
         };
         for def in &self.defined_variables {
             if def.name == object.name && def.scope == object.scope {
-                return Err("already_defined");
+                return None;
             }
         }
         for def in &self.defined_objects {
             if def.name == object.name && def.scope == object.scope {
-                return Err("already_defined");
+                return None;
             }
         }
         for def in &self.defined_arrays {
             if def.name == object.name && def.scope == object.scope {
-                return Err("already_defined");
+                return None;
             }
         }
         for import in &self.imports {
             if import.name == object.name && import.imported_into == scope.module_path {
-                return Err("already_imported");
+                return None;
             }
         }
         self.defined_objects.push(object);
         self.definition_counter += 1;
-        return Ok(self.definition_counter - 1);
+        return Some(self.definition_counter - 1);
     }
     pub fn get_object_if_exists(&mut self, name: &str) -> Option<CompileTimeObject> {
         for object in &self.defined_objects {
@@ -262,7 +250,10 @@ impl CompileTimeHelper {
         }
         for var in self.defined_arrays.clone() {
             if var.id == var_id {
-                return Some(BuiltinTypes::Array { element_type: Box::new(var.data_type), length: Some(var.length) });
+                return Some(BuiltinTypes::Array {
+                    element_type: Box::new(var.data_type),
+                    length: Some(var.length),
+                });
             }
         }
         None
@@ -297,5 +288,4 @@ impl CompileTimeHelper {
         }
         None
     }
-    
 }

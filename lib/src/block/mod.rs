@@ -1,6 +1,5 @@
-use crate::module::FunctionSignature;
 use crate::{ Scope, SpecialFunctions };
-use crate::{ module::VISIBILITY, BINOP, OPTCODE };
+use crate::{ BINOP, OPTCODE };
 mod array;
 
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]

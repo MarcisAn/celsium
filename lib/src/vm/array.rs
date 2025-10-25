@@ -1,5 +1,3 @@
-use num::BigInt;
-
 use super::{ vm::VM, StackValue };
 
 impl VM {

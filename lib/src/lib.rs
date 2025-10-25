@@ -238,7 +238,7 @@ impl CelsiumProgram {
                         SpecialFunctions::Length => {
                             let value = vm.pop();
                             let length_value = match value {
-                                StackValue::Bool { value } => 1,
+                                StackValue::Bool { value: _ } => 1,
                                 StackValue::Int { value } => value.to_string().len(),
                                 StackValue::Float { value } => value.to_string().len(),
                                 StackValue::String { value } => value.len(),
