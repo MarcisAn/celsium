@@ -126,13 +126,13 @@ impl CelsiumProgram {
                     );
                     #[cfg(target_family = "wasm")]
                     code_replace(&replace_value, span.line, span.col_start, span.length);
-                    println!(
-                        "value:{} line:{} col:{}, span:{}",
-                        replace_value,
-                        span.line,
-                        span.col_start,
-                        span.length
-                    );
+                    // println!(
+                    //     "value:{} line:{} col:{}, span:{}",
+                    //     replace_value,
+                    //     span.line,
+                    //     span.col_start,
+                    //     span.length
+                    // );
                 }
                 OPTCODE::Subtract => vm.aritmethics("-"),
                 OPTCODE::Multiply => vm.aritmethics("*"),
@@ -140,7 +140,7 @@ impl CelsiumProgram {
                 OPTCODE::Remainder => vm.aritmethics("%"),
                 OPTCODE::JumpIfFalse { steps, jump_target_column, jump_target_line } => {
                     if vm.must_jump() {
-                        println!("line: {}, col: {}", jump_target_line, jump_target_column);
+                        // println!("line: {}, col: {}", jump_target_line, jump_target_column);
                         index += *steps as isize;
                     }
                 }
@@ -152,16 +152,16 @@ impl CelsiumProgram {
                 }
                 OPTCODE::LessThan { span } => {
                     vm.aritmethics("<");
-                    println!(
-                        "value:{} line:{} col:{}, span:{}",
-                        vm::format_for_print::format_for_print(
-                            &vm.stack.back().unwrap().clone(),
-                            false
-                        ),
-                        span.line,
-                        span.col_start,
-                        span.length
-                    );
+                    // println!(
+                    //     "value:{} line:{} col:{}, span:{}",
+                    //     vm::format_for_print::format_for_print(
+                    //         &vm.stack.back().unwrap().clone(),
+                    //         false
+                    //     ),
+                    //     span.line,
+                    //     span.col_start,
+                    //     span.length
+                    // );
                 }
                 OPTCODE::LargerThan => vm.aritmethics(">"),
                 OPTCODE::LessOrEq => vm.aritmethics("<="),
@@ -179,16 +179,16 @@ impl CelsiumProgram {
                 OPTCODE::GetObjectField { field_name } => vm.get_object_field(field_name),
                 OPTCODE::LoadVar { id, span } => {
                     vm.load_var(*id);
-                    println!(
-                        "value:{} line:{} col:{}, span:{}",
-                        vm::format_for_print::format_for_print(
-                            &vm.stack.back().unwrap().clone(),
-                            false
-                        ),
-                        span.line,
-                        span.col_start,
-                        span.length
-                    );
+                    // println!(
+                    //     "value:{} line:{} col:{}, span:{}",
+                    //     vm::format_for_print::format_for_print(
+                    //         &vm.stack.back().unwrap().clone(),
+                    //         false
+                    //     ),
+                    //     span.line,
+                    //     span.col_start,
+                    //     span.length
+                    // );
                 }
                 OPTCODE::AssignVar { id } => vm.assign_var(*id),
                 OPTCODE::CreateArray { init_values_count } => {
