@@ -3,8 +3,8 @@ use crate::bytecode::OPTCODE;
 use super::Block;
 
 impl Block {
-    pub fn load_from_array(&mut self) {
-        self.bytecode.push(OPTCODE::GetFromArray {})
+    pub fn index(&mut self) {
+        self.bytecode.push(OPTCODE::GetIndex {})
     }
 
     pub fn assign_to_array(&mut self, id: usize) {

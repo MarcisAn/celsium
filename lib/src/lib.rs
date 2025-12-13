@@ -199,7 +199,7 @@ impl CelsiumProgram {
                     init_values.reverse();
                     vm.stack.push_back(StackValue::Array { value: init_values });
                 }
-                OPTCODE::GetFromArray => vm.get_from_array(),
+                OPTCODE::GetIndex => vm.get_index(),
                 OPTCODE::PushToArray { id } => vm.push_to_array(*id),
                 OPTCODE::GettArrayLength { id } => vm.get_array_length(*id),
                 OPTCODE::CallSpecialFunction { function } =>

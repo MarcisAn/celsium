@@ -1,19 +1,24 @@
+use std::ops::Index;
+
 use super::{ vm::VM, StackValue };
 
 impl VM {
-    pub fn get_from_array(&mut self) {
-        let index_stack = self.stack.pop_back().unwrap();
-        let index = match index_stack {
+    pub fn get_index(&mut self) {
+        let index_from_stack = self.stack.pop_back().unwrap();
+        let index = match index_from_stack {
             StackValue::Int { value } => value.to_string().parse::<usize>().unwrap(),
             _ => panic!("Array index is not an int"),
         };
-        let array_stack = self.stack.pop_back().unwrap();
-        let array = match array_stack {
-            StackValue::Array { value } => value,
-            _ => panic!("Atempto index non-array"),
+        let indexable_value_from_stack = self.stack.pop_back().unwrap();
+        let result = match indexable_value_from_stack {
+            StackValue::Array { value } => value[index].clone(),
+            StackValue::String { value } =>
+                StackValue::String {
+                    value: value.as_str().chars().nth(index).unwrap().to_string()
+                },
+            _ => panic!("Atempted index non-array"),
         };
-        self.stack.push_back(array[index].clone());
-
+        self.stack.push_back(result);
     }
     pub fn set_at_array(&mut self, id: usize) {
         let index_stack = self.stack.pop_back().unwrap();

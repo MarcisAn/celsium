@@ -83,7 +83,7 @@ pub enum OPTCODE {
     CreateArray {
         init_values_count: usize,
     },
-    GetFromArray,
+    GetIndex,
     AssignAtArrayIndex {
         id: usize,
     },
