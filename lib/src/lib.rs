@@ -138,7 +138,12 @@ impl CelsiumProgram {
                 OPTCODE::Multiply => vm.aritmethics("*"),
                 OPTCODE::Divide => vm.aritmethics("/"),
                 OPTCODE::Remainder => vm.aritmethics("%"),
-                OPTCODE::JumpIfFalse { steps, jump_target_column, jump_target_line } => {
+                OPTCODE::JumpIfFalse {
+                    steps,
+                    jump_target_column,
+                    jump_target_line,
+                    is_skipable,
+                } => {
                     if vm.must_jump() {
                         // println!("line: {}, col: {}", jump_target_line, jump_target_column);
                         index += *steps as isize;
@@ -268,6 +273,8 @@ impl CelsiumProgram {
                     vm.push_stackvalue(StackValue::String { value: value.to_string() }),
                 OPTCODE::LoadFloat { value } =>
                     vm.push_stackvalue(StackValue::Float { value: *value }),
+                OPTCODE::Break { span: _ } => todo!("Break should not appear in bytecode"),
+                OPTCODE::Continue { span: _ } => todo!("Continue should not appear in bytecode"),
             }
             index += 1;
         }

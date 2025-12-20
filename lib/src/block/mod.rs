@@ -58,7 +58,8 @@ impl Block {
         self.bytecode.push(OPTCODE::JumpIfFalse {
             steps: block_length,
             jump_target_column: jmp_target_column,
-            jump_target_line: jmp_target_line
+            jump_target_line: jmp_target_line,
+            is_skipable: false
         });
         for optcode in block.bytecode {
             self.bytecode.push(optcode);
@@ -71,7 +72,8 @@ impl Block {
         self.bytecode.push(OPTCODE::JumpIfFalse {
             steps: if_block_length + 1,
             jump_target_column: jmp_target_column,
-            jump_target_line: jmp_target_line
+            jump_target_line: jmp_target_line,
+            is_skipable: false
         });
         for optcode in if_block.bytecode {
             self.bytecode.push(optcode);
@@ -99,7 +101,8 @@ impl Block {
         self.bytecode.push(OPTCODE::JumpIfFalse {
             steps: block_length + 1,
             jump_target_column: jmp_target_column,
-            jump_target_line: jmp_target_line
+            jump_target_line: jmp_target_line,
+            is_skipable: true
         });
         for optcode in loop_block.bytecode {
             self.bytecode.push(optcode);
@@ -143,5 +146,11 @@ impl Block {
     }
     pub fn push_to_testing_stack(&mut self, duplicate_stackvalue: bool) {
         self.bytecode.push(OPTCODE::PushToTestingStack { duplicate_stackvalue });
+    }
+    pub fn break_loop(&mut self, span: TextSpan) {
+        self.bytecode.push(OPTCODE::Break{span: span});
+    }
+    pub fn continue_loop(&mut self, span: TextSpan) {
+        self.bytecode.push(OPTCODE::Continue{span: span});
     }
 }

@@ -62,7 +62,8 @@ pub enum OPTCODE {
     JumpIfFalse {
         steps: usize,
         jump_target_line: usize,
-        jump_target_column: usize
+        jump_target_column: usize,
+        is_skipable: bool
     },
     Jump {
         steps: usize,
@@ -107,4 +108,6 @@ pub enum OPTCODE {
     PushToTestingStack {
         duplicate_stackvalue: bool,
     },
+    Break {span: TextSpan},
+    Continue {span: TextSpan}
 }
