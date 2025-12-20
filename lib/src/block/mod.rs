@@ -49,6 +49,8 @@ impl Block {
             BINOP::And => OPTCODE::And,
             BINOP::Or => OPTCODE::Or,
             BINOP::Xor => OPTCODE::Xor,
+            BINOP::Not => OPTCODE::Not,
+
         });
     }
     pub fn define_if_block(&mut self, block: Block, jmp_target_line: usize, jmp_target_column: usize) {

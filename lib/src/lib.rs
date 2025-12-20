@@ -171,6 +171,7 @@ impl CelsiumProgram {
                 OPTCODE::Or => vm.aritmethics("or"),
                 OPTCODE::And => vm.aritmethics("and"),
                 OPTCODE::Xor => vm.aritmethics("xor"),
+                OPTCODE::Not => vm.not(),
                 OPTCODE::DefineVar { id } => vm.define_var(*id),
                 OPTCODE::DefineObject { id } => {
                     let object = vm.pop();

@@ -16,6 +16,7 @@ pub enum BINOP {
     And,
     Or,
     Xor,
+    Not
 }
 
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
@@ -57,6 +58,7 @@ pub enum OPTCODE {
     Or,
     And,
     Xor,
+    Not,
     JumpIfFalse {
         steps: usize,
         jump_target_line: usize,

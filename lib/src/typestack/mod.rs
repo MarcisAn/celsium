@@ -44,6 +44,7 @@ impl TypeStack {
             BINOP::And => self.compare(),
             BINOP::Or => self.compare(),
             BINOP::Xor => self.compare(),
+            BINOP::Not => Some(BuiltinTypes::Bool)
         };
         if result_type.is_some() {
             self.stack.push_back(result_type.clone().unwrap());

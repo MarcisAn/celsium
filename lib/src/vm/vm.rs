@@ -83,6 +83,19 @@ impl VM {
             _ => panic!("Unknown arithmetics operator"),
         }
     }
+    pub fn not(&mut self) {
+        //Pops a stackvalue and pushes a bool value that is inverted
+        let stackvalue = self.pop();
+        let return_val = match stackvalue {
+            StackValue::Bool { value } => !value,
+            StackValue::Int { value } => value == 0,
+            StackValue::Float { value } => value == 0.0,
+            StackValue::String { value } => value == "",
+            StackValue::Array { value } => value.len() == 0,
+            StackValue::Object { value:_ } => false,
+        };
+        self.push_stackvalue(StackValue::Bool { value: return_val });
+    }
     pub fn format_for_print(&mut self, newline: bool) -> String {
         return format_for_print(&self.stack.pop_back().unwrap(), newline);
     }
