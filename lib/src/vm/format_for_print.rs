@@ -5,15 +5,15 @@ pub fn format_for_print(value: &StackValue, newline: bool) -> String {
         StackValue::Bool { value } => {
             if !newline {
                 if *value {
-                    return "PATIESS".to_owned();
+                    return "1".to_owned();
                 } else {
-                    return "NEPATIESS".to_owned();
+                    return "0".to_owned();
                 }
             } else {
                 if *value {
-                    return "PATIESS\n".to_owned();
+                    return "1\n".to_owned();
                 } else {
-                    return "NEPATIESS\n".to_owned();
+                    return "0\n".to_owned();
                 }
             }
         }
