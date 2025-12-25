@@ -140,9 +140,9 @@ impl CelsiumProgram {
                 OPTCODE::Remainder => vm.aritmethics("%"),
                 OPTCODE::JumpIfFalse {
                     steps,
-                    jump_target_column,
-                    jump_target_line,
-                    is_skipable,
+                    jump_target_column:_,
+                    jump_target_line:_,
+                    is_skipable:_,
                 } => {
                     if vm.must_jump() {
                         // println!("line: {}, col: {}", jump_target_line, jump_target_column);
@@ -155,7 +155,7 @@ impl CelsiumProgram {
                 OPTCODE::JumpBack { steps } => {
                     index -= *steps as isize;
                 }
-                OPTCODE::LessThan { span } => {
+                OPTCODE::LessThan { span:_ } => {
                     vm.aritmethics("<");
                     // println!(
                     //     "value:{} line:{} col:{}, span:{}",
@@ -183,7 +183,7 @@ impl CelsiumProgram {
                     let _ = vm.variables.insert(*id, Variable { id: *id, value: object });
                 }
                 OPTCODE::GetObjectField { field_name } => vm.get_object_field(field_name),
-                OPTCODE::LoadVar { id, span } => {
+                OPTCODE::LoadVar { id, span:_ } => {
                     vm.load_var(*id);
                     // println!(
                     //     "value:{} line:{} col:{}, span:{}",

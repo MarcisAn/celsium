@@ -1,5 +1,3 @@
-use std::ops::Index;
-
 use super::{ vm::VM, StackValue };
 
 impl VM {
