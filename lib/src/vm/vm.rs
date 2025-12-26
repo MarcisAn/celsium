@@ -3,11 +3,16 @@ use crate::{ bytecode::OPTCODE, CelsiumProgram, BuiltinTypes };
 use std::{ collections::{ HashMap, LinkedList }, io::{ self, BufRead, Write } };
 
 
+pub struct CallStackItem {
+    pub(crate) optode_index: usize,
+    pub(crate) function_name: Option<String>,
+}
 
 pub struct VM {
     pub(crate) stack: LinkedList<StackValue>,
     pub(crate) variables: HashMap<usize, Variable>,
-    pub(crate) testing_stack: Vec<StackValue>
+    pub(crate) testing_stack: Vec<StackValue>,
+    pub(crate) call_stack: LinkedList<CallStackItem>
 }
 #[derive(Clone, Debug)]
 pub struct Variable {
@@ -23,6 +28,7 @@ impl VM {
             stack: LinkedList::new(),
             variables: HashMap::new(),
             testing_stack: vec![],
+            call_stack: LinkedList::new()
         }
     }
     pub fn push(&mut self, data_type: &BuiltinTypes, data: &String) {
@@ -50,6 +56,9 @@ impl VM {
         self.stack.push_back(stackvalue);
     }
     pub fn push_to_testing_stack(&mut self, duplicate_stackvalue: bool) {
+        if self.stack.back().is_none(){
+            return;
+        }
         let value = if duplicate_stackvalue {
             self.stack.back().unwrap().to_owned()    
         } else { 
@@ -97,6 +106,9 @@ impl VM {
         self.push_stackvalue(StackValue::Bool { value: return_val });
     }
     pub fn format_for_print(&mut self, newline: bool) -> String {
+        if self.stack.back().is_none() {
+            return "".to_string();
+        }
         return format_for_print(&self.stack.pop_back().unwrap(), newline);
     }
 

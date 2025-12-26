@@ -1,22 +1,18 @@
 use crate::block::Block;
 use crate::BuiltinTypes;
 
-#[derive(Clone, Debug,serde::Deserialize, serde::Serialize)]
-pub enum FunctionReturnType {
-    NONE,
-    BuiltinTypes,
-}
+
 #[derive(Clone, Debug,serde::Deserialize, serde::Serialize)]
 pub struct FunctionSignature {
     pub name: String,
-    pub return_type: FunctionReturnType,
+    pub return_type: Option<BuiltinTypes>,
     pub args: Vec<FuncArg>,
 }
 impl FunctionSignature {
     pub fn new(
         func_name: String,
         args: Vec<FuncArg>,
-        return_type: FunctionReturnType,
+        return_type: Option<BuiltinTypes>,
     ) -> FunctionSignature {
         FunctionSignature {
             name: func_name,

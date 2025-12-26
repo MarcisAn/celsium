@@ -125,7 +125,7 @@ impl Block {
         self.bytecode.push(OPTCODE::CreateObject { field_names });
     }
     pub fn return_from_function(&mut self) {
-        self.bytecode.push(OPTCODE::ReturnFromFunction);
+        self.bytecode.push(OPTCODE::Return);
     }
 
     pub fn assign_variable(&mut self, id: usize) {

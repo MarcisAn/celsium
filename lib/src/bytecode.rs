@@ -40,10 +40,6 @@ pub enum OPTCODE {
     CallFunction {
         name: String,
     },
-    CallFunctionWithBytecode {
-        bytecode: Vec<OPTCODE>,
-    },
-    ReturnFromFunction,
     Add {span: TextSpan},
     Subtract,
     Multiply,
@@ -67,6 +63,10 @@ pub enum OPTCODE {
     },
     Jump {
         steps: usize,
+    },
+    JumpToFunction {
+        target: usize,
+        function_name: Option<String>
     },
     JumpBack {
         steps: usize,
@@ -109,5 +109,6 @@ pub enum OPTCODE {
         duplicate_stackvalue: bool,
     },
     Break {span: TextSpan},
-    Continue {span: TextSpan}
+    Continue {span: TextSpan},
+    Return
 }

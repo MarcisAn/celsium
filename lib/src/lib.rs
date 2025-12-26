@@ -1,6 +1,8 @@
 pub mod bytecode_parser;
 pub mod bytecode;
 
+use std::collections::LinkedList;
+
 use block::Block;
 use bytecode::{ BINOP, OPTCODE };
 use module::Function;
@@ -19,6 +21,8 @@ use vm::vm::VM;
 use vm::ObjectField;
 use vm::StackValue;
 use wasm_bindgen::prelude::*;
+
+use crate::vm::vm::CallStackItem;
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
@@ -82,9 +86,35 @@ impl Scope {
     }
 }
 
+
+
 impl CelsiumProgram {
     pub fn new(main_block: Block, functions: Vec<Function>) -> CelsiumProgram {
-        CelsiumProgram { main_block, functions }
+        let mut bytecode = main_block.bytecode.clone();
+        bytecode.push(OPTCODE::Return); // Return from the main function
+        for function in &functions {
+            let bytecode_index_of_this_function = &mut bytecode.len();
+            bytecode.extend(function.body.bytecode.clone());
+            bytecode.push(OPTCODE::Return); // Return from the user defined function
+            let mut i = 0;
+            while i < bytecode.len() {
+                match &bytecode[i] {
+                    OPTCODE::CallFunction { name } => {
+                        if name == &function.signature.name {
+                            bytecode[i] = OPTCODE::JumpToFunction {
+                                target: *bytecode_index_of_this_function - 1,
+                                function_name: Some(name.to_string())
+                            };
+                        }
+                    }
+                    _ => (),
+                }
+                i += 1;
+            }
+        }
+        let mut modified_block = main_block.clone();
+        modified_block.bytecode = bytecode;
+        CelsiumProgram { main_block: modified_block, functions }
     }
 
     pub fn run_program(&mut self) -> Vec<StackValue> {
@@ -96,27 +126,27 @@ impl CelsiumProgram {
         return vm.testing_stack;
     }
 
-    pub fn get_bytecode(self) -> String {
+    pub fn get_bytecode_json(self) -> String {
         let global_bytecode: Vec<OPTCODE> = self.main_block.bytecode.clone();
         let json_bytecode = serde_json::to_string(&global_bytecode).unwrap();
         json_bytecode
     }
 
+    pub fn get_bytecode(&self) -> Vec<OPTCODE> {
+        self.main_block.bytecode.clone()
+    }
+
     fn run(&mut self, vm: &mut VM, bytecode: &Vec<OPTCODE>) {
-        let mut index: isize = 0;
-        while index < (bytecode.len() as isize) {
-            let optcode = &bytecode[index as usize];
+        let mut index: usize = 0;
+
+
+        while index < bytecode.len() {
+            let optcode = &bytecode[index];
             match optcode {
                 OPTCODE::PushToTestingStack { duplicate_stackvalue } =>
                     vm.push_to_testing_stack(*duplicate_stackvalue),
                 OPTCODE::CallFunction { name } => {
                     vm.call_function(name, self);
-                }
-                OPTCODE::ReturnFromFunction => {
-                    break;
-                }
-                OPTCODE::CallFunctionWithBytecode { bytecode: _ } => {
-                    panic!();
                 }
                 OPTCODE::Add { span } => {
                     vm.aritmethics("+");
@@ -140,22 +170,22 @@ impl CelsiumProgram {
                 OPTCODE::Remainder => vm.aritmethics("%"),
                 OPTCODE::JumpIfFalse {
                     steps,
-                    jump_target_column:_,
-                    jump_target_line:_,
-                    is_skipable:_,
+                    jump_target_column: _,
+                    jump_target_line: _,
+                    is_skipable: _,
                 } => {
                     if vm.must_jump() {
                         // println!("line: {}, col: {}", jump_target_line, jump_target_column);
-                        index += *steps as isize;
+                        index += *steps;
                     }
                 }
                 OPTCODE::Jump { steps } => {
-                    index += *steps as isize;
+                    index += *steps;
                 }
                 OPTCODE::JumpBack { steps } => {
-                    index -= *steps as isize;
+                    index -= *steps;
                 }
-                OPTCODE::LessThan { span:_ } => {
+                OPTCODE::LessThan { span: _ } => {
                     vm.aritmethics("<");
                     // println!(
                     //     "value:{} line:{} col:{}, span:{}",
@@ -183,7 +213,7 @@ impl CelsiumProgram {
                     let _ = vm.variables.insert(*id, Variable { id: *id, value: object });
                 }
                 OPTCODE::GetObjectField { field_name } => vm.get_object_field(field_name),
-                OPTCODE::LoadVar { id, span:_ } => {
+                OPTCODE::LoadVar { id, span: _ } => {
                     vm.load_var(*id);
                     // println!(
                     //     "value:{} line:{} col:{}, span:{}",
@@ -275,6 +305,17 @@ impl CelsiumProgram {
                     vm.push_stackvalue(StackValue::Float { value: *value }),
                 OPTCODE::Break { span: _ } => todo!("Break should not appear in bytecode"),
                 OPTCODE::Continue { span: _ } => todo!("Continue should not appear in bytecode"),
+                OPTCODE::Return => {
+                    let call_stack_item = vm.call_stack.pop_back();
+                    if call_stack_item.is_none() {
+                        break; //Programma beigusies
+                    }
+                    index = call_stack_item.unwrap().optode_index;
+                }
+                OPTCODE::JumpToFunction { target, function_name } => {
+                    vm.call_stack.push_back(CallStackItem { optode_index: index, function_name: function_name.clone() });
+                    index = *target;
+                }
             }
             index += 1;
         }
