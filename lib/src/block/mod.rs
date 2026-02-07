@@ -50,22 +50,32 @@ impl Block {
             BINOP::Or => OPTCODE::Or,
             BINOP::Xor => OPTCODE::Xor,
             BINOP::Not => OPTCODE::Not,
-
         });
     }
-    pub fn define_if_block(&mut self, block: Block, jmp_target_line: usize, jmp_target_column: usize) {
+    pub fn define_if_block(
+        &mut self,
+        block: Block,
+        jmp_target_line: usize,
+        jmp_target_column: usize
+    ) {
         let block_length = block.bytecode.len();
         self.bytecode.push(OPTCODE::JumpIfFalse {
             steps: block_length,
             jump_target_column: jmp_target_column,
             jump_target_line: jmp_target_line,
-            is_skipable: false
+            is_skipable: false,
         });
         for optcode in block.bytecode {
             self.bytecode.push(optcode);
         }
     }
-    pub fn define_if_else_block(&mut self, if_block: Block, else_block: Block, jmp_target_line: usize, jmp_target_column: usize) {
+    pub fn define_if_else_block(
+        &mut self,
+        if_block: Block,
+        else_block: Block,
+        jmp_target_line: usize,
+        jmp_target_column: usize
+    ) {
         //println!("{:?}", else_block);
         let if_block_length = if_block.bytecode.len();
         let else_block_length = else_block.bytecode.len();
@@ -73,7 +83,7 @@ impl Block {
             steps: if_block_length + 1,
             jump_target_column: jmp_target_column,
             jump_target_line: jmp_target_line,
-            is_skipable: false
+            is_skipable: false,
         });
         for optcode in if_block.bytecode {
             self.bytecode.push(optcode);
@@ -93,7 +103,13 @@ impl Block {
     pub fn define_simple_loop(&mut self, loop_block: Block) {
         self.bytecode.push(OPTCODE::SimpleLoop { body_block: loop_block });
     }
-    pub fn define_while_loop(&mut self, loop_block: Block, conditional_block: Block, jmp_target_line: usize, jmp_target_column: usize) {
+    pub fn define_while_loop(
+        &mut self,
+        loop_block: Block,
+        conditional_block: Block,
+        jmp_target_line: usize,
+        jmp_target_column: usize
+    ) {
         let block_length = loop_block.bytecode.len();
         for optcode in &conditional_block.bytecode {
             self.bytecode.push(optcode.clone());
@@ -102,7 +118,7 @@ impl Block {
             steps: block_length + 1,
             jump_target_column: jmp_target_column,
             jump_target_line: jmp_target_line,
-            is_skipable: true
+            is_skipable: true,
         });
         for optcode in loop_block.bytecode {
             self.bytecode.push(optcode);
@@ -144,13 +160,16 @@ impl Block {
     pub fn get_object_field(&mut self, field_name: String) {
         self.bytecode.push(OPTCODE::GetObjectField { field_name });
     }
+    pub fn set_object_field(&mut self, id: usize, field_name: String) {
+        self.bytecode.push(OPTCODE::SetObjectField { id, field_name });
+    }
     pub fn push_to_testing_stack(&mut self, duplicate_stackvalue: bool) {
         self.bytecode.push(OPTCODE::PushToTestingStack { duplicate_stackvalue });
     }
     pub fn break_loop(&mut self, span: TextSpan) {
-        self.bytecode.push(OPTCODE::Break{span: span});
+        self.bytecode.push(OPTCODE::Break { span: span });
     }
     pub fn continue_loop(&mut self, span: TextSpan) {
-        self.bytecode.push(OPTCODE::Continue{span: span});
+        self.bytecode.push(OPTCODE::Continue { span: span });
     }
 }

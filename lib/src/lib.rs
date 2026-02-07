@@ -1,8 +1,6 @@
 pub mod bytecode_parser;
 pub mod bytecode;
 
-use std::collections::LinkedList;
-
 use block::Block;
 use bytecode::{ BINOP, OPTCODE };
 use module::Function;
@@ -316,6 +314,7 @@ impl CelsiumProgram {
                     vm.call_stack.push_back(CallStackItem { optode_index: index, function_name: function_name.clone() });
                     index = *target;
                 }
+                OPTCODE::SetObjectField { id, field_name } => vm.set_object_field(*id, field_name),
             }
             index += 1;
         }

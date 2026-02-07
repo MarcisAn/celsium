@@ -83,6 +83,10 @@ pub enum OPTCODE {
     GetObjectField {
         field_name: String,
     },
+    SetObjectField {
+        id: usize,
+        field_name: String,
+    },
     CreateArray {
         init_values_count: usize,
     },

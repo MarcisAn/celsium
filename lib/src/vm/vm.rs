@@ -1,3 +1,5 @@
+use serde::de::value;
+
 use super::{ format_for_print::format_for_print, math_operators::*, StackValue };
 use crate::{ bytecode::OPTCODE, CelsiumProgram, BuiltinTypes };
 use std::{ collections::{ HashMap, LinkedList }, io::{ self, BufRead, Write } };
@@ -70,7 +72,7 @@ impl VM {
         return self.stack.pop_back().unwrap();
     }
     pub fn aritmethics(&mut self, action: &str) {
-        // println!("action {}", action);
+        println!("action {}", action);
         let b = self.stack.pop_back().unwrap();
         let a = self.stack.pop_back().unwrap();
         match action {
@@ -200,6 +202,26 @@ impl VM {
                 }
             }
             _ => panic!("not an object"),
+        }
+    }
+    pub fn set_object_field(&mut self, id: usize, field_name: &str) {
+        let new_field_value = self.stack.pop_back().unwrap();
+        let getter = self.variables.get_mut(&id);
+        if getter.is_none() {
+            panic!("Cound not found vairable with ID {}", id);
+        } else {
+            match &mut getter.unwrap().value {
+                StackValue::Object { value } => {
+                    for field in value{
+                        if field.name == field_name {
+                            field.value = new_field_value.clone();
+                        }
+                    }
+                    
+                },
+                _ => panic!()
+            }
+            
         }
     }
 }
