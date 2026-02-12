@@ -1,4 +1,4 @@
-use crate::{ Scope, SpecialFunctions };
+use crate::{ Scope };
 use crate::{ BINOP, OPTCODE };
 mod array;
 
@@ -150,7 +150,7 @@ impl Block {
     pub fn load_variable(&mut self, id: usize, span: TextSpan) {
         self.bytecode.push(OPTCODE::LoadVar { id, span })
     }
-    pub fn call_special_function(&mut self, function: SpecialFunctions) {
+    pub fn call_special_function(&mut self, function: String) {
         self.bytecode.push(OPTCODE::CallSpecialFunction { function });
     }
     pub fn add_blocks_bytecode(&mut self, block: Block) {

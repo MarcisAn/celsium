@@ -1,6 +1,6 @@
 pub mod bytecode_parser;
 pub mod bytecode;
-
+pub mod std;
 use block::Block;
 use bytecode::{ BINOP, OPTCODE };
 use module::Function;
@@ -21,6 +21,7 @@ use vm::StackValue;
 use wasm_bindgen::prelude::*;
 
 use crate::vm::vm::CallStackItem;
+use crate::std::*;
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
@@ -56,15 +57,6 @@ pub enum BuiltinTypes {
     Float,
 }
 
-#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
-pub enum SpecialFunctions {
-    Print {
-        newline: bool,
-    },
-    Input,
-    Random,
-    Length,
-}
 pub struct CelsiumProgram {
     main_block: Block,
     functions: Vec<Function>,
@@ -236,52 +228,18 @@ impl CelsiumProgram {
                 OPTCODE::GetIndex => vm.get_index(),
                 OPTCODE::PushToArray { id } => vm.push_to_array(*id),
                 OPTCODE::GettArrayLength { id } => vm.get_array_length(*id),
-                OPTCODE::CallSpecialFunction { function } =>
-                    match function {
-                        SpecialFunctions::Print { newline } => {
-                            let printable = &vm.format_for_print(*newline);
-                            #[cfg(target_family = "wasm")]
-                            wasm_print(printable);
-                            print!("{}", printable);
-                        }
-                        SpecialFunctions::Input => {
-                            #[cfg(target_family = "wasm")]
-                            async {
-                                let value = &wasm_input().await.as_string().unwrap();
-                                vm.push(&BuiltinTypes::String, value);
-                            };
-                            #[cfg(not(target_family = "wasm"))]
-                            vm.input("");
-                        }
-                        SpecialFunctions::Random => {
-                            let value = {
-                                let max = match vm.pop() {
-                                    StackValue::Int { value } => value,
-                                    _ => panic!(),
-                                };
-                                let min = match vm.pop() {
-                                    StackValue::Int { value } => value,
-                                    _ => panic!(),
-                                };
-                                rand::thread_rng().gen_range(min..max)
-                            };
-                            vm.push_stackvalue(StackValue::Int {
-                                value,
-                            });
-                        }
-                        SpecialFunctions::Length => {
-                            let value = vm.pop();
-                            let length_value = match value {
-                                StackValue::Bool { value: _ } => 1,
-                                StackValue::Int { value } => value.to_string().len(),
-                                StackValue::Float { value } => value.to_string().len(),
-                                StackValue::String { value } => value.len(),
-                                StackValue::Array { value } => value.len(),
-                                StackValue::Object { value } => value.len(),
-                            };
-                            vm.push_stackvalue(StackValue::Int { value: length_value as i64 });
-                        }
-                    }
+                OPTCODE::CallSpecialFunction { function } => {
+                    match function.as_str() {
+                        "izvade" => izvade(vm),
+                        "izvadetp" => izvadetp(vm),
+                        "ievade" => ievade(vm),
+                        "garums" => garums(vm),
+                        "nejaušs" => nejauss(vm),
+                        "nejaušs_robežās" => nejauss_robezas(vm),
+                        _ => unreachable!()
+                        
+                    };
+                },
                 OPTCODE::AssignAtArrayIndex { id } => vm.set_at_array(*id),
                 OPTCODE::SimpleLoop { body_block } =>
                     vm.simple_loop(self, body_block.bytecode.clone()),

@@ -104,7 +104,7 @@ pub enum OPTCODE {
         id: usize,
     },
     CallSpecialFunction {
-        function: super::SpecialFunctions,
+        function: String,
     },
     SimpleLoop {
         body_block: Block,
