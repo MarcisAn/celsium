@@ -73,7 +73,7 @@ pub fn get_std_functions() -> Vec<FunctionSignature> {
                 FuncArg { name: "min".to_string(), arg_type: crate::BuiltinTypes::Int },
                 FuncArg { name: "maks".to_string(), arg_type: crate::BuiltinTypes::Int }
             ],
-            return_type: Some(crate::BuiltinTypes::Float),
+            return_type: Some(crate::BuiltinTypes::Int),
         }
     ]
 }
