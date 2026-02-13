@@ -23,6 +23,18 @@ use wasm_bindgen::prelude::*;
 use crate::vm::vm::CallStackItem;
 use crate::std::*;
 
+/// Macro to generate a match statement that calls functions based on string names
+macro_rules! call_special_function {
+    ($function:expr, $vm:expr, $(($name:literal => $func:ident)),* $(,)?) => {
+        match $function.as_str() {
+            $(
+                $name => $func($vm),
+            )*
+            _ => unreachable!("Unknown special function: {}", $function),
+        }
+    };
+}
+
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
 #[cfg(feature = "wee_alloc")]
@@ -229,16 +241,16 @@ impl CelsiumProgram {
                 OPTCODE::PushToArray { id } => vm.push_to_array(*id),
                 OPTCODE::GettArrayLength { id } => vm.get_array_length(*id),
                 OPTCODE::CallSpecialFunction { function } => {
-                    match function.as_str() {
-                        "izvade" => izvade(vm),
-                        "izvadetp" => izvadetp(vm),
-                        "ievade" => ievade(vm),
-                        "garums" => garums(vm),
-                        "nejaušs" => nejauss(vm),
-                        "nejaušs_robežās" => nejauss_robezas(vm),
-                        _ => unreachable!()
-                        
-                    };
+                    call_special_function!(
+                        function,
+                        vm,
+                        ("izvade" => izvade),
+                        ("izvadetp" => izvadetp),
+                        ("ievade" => ievade),
+                        ("garums" => garums),
+                        ("nejaušs" => nejauss),
+                        ("nejaušs_robežās" => nejauss_robezas),
+                    );
                 },
                 OPTCODE::AssignAtArrayIndex { id } => vm.set_at_array(*id),
                 OPTCODE::SimpleLoop { body_block } =>
