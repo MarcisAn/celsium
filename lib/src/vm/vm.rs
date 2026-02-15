@@ -145,6 +145,12 @@ impl VM {
         }
     }
 
+    pub fn copy_var_value(&mut self, src_id: usize, dst_id: usize) {
+        let src = self.variables.get(&src_id).unwrap().value.clone();
+        let dst = self.variables.get_mut(&dst_id).unwrap();
+        *dst = Variable { id: dst_id, value: src };
+    }
+
     pub fn load_var(&mut self, id: usize) {
         let getter = self.variables.get(&id);
         if getter.is_none() {

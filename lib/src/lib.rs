@@ -285,6 +285,9 @@ impl CelsiumProgram {
                     index = *target;
                 }
                 OPTCODE::SetObjectField { id, field_name } => vm.set_object_field(*id, field_name),
+                OPTCODE::CopyVariableValue { src_var_id, dst_var_id } => {
+                    vm.copy_var_value(*src_var_id, *dst_var_id);
+                }
             }
             index += 1;
         }

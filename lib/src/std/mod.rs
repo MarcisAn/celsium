@@ -70,10 +70,17 @@ pub fn get_std_functions() -> Vec<FunctionSignature> {
         FunctionSignature {
             name: "nejaušs_robežās".to_string(),
             args: vec![
-                FuncArg { name: "min".to_string(), arg_type: crate::BuiltinTypes::Int },
-                FuncArg { name: "maks".to_string(), arg_type: crate::BuiltinTypes::Int }
+                FuncArg { name: "min".to_string(), arg_type: crate::BuiltinTypes::Int, mutable: false, local_var_id: None },
+                FuncArg { name: "maks".to_string(), arg_type: crate::BuiltinTypes::Int, mutable: false, local_var_id: None }
             ],
             return_type: Some(crate::BuiltinTypes::Int),
+        },
+        FunctionSignature {
+            name: "aizvietot_simbolu".to_string(),
+            args: vec![
+                FuncArg { name: "teksts".to_string(), arg_type: crate::BuiltinTypes::String, mutable: false, local_var_id: None },
+            ],
+            return_type: Some(crate::BuiltinTypes::String),
         }
     ]
 }
@@ -114,6 +121,7 @@ pub fn nejauss(vm: &mut VM) {
         value,
     });
 }
+
 pub fn garums(vm: &mut VM) {
     let value = vm.pop();
     let length_value = match value {

@@ -132,6 +132,9 @@ impl Block {
             id,
         });
     }
+    pub fn copy_var_value(&mut self, src_var_id: usize, dst_var_id: usize) {
+        self.bytecode.push(OPTCODE::CopyVariableValue { src_var_id, dst_var_id });
+    }
     pub fn define_object(&mut self, id: usize) {
         self.bytecode.push(OPTCODE::DefineObject {
             id,

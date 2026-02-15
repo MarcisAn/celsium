@@ -114,5 +114,6 @@ pub enum OPTCODE {
     },
     Break {span: TextSpan},
     Continue {span: TextSpan},
-    Return
+    Return,
+    CopyVariableValue {src_var_id: usize, dst_var_id: usize}
 }

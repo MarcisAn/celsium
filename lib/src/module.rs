@@ -26,6 +26,8 @@ impl FunctionSignature {
 pub struct FuncArg {
     pub name: String,
     pub arg_type: BuiltinTypes,
+    pub mutable: bool,
+    pub local_var_id: Option<usize>
 }
 #[derive(Clone, Debug,serde::Deserialize, serde::Serialize)]
 pub enum VISIBILITY {
