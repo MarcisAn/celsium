@@ -1,6 +1,8 @@
 use js_sys::Math::random;
 use rand::Rng;
 use wasm_bindgen::{ JsValue, prelude::wasm_bindgen };
+use futures::executor::block_on;
+
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
 #[cfg(feature = "wee_alloc")]
@@ -13,9 +15,14 @@ extern "C" {
     fn wasm_print(s: &str);
     fn code_replace(replace_with: &str, line: usize, column: usize, span: usize);
     async fn wasm_input() -> JsValue;
+    fn testfn() -> JsValue;
 }
 
-use crate::{ BuiltinTypes, module::{ FuncArg, FunctionSignature }, vm::{ self, StackValue, vm::VM } };
+use crate::{
+    BuiltinTypes,
+    module::{ FuncArg, FunctionSignature },
+    vm::{ self, StackValue, vm::VM },
+};
 
 fn f64_to_stackvalue(value: f64) -> StackValue {
     return StackValue::Float { value };
@@ -61,7 +68,11 @@ pub fn get_std_functions() -> Vec<FunctionSignature> {
             args: vec![],
             return_type: Some(crate::BuiltinTypes::String),
         },
-        FunctionSignature { name: "garums".to_string(), args: vec![], return_type: Some(crate::BuiltinTypes::Int) },
+        FunctionSignature {
+            name: "garums".to_string(),
+            args: vec![],
+            return_type: Some(crate::BuiltinTypes::Int),
+        },
         FunctionSignature {
             name: "nejaušs".to_string(),
             args: vec![],
@@ -70,16 +81,29 @@ pub fn get_std_functions() -> Vec<FunctionSignature> {
         FunctionSignature {
             name: "nejaušs_robežās".to_string(),
             args: vec![
-                FuncArg { name: "min".to_string(), arg_type: crate::BuiltinTypes::Int, mutable: false, local_var_id: None },
-                FuncArg { name: "maks".to_string(), arg_type: crate::BuiltinTypes::Int, mutable: false, local_var_id: None }
+                FuncArg {
+                    name: "min".to_string(),
+                    arg_type: crate::BuiltinTypes::Int,
+                    mutable: false,
+                    local_var_id: None,
+                },
+                FuncArg {
+                    name: "maks".to_string(),
+                    arg_type: crate::BuiltinTypes::Int,
+                    mutable: false,
+                    local_var_id: None,
+                }
             ],
             return_type: Some(crate::BuiltinTypes::Int),
         },
         FunctionSignature {
             name: "aizvietot_simbolu".to_string(),
-            args: vec![
-                FuncArg { name: "teksts".to_string(), arg_type: crate::BuiltinTypes::String, mutable: false, local_var_id: None },
-            ],
+            args: vec![FuncArg {
+                name: "teksts".to_string(),
+                arg_type: crate::BuiltinTypes::String,
+                mutable: false,
+                local_var_id: None,
+            }],
             return_type: Some(crate::BuiltinTypes::String),
         }
     ]
@@ -90,7 +114,7 @@ pub fn izvade(vm: &mut VM) {
     #[cfg(target_family = "wasm")]
     wasm_print(printable);
     print!("{}", printable);
-}
+} 
 pub fn izvadetp(vm: &mut VM) {
     let printable = &vm.format_for_print(false);
     #[cfg(target_family = "wasm")]
@@ -99,10 +123,10 @@ pub fn izvadetp(vm: &mut VM) {
 }
 pub fn ievade(vm: &mut VM) {
     #[cfg(target_family = "wasm")]
-    async {
-        let value = &wasm_input().await.as_string().unwrap();
-        vm.push(&BuiltinTypes::String, value);
-    };
+    block_on(async {
+        let value = wasm_input().await.as_string().unwrap();
+        vm.push(&BuiltinTypes::String, &value);
+    });
     #[cfg(not(target_family = "wasm"))]
     vm.input("");
 }
