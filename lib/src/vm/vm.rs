@@ -71,28 +71,32 @@ impl VM {
     pub fn pop(&mut self) -> StackValue {
         return self.stack.pop_back().unwrap();
     }
-    pub fn aritmethics(&mut self, action: &str) {
+    pub fn aritmethics(&mut self, action: &str) -> (StackValue, StackValue, StackValue){
         println!("action {}", action);
         let b = self.stack.pop_back().unwrap();
+        let b_clone = b.clone();
         let a = self.stack.pop_back().unwrap();
-        match action {
-            "+" => self.stack.push_back(add(a, b)),
-            "-" => self.stack.push_back(subtract(a, b)),
-            "*" => self.stack.push_back(multiply(a, b)),
-            "/" => self.stack.push_back(divide(a, b)),
-            "%" => self.stack.push_back(remainder(a, b)),
-            "<" => self.stack.push_back(less_than(a, b)),
-            ">" => self.stack.push_back(larger_than(a, b)),
-            "<=" => self.stack.push_back(less_or_eq(a, b)),
-            ">=" => self.stack.push_back(larger_or_eq(a, b)),
-            "!=" => self.stack.push_back(not_eq(a, b)),
-            "==" => self.stack.push_back(eq(a, b)),
-            "and" => self.stack.push_back(and(a, b)),
-            "or" => self.stack.push_back(or(a, b)),
-            "xor" => self.stack.push_back(xor(a, b)),
+        let a_clone = a.clone();
+        let result = match action {
+            "+" => add(a, b),
+            "-" => subtract(a, b),
+            "*" => multiply(a, b),
+            "/" => divide(a, b),
+            "%" => remainder(a, b),
+            "<" => less_than(a, b),
+            ">" => larger_than(a, b),
+            "<=" => less_or_eq(a, b),
+            ">=" => larger_or_eq(a, b),
+            "!=" => not_eq(a, b),
+            "==" => eq(a, b),
+            "and" => and(a, b),
+            "or" => or(a, b),
+            "xor" => xor(a, b),
 
             _ => panic!("Unknown arithmetics operator"),
-        }
+        };
+        self.stack.push_back(result.clone());
+        return (a_clone, b_clone, result)
     }
     pub fn not(&mut self) {
         //Pops a stackvalue and pushes a bool value that is inverted

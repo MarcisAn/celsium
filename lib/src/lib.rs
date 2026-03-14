@@ -1,6 +1,8 @@
 pub mod bytecode_parser;
 pub mod bytecode;
 pub mod std;
+use ::std::collections::HashMap;
+
 use block::Block;
 use bytecode::{ BINOP, OPTCODE };
 use module::Function;
@@ -20,6 +22,7 @@ use vm::ObjectField;
 use vm::StackValue;
 use wasm_bindgen::prelude::*;
 
+use crate::block::TextSpan;
 use crate::vm::vm::CallStackItem;
 use crate::std::*;
 
@@ -46,6 +49,8 @@ extern "C" {
     fn alert(s: &str);
     fn wasm_print(s: &str);
     fn code_replace(replace_with: &str, line: usize, column: usize, span: usize);
+    fn step();
+    fn explain(a: &str, line: usize, column: usize, span: usize);
     async fn wasm_input() -> JsValue;
 }
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Deserialize, serde::Serialize)]
@@ -69,9 +74,12 @@ pub enum BuiltinTypes {
     Float,
 }
 
+#[derive(Debug, Clone)]
 pub struct CelsiumProgram {
     main_block: Block,
     functions: Vec<Function>,
+    node_locations_by_id: HashMap<usize, TextSpan>,
+    node_ids_by_line: HashMap<usize, Vec<usize>>,
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
@@ -88,10 +96,13 @@ impl Scope {
     }
 }
 
-
-
 impl CelsiumProgram {
-    pub fn new(main_block: Block, functions: Vec<Function>) -> CelsiumProgram {
+    pub fn new(
+        main_block: Block,
+        functions: Vec<Function>,
+        node_locations_by_id: HashMap<usize, TextSpan>,
+        node_ids_by_line: HashMap<usize, Vec<usize>>
+    ) -> CelsiumProgram {
         let mut bytecode = main_block.bytecode.clone();
         bytecode.push(OPTCODE::Return); // Return from the main function
         for function in &functions {
@@ -105,7 +116,7 @@ impl CelsiumProgram {
                         if name == &function.signature.name {
                             bytecode[i] = OPTCODE::JumpToFunction {
                                 target: *bytecode_index_of_this_function - 1,
-                                function_name: Some(name.to_string())
+                                function_name: Some(name.to_string()),
                             };
                         }
                     }
@@ -116,7 +127,12 @@ impl CelsiumProgram {
         }
         let mut modified_block = main_block.clone();
         modified_block.bytecode = bytecode;
-        CelsiumProgram { main_block: modified_block, functions }
+        CelsiumProgram {
+            main_block: modified_block,
+            functions,
+            node_ids_by_line,
+            node_locations_by_id,
+        }
     }
 
     pub fn run_program(&mut self) -> Vec<StackValue> {
@@ -138,38 +154,106 @@ impl CelsiumProgram {
         self.main_block.bytecode.clone()
     }
 
+    fn code_replace_calculate(&mut self, node_id: &usize, new_value: String) {
+        let binding = self.clone();
+        let span = binding.node_locations_by_id.get(node_id).unwrap();
+        let delta_span = new_value.len() - span.length;
+        #[cfg(target_family = "wasm")]
+        code_replace(&new_value, span.line, span.col_start, span.length);
+
+        let current_line = span.line;
+        let other_nodes_on_same_line = self.node_ids_by_line.get(&current_line).unwrap();
+        for node in other_nodes_on_same_line {
+            let node_location = self.node_locations_by_id.get_mut(&node).unwrap();
+            if span.col_start <= node_location.col_start && span.col_start + span.length >= node_location.col_start + node_location.length {
+                node_location.length += delta_span;
+            }
+            if node_location.col_start > span.col_start + span.length {
+                node_location.col_start += delta_span;
+            }
+        }
+    }
+    fn explain_process(&mut self, explanation: String, node_id: &usize) {
+        let span = self.node_locations_by_id.get(node_id).unwrap();
+        #[cfg(target_family = "wasm")]
+        explain(&explanation, span.line, span.col_start, span.length);
+    }
+
     fn run(&mut self, vm: &mut VM, bytecode: &Vec<OPTCODE>) {
         let mut index: usize = 0;
 
-
         while index < bytecode.len() {
             let optcode = &bytecode[index];
-            match optcode {
+            let _ = match optcode {
+                OPTCODE::Step => {
+                    #[cfg(target_family = "wasm")]
+                    step();
+                }
                 OPTCODE::PushToTestingStack { duplicate_stackvalue } =>
                     vm.push_to_testing_stack(*duplicate_stackvalue),
                 OPTCODE::CallFunction { name } => {
                     vm.call_function(name, self);
                 }
-                OPTCODE::Add { span } => {
-                    vm.aritmethics("+");
+                OPTCODE::Add { node_id } => {
+                    let (a, b, result) = vm.aritmethics("+");
                     let replace_value = vm::format_for_print::format_for_print(
                         &vm.stack.back().unwrap().clone(),
                         false
                     );
-                    #[cfg(target_family = "wasm")]
-                    code_replace(&replace_value, span.line, span.col_start, span.length);
-                    // println!(
-                    //     "value:{} line:{} col:{}, span:{}",
-                    //     replace_value,
-                    //     span.line,
-                    //     span.col_start,
-                    //     span.length
-                    // );
+                    self.explain_process(
+                        format!("Saskaitīšanas darbība: {} + {} = {}", a, b, result),
+                        node_id
+                    );
+                    self.code_replace_calculate(node_id, replace_value);
                 }
-                OPTCODE::Subtract => vm.aritmethics("-"),
-                OPTCODE::Multiply => vm.aritmethics("*"),
-                OPTCODE::Divide => vm.aritmethics("/"),
-                OPTCODE::Remainder => vm.aritmethics("%"),
+                OPTCODE::Subtract { node_id } => {
+                    let (a, b, result) = vm.aritmethics("-");
+                    let replace_value = vm::format_for_print::format_for_print(
+                        &vm.stack.back().unwrap().clone(),
+                        false
+                    );
+                    self.explain_process(
+                        format!("Atņemšanas darbība: {} - {} = {}", a, b, result),
+                        node_id
+                    );
+                    self.code_replace_calculate(node_id, replace_value);
+                }
+                OPTCODE::Multiply { node_id } => {
+                    let (a, b, result) = vm.aritmethics("*");
+                    let replace_value = vm::format_for_print::format_for_print(
+                        &vm.stack.back().unwrap().clone(),
+                        false
+                    );
+                    self.explain_process(
+                        format!("Reizināšanas darbība: {} * {} = {}", a, b, result),
+                        node_id
+                    );
+                    self.code_replace_calculate(node_id, replace_value);
+                }
+                OPTCODE::Divide { node_id } => {
+                    let (a, b, result) = vm.aritmethics("/");
+                    let replace_value = vm::format_for_print::format_for_print(
+                        &vm.stack.back().unwrap().clone(),
+                        false
+                    );
+                    self.explain_process(
+                        format!("Dalīšanas darbība: {} / {} = {}", a, b, result),
+                        node_id
+                    );
+                    self.code_replace_calculate(node_id, replace_value);
+                }
+                OPTCODE::Remainder { node_id } => {
+                    let (a, b, result) = vm.aritmethics("%");
+                    let replace_value = vm::format_for_print::format_for_print(
+                        &vm.stack.back().unwrap().clone(),
+                        false
+                    );
+                    self.explain_process(
+                        format!("Atlikums {} dalot ar {} ir {}", a, b, result),
+                        node_id
+                    );
+                    self.code_replace_calculate(node_id, replace_value);
+                }
                 OPTCODE::JumpIfFalse {
                     steps,
                     jump_target_column: _,
@@ -187,27 +271,121 @@ impl CelsiumProgram {
                 OPTCODE::JumpBack { steps } => {
                     index -= *steps;
                 }
-                OPTCODE::LessThan { span: _ } => {
-                    vm.aritmethics("<");
-                    // println!(
-                    //     "value:{} line:{} col:{}, span:{}",
-                    //     vm::format_for_print::format_for_print(
-                    //         &vm.stack.back().unwrap().clone(),
-                    //         false
-                    //     ),
-                    //     span.line,
-                    //     span.col_start,
-                    //     span.length
-                    // );
+                OPTCODE::LessThan { node_id } => {
+                    let (a, b, result) = vm.aritmethics("<");
+                    let replace_value = vm::format_for_print::format_for_print(
+                        &vm.stack.back().unwrap().clone(),
+                        false
+                    );
+                    self.explain_process(
+                        format!("Vai {} ir mazāks par {}? {}.", a, b, result),
+                        node_id
+                    );
+                    self.code_replace_calculate(node_id, replace_value);
                 }
-                OPTCODE::LargerThan => vm.aritmethics(">"),
-                OPTCODE::LessOrEq => vm.aritmethics("<="),
-                OPTCODE::LargerOrEq => vm.aritmethics(">="),
-                OPTCODE::NotEq => vm.aritmethics("!="),
-                OPTCODE::Eq => vm.aritmethics("=="),
-                OPTCODE::Or => vm.aritmethics("or"),
-                OPTCODE::And => vm.aritmethics("and"),
-                OPTCODE::Xor => vm.aritmethics("xor"),
+                OPTCODE::LargerThan { node_id } => {
+                    let (a, b, result) = vm.aritmethics(">");
+                    let replace_value = vm::format_for_print::format_for_print(
+                        &vm.stack.back().unwrap().clone(),
+                        false
+                    );
+                    self.explain_process(
+                        format!("Vai {} ir lielāks par {}? {}.", a, b, result),
+                        node_id
+                    );
+                    self.code_replace_calculate(node_id, replace_value);
+                }
+                OPTCODE::LessOrEq { node_id } => {
+                    let (a, b, result) = vm.aritmethics("<=");
+                    let replace_value = vm::format_for_print::format_for_print(
+                        &vm.stack.back().unwrap().clone(),
+                        false
+                    );
+                    self.explain_process(
+                        format!("Vai {} ir vienāds vai mazāks par {}? {}.", a, b, result),
+                        node_id
+                    );
+                    self.code_replace_calculate(node_id, replace_value);
+                }
+                OPTCODE::LargerOrEq { node_id } => {
+                    let (a, b, result) = vm.aritmethics(">=");
+                    let replace_value = vm::format_for_print::format_for_print(
+                        &vm.stack.back().unwrap().clone(),
+                        false
+                    );
+                    self.explain_process(
+                        format!("Vai {} ir vienāds vai lielāks par {}? {}.", a, b, result),
+                        node_id
+                    );
+                    self.code_replace_calculate(node_id, replace_value);
+                }
+                OPTCODE::NotEq { node_id } => {
+                    let (a, b, result) = vm.aritmethics("!=");
+                    let replace_value = vm::format_for_print::format_for_print(
+                        &vm.stack.back().unwrap().clone(),
+                        false
+                    );
+                    self.explain_process(
+                        format!("Vai {} ir nevienāds ar {}? {}.", a, b, result),
+                        node_id
+                    );
+                    self.code_replace_calculate(node_id, replace_value);
+                }
+                OPTCODE::Eq { node_id } => {
+                    let (a, b, result) = vm.aritmethics("==");
+                    let replace_value = vm::format_for_print::format_for_print(
+                        &vm.stack.back().unwrap().clone(),
+                        false
+                    );
+                    self.explain_process(
+                        format!("Vai {} ir vienāds ar {}? {}.", a, b, result),
+                        node_id
+                    );
+                    self.code_replace_calculate(node_id, replace_value);
+                }
+                OPTCODE::Or { node_id } => {
+                    let (a, b, result) = vm.aritmethics("or");
+                    let replace_value = vm::format_for_print::format_for_print(
+                        &vm.stack.back().unwrap().clone(),
+                        false
+                    );
+                    self.explain_process(
+                        format!(
+                                "Vai {} un {} vismaz viena ir pateisa izteiksme? {}.",
+                                a,
+                                b,
+                                result
+                            ),
+                        node_id
+                    );
+                    self.code_replace_calculate(node_id, replace_value);
+                }
+                OPTCODE::And { node_id } => {
+                    let (a, b, result) = vm.aritmethics("and");
+                    let replace_value = vm::format_for_print::format_for_print(
+                        &vm.stack.back().unwrap().clone(),
+                        false
+                    );
+                    self.explain_process(
+                        format!("Vai {} un {} ir patiesas izteksmes? {}.", a, b, result),
+                        node_id
+                    );
+                    self.code_replace_calculate(node_id, replace_value);
+                }
+                OPTCODE::Xor { node_id } => {
+                    let (a, b, result) = vm.aritmethics("xor");
+                    let replace_value = vm::format_for_print::format_for_print(&result, false);
+                    self.explain_process(
+                        format!(
+                                "Vai {} vai {} ir patiesas izteksmes, bet ne abas? {}.",
+                                a,
+                                b,
+                                result
+                            ),
+                        node_id
+                    );
+                    self.code_replace_calculate(node_id, replace_value);
+                }
                 OPTCODE::Not => vm.not(),
                 OPTCODE::DefineVar { id } => vm.define_var(*id),
                 OPTCODE::DefineObject { id } => {
@@ -251,7 +429,7 @@ impl CelsiumProgram {
                         ("nejaušs" => nejauss),
                         ("nejaušs_robežās" => nejauss_robezas),
                     );
-                },
+                }
                 OPTCODE::AssignAtArrayIndex { id } => vm.set_at_array(*id),
                 OPTCODE::SimpleLoop { body_block } =>
                     vm.simple_loop(self, body_block.bytecode.clone()),
@@ -281,14 +459,17 @@ impl CelsiumProgram {
                     index = call_stack_item.unwrap().optode_index;
                 }
                 OPTCODE::JumpToFunction { target, function_name } => {
-                    vm.call_stack.push_back(CallStackItem { optode_index: index, function_name: function_name.clone() });
+                    vm.call_stack.push_back(CallStackItem {
+                        optode_index: index,
+                        function_name: function_name.clone(),
+                    });
                     index = *target;
                 }
                 OPTCODE::SetObjectField { id, field_name } => vm.set_object_field(*id, field_name),
                 OPTCODE::CopyVariableValue { src_var_id, dst_var_id } => {
                     vm.copy_var_value(*src_var_id, *dst_var_id);
                 }
-            }
+            };
             index += 1;
         }
     }

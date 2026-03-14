@@ -1,4 +1,4 @@
-use crate::block::{Block, TextSpan};
+use crate::block::{ Block, TextSpan };
 
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub enum BINOP {
@@ -16,57 +16,85 @@ pub enum BINOP {
     And,
     Or,
     Xor,
-    Not
+    Not,
 }
 
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub enum OPTCODE {
     LoadInt {
-        value: i64
+        value: i64,
     },
     LoadBool {
-        value: bool
+        value: bool,
     },
     LoadString {
-        value: String
+        value: String,
     },
     LoadFloat {
-        value: f64
+        value: f64,
     },
     LoadVar {
         id: usize,
-        span: TextSpan
+        span: TextSpan,
     },
     CallFunction {
         name: String,
     },
-    Add {span: TextSpan},
-    Subtract,
-    Multiply,
-    Divide,
-    Remainder,
-    LessThan{span: TextSpan},
-    LargerThan,
-    LessOrEq,
-    LargerOrEq,
-    NotEq,
-    Eq,
-    Or,
-    And,
-    Xor,
+    Add {
+        node_id: usize,
+    },
+    Subtract {
+        node_id: usize,
+    },
+    Multiply {
+        node_id: usize,
+    },
+    Divide {
+        node_id: usize,
+    },
+    Remainder {
+        node_id: usize,
+    },
+    LessThan {
+        node_id: usize,
+    },
+    LargerThan {
+        node_id: usize,
+    },
+    LessOrEq {
+        node_id: usize,
+    },
+    LargerOrEq {
+        node_id: usize,
+    },
+    NotEq {
+        node_id: usize,
+    },
+    Eq {
+        node_id: usize,
+    },
+    Or {
+        node_id: usize,
+    },
+    And {
+        node_id: usize,
+    },
+    Xor {
+        node_id: usize,
+    },
     Not,
     JumpIfFalse {
         steps: usize,
         jump_target_line: usize,
         jump_target_column: usize,
-        is_skipable: bool
+        is_skipable: bool,
     },
     Jump {
         steps: usize,
     },
     JumpToFunction {
         target: usize,
-        function_name: Option<String>
+        function_name: Option<String>,
     },
     JumpBack {
         steps: usize,
@@ -112,8 +140,16 @@ pub enum OPTCODE {
     PushToTestingStack {
         duplicate_stackvalue: bool,
     },
-    Break {span: TextSpan},
-    Continue {span: TextSpan},
+    Break {
+        span: TextSpan,
+    },
+    Continue {
+        span: TextSpan,
+    },
     Return,
-    CopyVariableValue {src_var_id: usize, dst_var_id: usize}
+    CopyVariableValue {
+        src_var_id: usize,
+        dst_var_id: usize,
+    },
+    Step,
 }

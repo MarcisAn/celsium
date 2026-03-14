@@ -33,22 +33,22 @@ impl Block {
     pub fn create_array(&mut self, number_of_elements: usize) {
         self.bytecode.push(OPTCODE::CreateArray { init_values_count: number_of_elements });
     }
-    pub fn binop(&mut self, operator: BINOP, span: TextSpan) {
+    pub fn binop(&mut self, operator: BINOP, node_id: usize) {
         self.bytecode.push(match operator {
-            BINOP::Add => OPTCODE::Add { span: span },
-            BINOP::Subtract => OPTCODE::Subtract,
-            BINOP::Multiply => OPTCODE::Multiply,
-            BINOP::Divide => OPTCODE::Divide,
-            BINOP::Remainder => OPTCODE::Remainder,
-            BINOP::LessThan => OPTCODE::LessThan { span: span },
-            BINOP::LargerThan => OPTCODE::LargerThan,
-            BINOP::LessOrEq => OPTCODE::LessOrEq,
-            BINOP::LargerOrEq => OPTCODE::LargerOrEq,
-            BINOP::NotEq => OPTCODE::NotEq,
-            BINOP::Eq => OPTCODE::Eq,
-            BINOP::And => OPTCODE::And,
-            BINOP::Or => OPTCODE::Or,
-            BINOP::Xor => OPTCODE::Xor,
+            BINOP::Add => OPTCODE::Add { node_id },
+            BINOP::Subtract => OPTCODE::Subtract { node_id },
+            BINOP::Multiply => OPTCODE::Multiply { node_id },
+            BINOP::Divide => OPTCODE::Divide { node_id },
+            BINOP::Remainder => OPTCODE::Remainder { node_id },
+            BINOP::LessThan => OPTCODE::LessThan { node_id },
+            BINOP::LargerThan => OPTCODE::LargerThan { node_id },
+            BINOP::LessOrEq => OPTCODE::LessOrEq { node_id },
+            BINOP::LargerOrEq => OPTCODE::LargerOrEq { node_id },
+            BINOP::NotEq => OPTCODE::NotEq { node_id },
+            BINOP::Eq => OPTCODE::Eq { node_id },
+            BINOP::And => OPTCODE::And { node_id },
+            BINOP::Or => OPTCODE::Or { node_id },
+            BINOP::Xor => OPTCODE::Xor { node_id },
             BINOP::Not => OPTCODE::Not,
         });
     }
