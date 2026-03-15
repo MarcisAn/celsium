@@ -97,6 +97,7 @@ impl TypeStack{
     pub(super)fn compare(&mut self) -> Option<BuiltinTypes> {
         let a = self.stack.pop_back().unwrap();
         let b = self.stack.pop_back().unwrap();
+
         let result = match a {
             BuiltinTypes::Int =>
                 match b {

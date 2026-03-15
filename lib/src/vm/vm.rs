@@ -4,7 +4,6 @@ use super::{ format_for_print::format_for_print, math_operators::*, StackValue }
 use crate::{ bytecode::OPTCODE, CelsiumProgram, BuiltinTypes };
 use std::{ collections::{ HashMap, LinkedList }, io::{ self, BufRead, Write } };
 
-
 pub struct CallStackItem {
     pub(crate) optode_index: usize,
     pub(crate) function_name: Option<String>,
@@ -14,7 +13,7 @@ pub struct VM {
     pub(crate) stack: LinkedList<StackValue>,
     pub(crate) variables: HashMap<usize, Variable>,
     pub(crate) testing_stack: Vec<StackValue>,
-    pub(crate) call_stack: LinkedList<CallStackItem>
+    pub(crate) call_stack: LinkedList<CallStackItem>,
 }
 #[derive(Clone, Debug)]
 pub struct Variable {
@@ -30,13 +29,12 @@ impl VM {
             stack: LinkedList::new(),
             variables: HashMap::new(),
             testing_stack: vec![],
-            call_stack: LinkedList::new()
+            call_stack: LinkedList::new(),
         }
     }
     pub fn push(&mut self, data_type: &BuiltinTypes, data: &String) {
         match data_type {
-            BuiltinTypes::Int =>
-                panic!(),
+            BuiltinTypes::Int => panic!(),
             BuiltinTypes::Bool => {
                 if data == "1" {
                     self.stack.push_back(StackValue::Bool { value: true })
@@ -48,22 +46,22 @@ impl VM {
                 self.stack.push_back(StackValue::String {
                     value: data.to_string(),
                 }),
-            BuiltinTypes::Object{ fields: _} => panic!("object should not appear in bytecode"),
+            BuiltinTypes::Object { fields: _ } => panic!("object should not appear in bytecode"),
             BuiltinTypes::Float =>
                 self.stack.push_back(StackValue::Float { value: data.parse().unwrap() }),
-                            BuiltinTypes::Array { element_type: _, length: _ } => todo!(),
+            BuiltinTypes::Array { element_type: _, length: _ } => todo!(),
         }
     }
     pub fn push_stackvalue(&mut self, stackvalue: StackValue) {
         self.stack.push_back(stackvalue);
     }
     pub fn push_to_testing_stack(&mut self, duplicate_stackvalue: bool) {
-        if self.stack.back().is_none(){
+        if self.stack.back().is_none() {
             return;
         }
         let value = if duplicate_stackvalue {
-            self.stack.back().unwrap().to_owned()    
-        } else { 
+            self.stack.back().unwrap().to_owned()
+        } else {
             self.stack.pop_back().unwrap()
         };
         self.testing_stack.push(value);
@@ -71,8 +69,7 @@ impl VM {
     pub fn pop(&mut self) -> StackValue {
         return self.stack.pop_back().unwrap();
     }
-    pub fn aritmethics(&mut self, action: &str) -> (StackValue, StackValue, StackValue){
-        println!("action {}", action);
+    pub fn aritmethics(&mut self, action: &str) -> (StackValue, StackValue, StackValue) {
         let b = self.stack.pop_back().unwrap();
         let b_clone = b.clone();
         let a = self.stack.pop_back().unwrap();
@@ -96,7 +93,7 @@ impl VM {
             _ => panic!("Unknown arithmetics operator"),
         };
         self.stack.push_back(result.clone());
-        return (a_clone, b_clone, result)
+        return (a_clone, b_clone, result);
     }
     pub fn not(&mut self) {
         //Pops a stackvalue and pushes a bool value that is inverted
@@ -107,7 +104,7 @@ impl VM {
             StackValue::Float { value } => value == 0.0,
             StackValue::String { value } => value == "",
             StackValue::Array { value } => value.len() == 0,
-            StackValue::Object { value:_ } => false,
+            StackValue::Object { value: _ } => false,
         };
         self.push_stackvalue(StackValue::Bool { value: return_val });
     }
@@ -118,22 +115,23 @@ impl VM {
         return format_for_print(&self.stack.pop_back().unwrap(), newline);
     }
 
+    pub fn to_bool(value: StackValue) ->bool {
+        return match value {
+            StackValue::Bool { value } => value,
+            StackValue::Int { value } => value != 0,
+            StackValue::Float { value } => value != 0.0,
+            StackValue::String { value } => value != "",
+            StackValue::Array { value } => value.len() != 0,
+            StackValue::Object { value } => value.len() != 0,
+        }        
+    }
+
     pub fn must_jump(&mut self) -> bool {
         let value = self.stack.pop_back().unwrap();
-        if
-            value ==
-                (StackValue::Int {
-                    value: 0,
-                }) ||
-            value ==
-                (StackValue::String {
-                    value: "".to_string(),
-                })
-        {
-            return true;
-        }
-        return value == StackValue::Bool { value: false };
+        return !VM::to_bool(value);
     }
+
+    
 
     pub fn define_var(&mut self, id: usize) {
         self.variables.insert(id, Variable { id, value: self.stack.pop_back().unwrap() });
@@ -155,14 +153,16 @@ impl VM {
         *dst = Variable { id: dst_id, value: src };
     }
 
-    pub fn load_var(&mut self, id: usize) {
+    pub fn load_var(&mut self, id: usize) -> StackValue {
         let getter = self.variables.get(&id);
         if getter.is_none() {
             panic!("Cound not found vairable id {}", id);
         } else {
             let value = getter.unwrap().value.clone();
-            self.stack.push_back(value);
+            self.stack.push_back(value.clone());
+            return value;
         }
+
     }
 
     pub fn input(&mut self, prompt: &str) {
@@ -181,7 +181,7 @@ impl VM {
     }
 
     pub fn call_function(&mut self, name: &String, program: &mut CelsiumProgram) {
-        for function in  program.functions.clone() {
+        for function in program.functions.clone() {
             if function.signature.name == name.to_string() {
                 program.run(self, &function.body.bytecode);
             }
@@ -204,8 +204,8 @@ impl VM {
         let object = self.stack.pop_back().unwrap();
         match object {
             StackValue::Object { value } => {
-                for field in value{
-                    if field.name == field_name{
+                for field in value {
+                    if field.name == field_name {
                         self.stack.push_back(field.value);
                         break;
                     }
@@ -222,16 +222,14 @@ impl VM {
         } else {
             match &mut getter.unwrap().value {
                 StackValue::Object { value } => {
-                    for field in value{
+                    for field in value {
                         if field.name == field_name {
                             field.value = new_field_value.clone();
                         }
                     }
-                    
-                },
-                _ => panic!()
+                }
+                _ => panic!(),
             }
-            
         }
     }
 }

@@ -9,6 +9,7 @@ use futures::executor::block_on;
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
+#[cfg(target_family = "wasm")]
 #[wasm_bindgen]
 extern "C" {
     fn alert(s: &str);

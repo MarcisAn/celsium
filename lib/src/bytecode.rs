@@ -35,7 +35,7 @@ pub enum OPTCODE {
     },
     LoadVar {
         id: usize,
-        span: TextSpan,
+        node_id: usize,
     },
     CallFunction {
         name: String,

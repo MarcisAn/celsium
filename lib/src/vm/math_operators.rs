@@ -1,3 +1,5 @@
+use crate::vm::vm::VM;
+
 use super::StackValue;
 
 fn add_to_int(a: i64, b: StackValue) -> StackValue {
@@ -435,33 +437,36 @@ pub fn eq(a: StackValue, b: StackValue) -> StackValue {
 }
 
 pub fn and(a: StackValue, b: StackValue) -> StackValue {
-    if (a == StackValue::Bool { value: true } && b == StackValue::Bool { value: true }) {
-        StackValue::Bool { value: true }
-    } else {
-        StackValue::Bool { value: false }
-    }
+    let a_bool = VM::to_bool(a);
+    let b_bool = VM::to_bool(b);
+    return StackValue::Bool { value: a_bool && b_bool };
 }
 
 pub fn or(a: StackValue, b: StackValue) -> StackValue {
-    if (a == StackValue::Bool { value: true } || b == StackValue::Bool { value: true }) {
-        StackValue::Bool { value: true }
-    } else {
-        StackValue::Bool { value: false }
-    }
+    let a_bool = VM::to_bool(a);
+    let b_bool = VM::to_bool(b);
+    return StackValue::Bool { value: a_bool || b_bool };
 }
 
 pub fn xor(a: StackValue, b: StackValue) -> StackValue {
-    if (a == StackValue::Bool { value: true }) {
-        if b == (StackValue::Bool { value: false }) {
-            StackValue::Bool { value: true }
-        } else {
-            StackValue::Bool { value: false }
+    let a_bool = VM::to_bool(a);
+    let b_bool = VM::to_bool(b);
+
+    if a_bool {
+        if b_bool {
+            return StackValue::Bool { value: false }
         }
-    } else {
-        if b == (StackValue::Bool { value: false }) {
-            StackValue::Bool { value: false }
-        } else {
-            StackValue::Bool { value: true }
+        else {
+            return StackValue::Bool { value: true }
+        }
+    }
+
+    else {
+        if b_bool {
+            return StackValue::Bool { value: true }
+        }
+        else {
+            return StackValue::Bool { value: false }
         }
     }
 }

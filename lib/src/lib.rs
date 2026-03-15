@@ -44,6 +44,7 @@ macro_rules! call_special_function {
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
+#[cfg(target_family = "wasm")]
 #[wasm_bindgen]
 extern "C" {
     fn alert(s: &str);
@@ -80,7 +81,7 @@ pub struct CelsiumProgram {
     functions: Vec<Function>,
     node_locations_by_id: HashMap<usize, TextSpan>,
     node_ids_by_line: HashMap<usize, Vec<usize>>,
-    node_parents: HashMap<usize, Option<usize>>
+    node_parents: HashMap<usize, Option<usize>>,
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
@@ -134,7 +135,7 @@ impl CelsiumProgram {
             functions,
             node_ids_by_line,
             node_locations_by_id,
-            node_parents
+            node_parents,
         }
     }
 
@@ -161,27 +162,24 @@ impl CelsiumProgram {
         let binding = self.clone();
         let span = binding.node_locations_by_id.get(node_id).unwrap();
         let delta_span: isize = (new_value.len() as isize) - (span.length as isize);
-        
+
         #[cfg(target_family = "wasm")]
         code_replace(&new_value, span.line, span.col_start, span.length);
 
         let current_line = span.line;
         self.change_span_of_parent(node_id, current_line, delta_span);
-
-        for node_in_the_same_line in self.node_ids_by_line.get(&current_line).unwrap(){
+        for node_in_the_same_line in self.node_ids_by_line.get(&current_line).unwrap() {
             let node_position = self.node_locations_by_id.get_mut(node_in_the_same_line).unwrap();
-            if span.col_start < node_position.col_start {
+            if span.col_start + span.length < node_position.col_start {
                 if delta_span >= 0 {
                     node_position.col_start += delta_span as usize;
-                }
-                else {
-                    node_position.col_start -= (-delta_span) as usize;
+                } else {
+                    node_position.col_start -= -delta_span as usize;
                 }
             }
         }
-        
     }
-    fn change_span_of_parent(&mut self, node_id: &usize, line:usize, delta_span: isize) {
+    fn change_span_of_parent(&mut self, node_id: &usize, line: usize, delta_span: isize) {
         let parrent_node = self.node_parents.get(node_id).unwrap();
         if parrent_node.is_some() {
             let parrent_id = parrent_node.unwrap();
@@ -190,9 +188,13 @@ impl CelsiumProgram {
                 let parrent_location = self.node_locations_by_id.get_mut(&parrent_id).unwrap();
                 if delta_span >= 0 {
                     parrent_location.length += delta_span as usize;
-                }
-                else {
-                    parrent_location.length -= (-delta_span) as usize;
+                } else {
+                    if -delta_span >= parrent_location.length as isize {
+                        parrent_location.length = 0;
+                    }
+                    else {
+                        parrent_location.length -= (-delta_span) as usize;
+                    }
                 }
             }
             self.change_span_of_parent(&parrent_node.unwrap(), line, delta_span);
@@ -418,18 +420,13 @@ impl CelsiumProgram {
                     let _ = vm.variables.insert(*id, Variable { id: *id, value: object });
                 }
                 OPTCODE::GetObjectField { field_name } => vm.get_object_field(field_name),
-                OPTCODE::LoadVar { id, span: _ } => {
-                    vm.load_var(*id);
-                    // println!(
-                    //     "value:{} line:{} col:{}, span:{}",
-                    //     vm::format_for_print::format_for_print(
-                    //         &vm.stack.back().unwrap().clone(),
-                    //         false
-                    //     ),
-                    //     span.line,
-                    //     span.col_start,
-                    //     span.length
-                    // );
+                OPTCODE::LoadVar { id, node_id} => {
+                    let var_value = vm.load_var(*id);
+                    self.explain_process(
+                        format!("Mainīgā vērtība ir {}", var_value),
+                        node_id
+                    );
+                    self.code_replace_calculate(node_id, format!("{}", var_value));
                 }
                 OPTCODE::AssignVar { id } => vm.assign_var(*id),
                 OPTCODE::CreateArray { init_values_count } => {

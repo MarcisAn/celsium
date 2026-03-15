@@ -150,8 +150,8 @@ impl Block {
     pub fn assign_variable(&mut self, id: usize) {
         self.bytecode.push(OPTCODE::AssignVar { id })
     }
-    pub fn load_variable(&mut self, id: usize, span: TextSpan) {
-        self.bytecode.push(OPTCODE::LoadVar { id, span })
+    pub fn load_variable(&mut self, id: usize, node_id: usize) {
+        self.bytecode.push(OPTCODE::LoadVar { id, node_id })
     }
     pub fn call_special_function(&mut self, function: String) {
         self.bytecode.push(OPTCODE::CallSpecialFunction { function });
