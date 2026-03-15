@@ -80,6 +80,7 @@ pub struct CelsiumProgram {
     functions: Vec<Function>,
     node_locations_by_id: HashMap<usize, TextSpan>,
     node_ids_by_line: HashMap<usize, Vec<usize>>,
+    node_parents: HashMap<usize, Option<usize>>
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
@@ -101,7 +102,8 @@ impl CelsiumProgram {
         main_block: Block,
         functions: Vec<Function>,
         node_locations_by_id: HashMap<usize, TextSpan>,
-        node_ids_by_line: HashMap<usize, Vec<usize>>
+        node_ids_by_line: HashMap<usize, Vec<usize>>,
+        node_parents: HashMap<usize, Option<usize>>
     ) -> CelsiumProgram {
         let mut bytecode = main_block.bytecode.clone();
         bytecode.push(OPTCODE::Return); // Return from the main function
@@ -132,6 +134,7 @@ impl CelsiumProgram {
             functions,
             node_ids_by_line,
             node_locations_by_id,
+            node_parents
         }
     }
 
@@ -157,20 +160,42 @@ impl CelsiumProgram {
     fn code_replace_calculate(&mut self, node_id: &usize, new_value: String) {
         let binding = self.clone();
         let span = binding.node_locations_by_id.get(node_id).unwrap();
-        let delta_span = new_value.len() - span.length;
+        let delta_span: isize = (new_value.len() as isize) - (span.length as isize);
+        
         #[cfg(target_family = "wasm")]
         code_replace(&new_value, span.line, span.col_start, span.length);
 
         let current_line = span.line;
-        let other_nodes_on_same_line = self.node_ids_by_line.get(&current_line).unwrap();
-        for node in other_nodes_on_same_line {
-            let node_location = self.node_locations_by_id.get_mut(&node).unwrap();
-            if span.col_start <= node_location.col_start && span.col_start + span.length >= node_location.col_start + node_location.length {
-                node_location.length += delta_span;
+        self.change_span_of_parent(node_id, current_line, delta_span);
+
+        for node_in_the_same_line in self.node_ids_by_line.get(&current_line).unwrap(){
+            let node_position = self.node_locations_by_id.get_mut(node_in_the_same_line).unwrap();
+            if span.col_start < node_position.col_start {
+                if delta_span >= 0 {
+                    node_position.col_start += delta_span as usize;
+                }
+                else {
+                    node_position.col_start -= (-delta_span) as usize;
+                }
             }
-            if node_location.col_start > span.col_start + span.length {
-                node_location.col_start += delta_span;
+        }
+        
+    }
+    fn change_span_of_parent(&mut self, node_id: &usize, line:usize, delta_span: isize) {
+        let parrent_node = self.node_parents.get(node_id).unwrap();
+        if parrent_node.is_some() {
+            let parrent_id = parrent_node.unwrap();
+            let parent_line = self.node_locations_by_id.get(&parrent_id).unwrap().line;
+            if line == parent_line {
+                let parrent_location = self.node_locations_by_id.get_mut(&parrent_id).unwrap();
+                if delta_span >= 0 {
+                    parrent_location.length += delta_span as usize;
+                }
+                else {
+                    parrent_location.length -= (-delta_span) as usize;
+                }
             }
+            self.change_span_of_parent(&parrent_node.unwrap(), line, delta_span);
         }
     }
     fn explain_process(&mut self, explanation: String, node_id: &usize) {
@@ -351,11 +376,11 @@ impl CelsiumProgram {
                     );
                     self.explain_process(
                         format!(
-                                "Vai {} un {} vismaz viena ir pateisa izteiksme? {}.",
-                                a,
-                                b,
-                                result
-                            ),
+                            "Vai {} un {} vismaz viena ir pateisa izteiksme? {}.",
+                            a,
+                            b,
+                            result
+                        ),
                         node_id
                     );
                     self.code_replace_calculate(node_id, replace_value);
@@ -377,11 +402,11 @@ impl CelsiumProgram {
                     let replace_value = vm::format_for_print::format_for_print(&result, false);
                     self.explain_process(
                         format!(
-                                "Vai {} vai {} ir patiesas izteksmes, bet ne abas? {}.",
-                                a,
-                                b,
-                                result
-                            ),
+                            "Vai {} vai {} ir patiesas izteksmes, bet ne abas? {}.",
+                            a,
+                            b,
+                            result
+                        ),
                         node_id
                     );
                     self.code_replace_calculate(node_id, replace_value);
