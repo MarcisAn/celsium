@@ -139,6 +139,18 @@ impl CelsiumProgram {
         }
     }
 
+    pub fn stackvalue_type_to_str(value: StackValue) -> String {
+        let var_type = match &value {
+            StackValue::Bool { value: _ } => "būls",
+            StackValue::Int { value: _ } => "vesels skaitlis",
+            StackValue::Float { value: _ } => "decimālskaitlis",
+            StackValue::String { value: _ } => "teksts",
+            StackValue::Array { value: _ } => "saraksts",
+            StackValue::Object { value: _ } => "objekts",
+        };
+        return var_type.to_string();
+    }
+
     pub fn run_program(&mut self) -> Vec<StackValue> {
         let global_bytecode: Vec<OPTCODE> = self.main_block.bytecode.clone();
         let mut vm = VM::new();
@@ -189,11 +201,10 @@ impl CelsiumProgram {
                 if delta_span >= 0 {
                     parrent_location.length += delta_span as usize;
                 } else {
-                    if -delta_span >= parrent_location.length as isize {
+                    if -delta_span >= (parrent_location.length as isize) {
                         parrent_location.length = 0;
-                    }
-                    else {
-                        parrent_location.length -= (-delta_span) as usize;
+                    } else {
+                        parrent_location.length -= -delta_span as usize;
                     }
                 }
             }
@@ -414,16 +425,29 @@ impl CelsiumProgram {
                     self.code_replace_calculate(node_id, replace_value);
                 }
                 OPTCODE::Not => vm.not(),
-                OPTCODE::DefineVar { id } => vm.define_var(*id),
+                OPTCODE::DefineVar { id, var_name, node_id } => {
+                    let value = vm.stack.pop_back().unwrap();
+                    vm.variables.insert(*id, Variable {
+                        id: *id,
+                        value: value.clone(),
+                    });
+                    self.explain_process(format!("Jaunam mainīgajam \"{}\" tiek piešķirta vērtība {} ({})", var_name, value.clone(), CelsiumProgram::stackvalue_type_to_str(value)), node_id);
+                }
                 OPTCODE::DefineObject { id } => {
                     let object = vm.pop();
                     let _ = vm.variables.insert(*id, Variable { id: *id, value: object });
                 }
                 OPTCODE::GetObjectField { field_name } => vm.get_object_field(field_name),
-                OPTCODE::LoadVar { id, node_id} => {
+                OPTCODE::LoadVar { id, node_id, var_name } => {
                     let var_value = vm.load_var(*id);
+
                     self.explain_process(
-                        format!("Mainīgā vērtība ir {}", var_value),
+                        format!(
+                            "Mainīgā \"{}\" vērtība ir {} ({})",
+                            var_name,
+                            var_value,
+                            CelsiumProgram::stackvalue_type_to_str(var_value.clone())
+                        ),
                         node_id
                     );
                     self.code_replace_calculate(node_id, format!("{}", var_value));

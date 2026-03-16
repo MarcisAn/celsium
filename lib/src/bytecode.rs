@@ -36,6 +36,7 @@ pub enum OPTCODE {
     LoadVar {
         id: usize,
         node_id: usize,
+        var_name: String
     },
     CallFunction {
         name: String,
@@ -101,6 +102,8 @@ pub enum OPTCODE {
     },
     DefineVar {
         id: usize,
+        var_name: String,
+        node_id: usize
     },
     DefineObject {
         id: usize,

@@ -127,9 +127,11 @@ impl Block {
             steps: block_length + &conditional_block.bytecode.len() + 2,
         });
     }
-    pub fn define_variable(&mut self, id: usize) {
+    pub fn define_variable(&mut self, id: usize, var_name: String, node_id: usize) {
         self.bytecode.push(OPTCODE::DefineVar {
             id,
+            var_name,
+            node_id
         });
     }
     pub fn copy_var_value(&mut self, src_var_id: usize, dst_var_id: usize) {
@@ -150,8 +152,8 @@ impl Block {
     pub fn assign_variable(&mut self, id: usize) {
         self.bytecode.push(OPTCODE::AssignVar { id })
     }
-    pub fn load_variable(&mut self, id: usize, node_id: usize) {
-        self.bytecode.push(OPTCODE::LoadVar { id, node_id })
+    pub fn load_variable(&mut self, id: usize, node_id: usize, var_name: &str) {
+        self.bytecode.push(OPTCODE::LoadVar { id, node_id,  var_name: var_name.to_string() })
     }
     pub fn call_special_function(&mut self, function: String) {
         self.bytecode.push(OPTCODE::CallSpecialFunction { function });

@@ -133,8 +133,7 @@ impl VM {
 
     
 
-    pub fn define_var(&mut self, id: usize) {
-        self.variables.insert(id, Variable { id, value: self.stack.pop_back().unwrap() });
+    pub fn define_var(&mut self, id: usize, name: String) {
     }
 
     pub fn assign_var(&mut self, id: usize) {
