@@ -243,6 +243,8 @@ impl CelsiumProgram {
                         node_id
                     );
                     self.code_replace_calculate(node_id, replace_value);
+                    #[cfg(target_family = "wasm")]
+                    step();
                 }
                 OPTCODE::Subtract { node_id } => {
                     let (a, b, result) = vm.aritmethics("-");
@@ -255,6 +257,8 @@ impl CelsiumProgram {
                         node_id
                     );
                     self.code_replace_calculate(node_id, replace_value);
+                    #[cfg(target_family = "wasm")]
+                    step();
                 }
                 OPTCODE::Multiply { node_id } => {
                     let (a, b, result) = vm.aritmethics("*");
@@ -267,6 +271,8 @@ impl CelsiumProgram {
                         node_id
                     );
                     self.code_replace_calculate(node_id, replace_value);
+                    #[cfg(target_family = "wasm")]
+                    step();
                 }
                 OPTCODE::Divide { node_id } => {
                     let (a, b, result) = vm.aritmethics("/");
@@ -279,6 +285,8 @@ impl CelsiumProgram {
                         node_id
                     );
                     self.code_replace_calculate(node_id, replace_value);
+                    #[cfg(target_family = "wasm")]
+                    step();
                 }
                 OPTCODE::Remainder { node_id } => {
                     let (a, b, result) = vm.aritmethics("%");
@@ -291,6 +299,8 @@ impl CelsiumProgram {
                         node_id
                     );
                     self.code_replace_calculate(node_id, replace_value);
+                    #[cfg(target_family = "wasm")]
+                    step();
                 }
                 OPTCODE::JumpIfFalse {
                     steps,
@@ -320,6 +330,8 @@ impl CelsiumProgram {
                         node_id
                     );
                     self.code_replace_calculate(node_id, replace_value);
+                    #[cfg(target_family = "wasm")]
+                    step();
                 }
                 OPTCODE::LargerThan { node_id } => {
                     let (a, b, result) = vm.aritmethics(">");
@@ -332,6 +344,8 @@ impl CelsiumProgram {
                         node_id
                     );
                     self.code_replace_calculate(node_id, replace_value);
+                    #[cfg(target_family = "wasm")]
+                    step();
                 }
                 OPTCODE::LessOrEq { node_id } => {
                     let (a, b, result) = vm.aritmethics("<=");
@@ -344,6 +358,8 @@ impl CelsiumProgram {
                         node_id
                     );
                     self.code_replace_calculate(node_id, replace_value);
+                    #[cfg(target_family = "wasm")]
+                    step();
                 }
                 OPTCODE::LargerOrEq { node_id } => {
                     let (a, b, result) = vm.aritmethics(">=");
@@ -356,6 +372,8 @@ impl CelsiumProgram {
                         node_id
                     );
                     self.code_replace_calculate(node_id, replace_value);
+                    #[cfg(target_family = "wasm")]
+                    step();
                 }
                 OPTCODE::NotEq { node_id } => {
                     let (a, b, result) = vm.aritmethics("!=");
@@ -368,6 +386,8 @@ impl CelsiumProgram {
                         node_id
                     );
                     self.code_replace_calculate(node_id, replace_value);
+                    #[cfg(target_family = "wasm")]
+                    step();
                 }
                 OPTCODE::Eq { node_id } => {
                     let (a, b, result) = vm.aritmethics("==");
@@ -380,6 +400,8 @@ impl CelsiumProgram {
                         node_id
                     );
                     self.code_replace_calculate(node_id, replace_value);
+                    #[cfg(target_family = "wasm")]
+                    step();
                 }
                 OPTCODE::Or { node_id } => {
                     let (a, b, result) = vm.aritmethics("or");
@@ -397,6 +419,8 @@ impl CelsiumProgram {
                         node_id
                     );
                     self.code_replace_calculate(node_id, replace_value);
+                    #[cfg(target_family = "wasm")]
+                    step();
                 }
                 OPTCODE::And { node_id } => {
                     let (a, b, result) = vm.aritmethics("and");
@@ -409,6 +433,8 @@ impl CelsiumProgram {
                         node_id
                     );
                     self.code_replace_calculate(node_id, replace_value);
+                    #[cfg(target_family = "wasm")]
+                    step();
                 }
                 OPTCODE::Xor { node_id } => {
                     let (a, b, result) = vm.aritmethics("xor");
@@ -423,6 +449,8 @@ impl CelsiumProgram {
                         node_id
                     );
                     self.code_replace_calculate(node_id, replace_value);
+                    #[cfg(target_family = "wasm")]
+                    step();
                 }
                 OPTCODE::Not => vm.not(),
                 OPTCODE::DefineVar { id, var_name, node_id } => {
@@ -431,7 +459,17 @@ impl CelsiumProgram {
                         id: *id,
                         value: value.clone(),
                     });
-                    self.explain_process(format!("Jaunam mainīgajam \"{}\" tiek piešķirta vērtība {} ({})", var_name, value.clone(), CelsiumProgram::stackvalue_type_to_str(value)), node_id);
+                    self.explain_process(
+                        format!(
+                            "Jaunam mainīgajam \"{}\" tiek piešķirta vērtība {} ({})",
+                            var_name,
+                            value.clone(),
+                            CelsiumProgram::stackvalue_type_to_str(value)
+                        ),
+                        node_id
+                    );
+                    #[cfg(target_family = "wasm")]
+                    step();
                 }
                 OPTCODE::DefineObject { id } => {
                     let object = vm.pop();
@@ -451,6 +489,8 @@ impl CelsiumProgram {
                         node_id
                     );
                     self.code_replace_calculate(node_id, format!("{}", var_value));
+                    #[cfg(target_family = "wasm")]
+                    step();
                 }
                 OPTCODE::AssignVar { id } => vm.assign_var(*id),
                 OPTCODE::CreateArray { init_values_count } => {
